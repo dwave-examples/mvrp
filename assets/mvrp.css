@@ -1,0 +1,284 @@
+/*
+This file is forked from apps/dash-clinical-analytics/assets/clinical-analytics.css
+under the following license
+
+MIT License
+
+Copyright (c) 2019 Plotly
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+Modifications are licensed under
+
+Apache License, Version 2.0
+(see ./LICENSE for details)
+
+*/
+
+#app-container {
+    width: auto !important;
+    min-width: 100rem;
+    white-space: nowrap;
+}
+
+@font-face {
+    font-family: Acumin;
+    font-weight: bold;
+    src: url("Acumin-BdPro.otf") format("opentype");
+}
+
+body {
+    background-color: #f9f9f9;
+    color: #333333;
+    font-size: 1.4rem;
+    margin: 0rem;
+}
+
+hr {
+    margin: 0.3rem 0rem;
+}
+
+#description-card {
+    margin: 2rem 0rem;
+    font-family: "Helvetica Neue", sans-serif;
+    text-align: justify;
+}
+
+#banner {
+    height: 5.5rem;
+    background-color: #074c91;
+
+    /* set width so that banner covers window width even when small */
+    width: max(100%, 106rem);
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+#banner Img {
+    position: relative;
+    height: 3rem;
+    width: auto;
+    margin-left: 2rem;
+}
+
+H1, H2, H3, H4, H5, H6 {
+    color: #074c91;
+    font-weight: 300;
+    font-family: Acumin, "Helvetica Neue", sans-serif;
+}
+
+H2 {
+    font-size: 3rem;
+    padding-top: 1rem;
+}
+
+H3 {
+    font-size: 2.5rem;
+    padding-top: 1rem;
+}
+
+H4 {
+    font-size: 2rem;
+    padding-top: 1rem;
+}
+
+#left-column {
+    padding: 0rem 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    width: 40rem;
+    height: calc(100vh - 5.5rem);
+
+    display: inline-block;
+    vertical-align: top;
+    white-space: normal;
+}
+
+#right-column {
+    background-color: #f4f4f4;
+    padding: 0rem 2rem;
+
+    /* set width to viewport width - left col width - padding */
+    width: max(calc(100vw - 40rem - 8rem), 60rem);
+    display: inline-block;
+    vertical-align: top;
+}
+
+.result-table {
+    font-size: 1.6rem;
+    width: 80rem;
+}
+
+.cost-row {
+    text-align: right;
+}
+.cost-heading {
+    text-align: right;
+}
+.total-cost-row {
+    text-align: right;
+    font-weight: 600;
+}
+.stats-row {
+    text-align: right;
+    font-weight: 600;
+}
+.stats-heading {
+    text-align: right;
+}
+
+#solution-map {
+    border: 2px solid transparent !important;
+
+    width: 100%;
+    /* set height to viewport - (banner + tabs) */
+    height: calc(100vh - 15rem);
+    min-height: 70rem;
+}
+
+#control-card > p {
+    font-weight: bold;
+}
+
+#run-button {
+    width: 40rem;
+    font-size: 1.4rem;
+    background-color: #2a7de1;
+    color: white;
+    margin-right:5px;
+}
+
+#run-button:disabled {
+    font-size: 1.4rem;
+    background-color: gray;
+    color: white;
+    opacity: 0.5;
+}
+
+#run-button:disabled:hover {
+    font-size: 1.4rem;
+    background-color: gray;
+    color: white;
+    opacity: 0.5;
+}
+
+#run-button:hover {
+    background-color: #074c91;
+    color: white;
+}
+
+#cancel-button {
+    width: 40rem;
+    font-size: 1.4rem;
+    background-color: #C70039;
+    color: white;
+}
+
+#cancel-button:hover {
+    background-color: #900C3F;
+    color: white;
+}
+
+.tab-fail {
+    border-top: 2px solid red !important;
+}
+
+.tab-success {
+    border-top: 2px solid green !important;
+}
+
+.tab-warning {
+    border-top: 2px solid orange !important;
+}
+
+.control-p {
+    margin-top:1rem;
+}
+
+#solver-time-limit {
+    margin-bottom:2rem;
+}
+
+.tab-loading {
+    overflow: hidden;
+    position: relative;
+  }
+
+.tab-loading::before, .tab-loading::after {
+    content: '';
+    box-sizing: border-box;
+    position: absolute;
+    border: 2px solid transparent;
+    width: 0;
+    height: 0;
+}
+
+.tab-loading::before {
+    top: 0;
+    left: 0;
+    border-top-color: #60daaa;
+    border-right-color: #60daaa;
+    animation: border1 2s infinite;
+}
+
+.tab-loading::after {
+    bottom: 0;
+    right: 0;
+    animation: border1 2s 1s infinite, borderColor1 2s 1s infinite;
+}
+
+@keyframes border1 {
+    0% {
+        width: 0;
+        height: 0;
+    }
+    25% {
+        width: 100%;
+        height: 0;
+    }
+    50% {
+        width: 100%;
+        height: 100%;
+    }
+    100% {
+        width: 100%;
+        height: 100%;
+    }
+}
+@keyframes borderColor1 {
+    0% {
+        border-bottom-color: #60daaa;
+        border-left-color: #60daaa;
+    }
+    50% {
+        border-bottom-color: #60daaa;
+        border-left-color: #60daaa;
+    }
+    51% {
+        border-bottom-color: transparent;
+        border-left-color: transparent;
+    }
+    100% {
+        border-bottom-color: transparent;
+        border-left-color: transparent;
+    }
+}
