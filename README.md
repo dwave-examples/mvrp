@@ -1,21 +1,34 @@
-[![Open in GitHub Codespaces](
-  https://img.shields.io/badge/Open%20in%20GitHub%20Codespaces-333?logo=github)](
-  https://codespaces.new/dwave-examples/mvrp?quickstart=1)
+[![Open in GitHub Codespaces](https://img.shields.io/badge/Open%20in%20GitHub%20Codespaces-333?logo=github)](https://codespaces.new/dwave-examples/mvrp-dash?quickstart=1)
 
-# Installation Instructions
+# Multi Vehicle Routing Problem
 
-Supports python 3.8+ on Linux/MacOS/Windows systems.
+Run the Multi Vehicle Routing Problem (MVRP) problem for several different scenarios. Select between
+delivery drones (flight path) and trucks (roads), the number of vehicles and client locations.
 
-```
+![D-Wave Logo](assets/app.png)
+
+## Usage
+
+To run, install the requirements
+
+```bash
 pip install -r requirements.txt
 ```
 
-# Running the web app
+and run `app.py`
 
-Run the command:
-
-```
+```bash
 python app.py
 ```
 
 A browser should open running the web app.
+
+## Problem Description
+
+
+## References
+
+
+## License
+
+Released under the Apache License 2.0. See [LICENSE](LICENSE) file.
