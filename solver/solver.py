@@ -15,12 +15,23 @@ from __future__ import annotations
 
 import time
 import warnings
+from enum import Enum
 from typing import Any, Hashable, NamedTuple
 
 import networkx as nx
 import numpy as np
 
 from solver.cvrp import CapacitatedVehicleRoutingProblem
+
+
+class VehicleType(Enum):
+    TRUCKS = 0
+    DELIVERY_DRONES = 1
+
+
+class SamplerType(Enum):
+    DQM = 0
+    KMEANS = 1
 
 
 class RoutingProblemParameters(NamedTuple):
@@ -41,7 +52,8 @@ class RoutingProblemParameters(NamedTuple):
     client_subset: list
     num_clients: int
     num_vehicles: int
-    sampler_type: str
+    vehicle_type: VehicleType
+    sampler_type: SamplerType
     time_limit: float
 
 
@@ -50,20 +62,17 @@ class Solver:
 
     Args:
         parameters: NamedTuple that specifies all problem details.
-        vehichle_type: Vehicle type used for solution. Can be either "Delivery Drones"
-            (flight path) or "Trucks" (follow roads).
     """
 
-    def __init__(self, parameters: RoutingProblemParameters, vehicle_type: str) -> None:
+    def __init__(self, parameters: RoutingProblemParameters) -> None:
         self._parameters = parameters
-        self._vehicle_type = vehicle_type
         self._solution = None
 
-        if vehicle_type == "Trucks":
+        if self.vehicle_type is VehicleType.TRUCKS:
             self._paths_and_lengths = dict(
                 nx.all_pairs_dijkstra(parameters.map_network, weight="length")
             )
-        else:
+        else:  # if vehicle_type is DELIVERY_DRONES
             self._paths_and_lengths = None
 
     def __getattr__(self, name: str) -> Any:
@@ -90,7 +99,7 @@ class Solver:
             start: Start node label (used for trucks).
             end: End node label (used for trucks).
         """
-        if self._vehicle_type == "Trucks":
+        if self.vehicle_type is VehicleType.TRUCKS:
             return self.paths_and_lengths[start][0][end]
 
         radius_earth = 6371000  # meters

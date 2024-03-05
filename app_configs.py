@@ -14,39 +14,41 @@
 
 """This file stores input parameters for the app."""
 
-import json
+ADDRESS = "Cambridge Ln, Rockhampton QLD 4700, Australia"
+THUMBNAIL = "assets/dwave_logo.svg"
 
-HTML_CONFIGS = {
-    "title": "MVRP Demo",
-    "main_header": "Multi Vehicle Routing Problem",
-    "description": """
-        Run the Multi Vehicle Routing Problem (MVRP) problem for several different scenarios. Select
-        between delivery drones (flight path) and trucks (roads), the number of vehicles and client
-        locations.
-        """,
-    "solver_options": {
-        "min_time_seconds": 5,
-        "max_time_seconds": 300,
-        "time_step_seconds": 5,
-        "default_time_seconds": 5,
-    },
-    "tabs": {
-        "map": {
-            "name": "Map",
-            "header": "Solution map",
-        },
-        "classical": {
-            "name": "Classical",
-            "header": "K-Means classical solution",
-        },
-        "result": {
-            "name": "Results",
-            "header": "D-Wave Hybrid Solver results",
-        },
-    },
+APP_TITLE = "MVRP Demo"
+MAIN_HEADER = "Multi Vehicle Routing Problem"
+DESCRIPTION = """\
+Run the Multi Vehicle Routing Problem (MVRP) problem for several different scenarios. Select
+between delivery drones (flight path) and trucks (roads), the number of vehicles and client
+locations.
+"""
+
+#######################################
+# Sliders, buttons and option entries #
+#######################################
+
+# number of vehicles slider (value means default)
+NUM_VEHICLES = {
+    "min": 1,
+    "max": 10,
+    "step": 1,
+    "value": 7,
 }
 
-VEHICLE_TYPES = ["Delivery Drones", "Trucks"]
-SAMPLER_TYPES = ["Quantum Hybrid (DQM)", "Classical (K-Means)"]
-NUM_VEHICLES = {"min": 1, "max": 10, "step": 1}
-NUM_CLIENTS = {"min": 10, "max": 100, "step": 1}
+# number of client locations slider (value means default)
+NUM_CLIENT_LOCATIONS = {
+    "min": 10,
+    "max": 100,
+    "step": 1,
+    "value": 70,
+}
+
+# solver time limits in seconds (value means default)
+SOLVER_TIME = {
+    "min": 5,
+    "max": 300,
+    "step": 5,
+    "value": 5,
+}

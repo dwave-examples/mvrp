@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Union
 
 import dash
 import diskcache
@@ -31,12 +31,12 @@ from map import (
     plot_solution_routes_on_map,
     show_locations_on_initial_map,
 )
-from solver.solver import RoutingProblemParameters, Solver
+from solver.solver import RoutingProblemParameters, SamplerType, Solver, VehicleType
 
 cache = diskcache.Cache("./cache")
 background_callback_manager = DiskcacheManager(cache)
 
-from app_configs import HTML_CONFIGS
+from app_configs import APP_TITLE
 
 if TYPE_CHECKING:
     from dash import html
@@ -47,7 +47,7 @@ app = dash.Dash(
     prevent_initial_callbacks="initial_duplicate",
     background_callback_manager=background_callback_manager,
 )
-app.title = HTML_CONFIGS["title"]
+app.title = APP_TITLE
 
 server = app.server
 app.config.suppress_callback_exceptions = True
@@ -124,8 +124,8 @@ def render_initial_map(num_clients: int) -> str:
 )
 def run_optimiation(
     run_click: int,
-    vehicle_type: str,
-    sampler_type: str,
+    vehicle_type: Union[VehicleType, int],
+    sampler_type: Union[SamplerType, int],
     num_vehicles: int,
     time_limit: float,
     num_clients: int,
@@ -140,9 +140,10 @@ def run_optimiation(
 
     Args:
         run_click: The (total) number of times the run button has been clicked.
-        vehicle_type: The vehicle type. Either "Delivery Drones" or "Trucks".
-        sampler_type: The type of sampler used by the optimization. Either
-            "Quantum Hybrid (DQM)" or "Classical (K-Means)").
+        vehicle_type: Either Trucks (``0`` or ``VehicleType.TRUCKS``) or
+            Delivery Drones (``1`` or ``VehicleType.DELIVERY_DRONES``).
+        sampler_type: Either Quantum Hybrid (DQM) (``0`` or ``SamplerType.DQM``) or
+            Classical (K-Means) (``1`` or ``SamplerType.KMEANS``).
         num_vehicles: The number of vehicles.
         time_limit: The solver time limit.
         num_clients: The number of force locations.
@@ -164,6 +165,12 @@ def run_optimiation(
     if run_click == 0 or ctx.triggered_id != "run-button":
         return ""
 
+    if isinstance(vehicle_type, int):
+        vehicle_type = VehicleType(vehicle_type)
+
+    if isinstance(sampler_type, int):
+        sampler_type = SamplerType(sampler_type)
+
     if ctx.triggered_id == "run-button":
         map_network, depot_id, force_locations = generate_mapping_information(num_clients)
         initial_map = show_locations_on_initial_map(map_network, depot_id, force_locations)
@@ -174,22 +181,19 @@ def run_optimiation(
             client_subset=force_locations,
             num_clients=num_clients,
             num_vehicles=num_vehicles,
+            vehicle_type=vehicle_type,
             sampler_type=sampler_type,
             time_limit=time_limit,
         )
-        routing_problem_solver = Solver(routing_problem_parameters, vehicle_type)
+        routing_problem_solver = Solver(routing_problem_parameters)
 
         # run problem and generate solution (stored in Solver)
         wall_clock_time = routing_problem_solver.generate()
 
         solution_map, solution_cost = plot_solution_routes_on_map(
             initial_map,
-            routing_problem_parameters.map_network,
-            routing_problem_solver.solution,
-            routing_problem_parameters.depot_id,
-            routing_problem_solver.paths_and_lengths,
-            routing_problem_solver.cost_between_nodes,
-            vehicle_type,
+            routing_problem_parameters,
+            routing_problem_solver,
         )
 
         problem_size = num_vehicles * num_clients

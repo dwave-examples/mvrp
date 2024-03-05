@@ -16,7 +16,6 @@ from __future__ import annotations
 
 import random
 from pathlib import Path
-from typing import Callable
 
 import folium
 import folium.plugins as plugins
@@ -25,13 +24,15 @@ import numpy as np
 import osmnx as ox
 from scipy.spatial import cKDTree
 
+from app_configs import ADDRESS
+from solver.solver import VehicleType
+
 ox.settings.use_cache = True
 ox.settings.overpass_rate_limit = False
 
 depot_icon_path = Path(__file__).parent / "assets/depot_location.png"
 force_icon_path = Path(__file__).parent / "assets/force_location.png"
 
-ADDRESS = "Cambridge Ln, Rockhampton QLD 4700, Australia"
 depot_icon = folium.CustomIcon(str(depot_icon_path), icon_size=(32, 37))
 
 
@@ -144,29 +145,26 @@ def show_locations_on_initial_map(
 
 def plot_solution_routes_on_map(
     folium_map: folium.Map,
-    G: nx.Graph,
-    solution: dict,
-    depot_id: int,
-    dijkstra_paths: dict,
-    partial_cost_func: Callable,
-    vehicle_type: str,
+    routing_parameters,
+    routing_solver,
 ) -> folium.folium.Map:
     """Generate interactive folium map for drone routes given solution dictionary.
 
     Args:
         folium_map: Initial folium map to plot solution on.
-        G: Map network to plot.
-        solution: Solution returned by CVRP.
-        depot_id: Node ID of the depot location.
-        dijkstra_paths: Dictionary containing both paths and path lengths between any two nodes.
-        partial_cost_func: Partial cost function to pass to CVRP.
-        vehicle_type: The vehicle type. Either "Delivery Drones" or "Trucks".
+        routing_solver: Solver class containing the solution (if run).
+        routing_parameters: Routing problem parameters.
 
     Returns:
         `folium.folium.Map` object,  dictionary with solution cost information.
 
     """
     solution_cost_information = {}
+    G = routing_parameters.map_network
+
+    solution = routing_solver.solution
+    cost = routing_solver.cost_between_nodes
+    paths = routing_solver.paths_and_lengths
 
     # get colourblind palette from seaborn (10 colours) and expand if more vehicles
     palette = [
@@ -194,7 +192,7 @@ def plot_solution_routes_on_map(
 
         for node in route_network.nodes:
             locations.update({node: (G.nodes[node]["y"], G.nodes[node]["x"])})
-            if node != depot_id:
+            if node != routing_parameters.depot_id:
                 location_icon, nodes = _get_nodes(G, node)
 
                 folium.Marker(
@@ -214,24 +212,19 @@ def plot_solution_routes_on_map(
 
         route_color = palette.pop()
 
-        if vehicle_type == "Trucks":
-            routes = [dijkstra_paths[start][1][end] for start, end in route_network.edges]
-            solution_cost_information[vehicle_id + 1]["optimized_cost"] += sum(
-                [dijkstra_paths[start][0][end] for start, end in route_network.edges]
+        for start, end in route_network.edges:
+            solution_cost_information[vehicle_id + 1]["optimized_cost"] += cost(
+                locations[start], locations[end], start, end
             )
-            for route in routes:
+
+            if routing_parameters.vehicle_type is VehicleType.TRUCKS:
+                route = paths[start][1][end]
                 folium_map = ox.graph_to_gdfs(G.subgraph(route), nodes=False).explore(
                     m=folium_map, color=route_color
                 )
-        elif vehicle_type == "Delivery Drones":
-            for edge in route_network.edges:
-                solution_cost_information[vehicle_id + 1]["optimized_cost"] += partial_cost_func(
-                    locations[edge[0]], locations[edge[1]], edge[0], edge[1]
-                )
-                folium.PolyLine([locations[node] for node in edge], color=route_color).add_to(
+            else:  # if vehicle_type is DELIVERY_DRONES
+                folium.PolyLine((locations[start], locations[end]), color=route_color).add_to(
                     folium_map
                 )
-        else:
-            raise ValueError(f"'Trucks' or 'Delivery Drones' accepted; got {vehicle_type}")
 
     return folium_map, solution_cost_information

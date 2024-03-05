@@ -13,21 +13,32 @@
 # limitations under the License.
 
 """This file stores the HTML layout for the app (see ``mvrp.css`` for CSS styling)."""
+from __future__ import annotations
 
 import html
 
 from dash import dcc, html
 
-from app_configs import HTML_CONFIGS, NUM_CLIENTS, NUM_VEHICLES, SAMPLER_TYPES, VEHICLE_TYPES
+from app_configs import (
+    DESCRIPTION,
+    MAIN_HEADER,
+    NUM_CLIENT_LOCATIONS,
+    NUM_VEHICLES,
+    SOLVER_TIME,
+    THUMBNAIL,
+)
 
 map_width, map_height = 1000, 600
+
+VEHICLE_TYPES = ["Trucks", "Delivery Drones"]
+SAMPLER_TYPES = ["Quantum Hybrid (DQM)", "Classical (K-Means)"]
 
 
 def description_card():
     """A Div containing dashboard title & descriptions."""
     return html.Div(
         id="description-card",
-        children=[html.H2(HTML_CONFIGS["main_header"]), html.P(HTML_CONFIGS["description"])],
+        children=[html.H2(MAIN_HEADER), html.P(DESCRIPTION)],
     )
 
 
@@ -40,8 +51,8 @@ def generate_control_card() -> html.Div:
         html.Div: A Div containing the dropdowns for selecting the scenario,
         model, and solver.
     """
-    vehicle_options = [{"label": vehicle, "value": vehicle} for vehicle in VEHICLE_TYPES]
-    sampler_options = [{"label": sampler, "value": sampler} for sampler in SAMPLER_TYPES]
+    vehicle_options = [{"label": vehicle, "value": i} for i, vehicle in enumerate(VEHICLE_TYPES)]
+    sampler_options = [{"label": sampler, "value": i} for i, sampler in enumerate(SAMPLER_TYPES)]
 
     return html.Div(
         id="control-card",
@@ -67,7 +78,6 @@ def generate_control_card() -> html.Div:
             dcc.Slider(
                 id="num-vehicles-select",
                 **NUM_VEHICLES,
-                value=NUM_VEHICLES["min"] + 1,
                 marks={
                     NUM_VEHICLES["min"]: str(NUM_VEHICLES["min"]),
                     NUM_VEHICLES["max"]: str(NUM_VEHICLES["max"]),
@@ -76,30 +86,26 @@ def generate_control_card() -> html.Div:
                     "placement": "top",
                     "always_visible": True,
                     # "style": {"color": "LightSteelBlue", "fontSize": "20px"}
-                }
+                },
             ),
             html.H4("Number of force locations", className="control-p"),
             dcc.Slider(
                 id="num-clients-select",
-                **NUM_CLIENTS,
-                value=NUM_CLIENTS["min"],
+                **NUM_CLIENT_LOCATIONS,
                 marks={
-                    NUM_CLIENTS["min"]: str(NUM_CLIENTS["min"]),
-                    NUM_CLIENTS["max"]: str(NUM_CLIENTS["max"]),
+                    NUM_CLIENT_LOCATIONS["min"]: str(NUM_CLIENT_LOCATIONS["min"]),
+                    NUM_CLIENT_LOCATIONS["max"]: str(NUM_CLIENT_LOCATIONS["max"]),
                 },
                 tooltip={
                     "placement": "top",
                     "always_visible": True,
-                }
+                },
             ),
             html.H4("Solver Time Limit", className="control-p"),
             dcc.Input(
                 id="solver-time-limit",
                 type="number",
-                value=HTML_CONFIGS["solver_options"]["default_time_seconds"],
-                min=HTML_CONFIGS["solver_options"]["min_time_seconds"],
-                max=HTML_CONFIGS["solver_options"]["max_time_seconds"],
-                step=HTML_CONFIGS["solver_options"]["time_step_seconds"],
+                **SOLVER_TIME,
             ),
             html.Div(
                 id="button-group",
@@ -125,7 +131,7 @@ def set_html(app):
         id="app-container",
         children=[
             # Banner
-            html.Div(id="banner", children=[html.Img(src="assets/dwave_logo.svg")]),
+            html.Div(id="banner", children=[html.Img(src=THUMBNAIL)]),
             # Left column
             html.Div(
                 id="left-column",
@@ -146,14 +152,14 @@ def set_html(app):
                         value="map-tab",
                         children=[
                             dcc.Tab(
-                                label=HTML_CONFIGS["tabs"]["map"]["name"],
+                                label="Map",
                                 id="map-tab",
                                 value="map-tab",  # used for switching to programatically
                                 className="tab",
                                 children=[html.Iframe(id="solution-map")],
                             ),
                             dcc.Tab(
-                                label=HTML_CONFIGS["tabs"]["result"]["name"],
+                                label="Results",
                                 id="results-tab",
                                 className="tab",
                                 disabled=True,
@@ -221,8 +227,14 @@ def set_html(app):
     )
 
 
-def create_table_row(num_vehicles, values_dicts, values_tot):
-    """TODO"""
+def create_table_row(num_vehicles: int, values_dicts: dict[int, dict], values_tot: list) -> None:
+    """Create a row in the table dynamically.
+
+    Args:
+        num_vehicles: Number of vehicles (i.e., number of table rows).
+        values_dicts: List of dictionaries with vehicle number as results data as values.
+        values_tot: List of total results data (sum of individual vehicle data).
+    """
     table_row = [
         html.Tr(
             [
