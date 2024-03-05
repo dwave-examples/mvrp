@@ -29,14 +29,14 @@ from solver.ckmeans import CKMeans
 
 
 class CapacitatedVehicleRoutingProblem:
-    def __init__(self, cost_function) -> None:
-        """A class to handle data and operations related to Multi-vehicle routing problem.
+    """A class to handle data and operations related to Multi-vehicle routing problem.
 
-        Args:
-            cost_function: The cost function that takes two coordinates and two labels and
-                computes the cost. The function needs to take all four inputs, but it doesn't
-                necessarily make use of all of it.
-        """
+    Args:
+        cost_function: The cost function that takes two coordinates and two labels and
+            computes the cost.
+    """
+
+    def __init__(self, cost_function) -> None:
         self._cost_callback = cost_function
 
         self._depots = Variables()
@@ -118,9 +118,9 @@ class CapacitatedVehicleRoutingProblem:
                 if label in self._depots:
                     continue
 
-                # add cost for each new added edge
+                # add cost for each new added edge (directed)
                 self._costs[label, key] = self._cost_callback(co_1, co_2, label, key)
-                self._costs[key, label] = self._cost_callback(co_2, co_2, key, label)
+                self._costs[key, label] = self._cost_callback(co_2, co_1, key, label)
 
             # add new coordinate to clients and add/update existing coordinates
             self._clients._append(label)
@@ -216,9 +216,10 @@ class CapacitatedVehicleRoutingProblem:
             idx = {id: i for i, id in enumerate(cluster)}
 
             weight_matrix = np.zeros((len(cluster), len(cluster)))
-            for tup in permutations(cluster, 2):
-                weight_matrix[idx[tup[0]], idx[tup[1]]] = self.costs[tup]
-                weight_matrix[idx[tup[1]], idx[tup[0]]] = self.costs[tup]
+            for coord in combinations(cluster, 2):
+                coord_reverse = tuple(reversed(coord))
+                weight_matrix[idx[coord[0]], idx[coord[1]]] = self.costs[coord]
+                weight_matrix[idx[coord[1]], idx[coord[0]]] = self.costs[coord_reverse]
 
             path, _ = solve_tsp_local_search(weight_matrix)
 
