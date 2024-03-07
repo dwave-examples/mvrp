@@ -31,7 +31,7 @@ from app_configs import (
 map_width, map_height = 1000, 600
 
 VEHICLE_TYPES = ["Trucks", "Delivery Drones"]
-SAMPLER_TYPES = ["Quantum Hybrid (DQM)", "Classical (K-Means)"]
+SAMPLER_TYPES = ["Quantum Hybrid", "Classical (K-Means)"]
 
 
 def description_card():
@@ -227,7 +227,7 @@ def set_html(app):
     )
 
 
-def create_table_row(num_vehicles: int, values_dicts: dict[int, dict], values_tot: list) -> None:
+def create_table_row(num_vehicles: int, values_dicts: dict[int, dict], values_tot: list) -> list[html.Tr]:
     """Create a row in the table dynamically.
 
     Args:

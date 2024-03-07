@@ -74,10 +74,15 @@ def generate_inital_map(num_clients: int) -> folium.Map:
     Output("solution-map", "srcDoc", allow_duplicate=True),
     inputs=[
         Input("num-clients-select", "value"),
+        Input("run-button", "n_clicks"),
     ],
 )
-def render_initial_map(num_clients: int) -> str:
+def render_initial_map(num_clients: int, _) -> str:
     """Generates and saves and HTML version of the initial map.
+
+    Note that 'run-button' is required as an Input to reload the map each time
+    a run is started. This resets the solution map to the initial map but does
+    NOT regenerate the initial map unless 'num-clients-select' is changed.
 
     Args:
         num_clients: Number of force locations.
@@ -85,10 +90,14 @@ def render_initial_map(num_clients: int) -> str:
     Returns:
         str: Initial map shown on the map tab as HTML.
     """
-    initial_map = generate_inital_map(num_clients)
-    initial_map.save("initial_map.html")
-    return open("initial_map.html", "r").read()
+    map_path = Path("initial_map.html")
 
+    # only regenerate map if num_clients is changed (i.e., if run buttons is NOT clicked)
+    if ctx.triggered_id != "run-button" or not map_path.exists():
+        initial_map = generate_inital_map(num_clients)
+        initial_map.save(map_path)
+
+    return open(map_path, "r").read()
 
 @app.long_callback(
     # update map and results tabs

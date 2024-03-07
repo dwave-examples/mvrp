@@ -140,7 +140,7 @@ class Solver:
             {k: -(-sum(demand.values()) // self.num_vehicles) for k in range(self.num_vehicles)}
         )
 
-        if self.sampler_type == "Classical (K-Means)":
+        if self.sampler_type is SamplerType.KMEANS:
             cvrp.cluster_kmeans(time_limit=self.time_limit)
         else:
             try:
