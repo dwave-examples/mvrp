@@ -15,6 +15,7 @@
 """This file stores input parameters for the app."""
 
 ADDRESS = "Cambridge Ln, Rockhampton QLD 4700, Australia"
+DISTANCE = 1700  # bounding box distance (in meters) around address
 THUMBNAIL = "assets/dwave_logo.svg"
 
 APP_TITLE = "MVRP Demo"
@@ -34,7 +35,7 @@ NUM_VEHICLES = {
     "min": 1,
     "max": 10,
     "step": 1,
-    "value": 7,
+    "value": 6,
 }
 
 # number of client locations slider (value means default)

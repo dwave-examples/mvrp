@@ -24,7 +24,7 @@ import numpy as np
 import osmnx as ox
 from scipy.spatial import cKDTree
 
-from app_configs import ADDRESS
+from app_configs import ADDRESS, DISTANCE
 from solver.solver import VehicleType
 
 ox.settings.use_cache = True
@@ -61,7 +61,7 @@ def generate_mapping_information(num_clients: int) -> tuple[nx.MultiDiGraph, int
     """
     random.seed(num_clients)
 
-    G = ox.graph_from_address(address=ADDRESS, dist=1000, network_type="drive")
+    G = ox.graph_from_address(address=ADDRESS, dist=DISTANCE, network_type="drive", truncate_by_edge=True)
     map_network = ox.utils_graph.get_largest_component(G, strongly=True)
 
     node_index_map = dict(enumerate(map_network.nodes(data=True)))
