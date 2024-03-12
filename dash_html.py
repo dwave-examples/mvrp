@@ -19,14 +19,8 @@ import html
 
 from dash import dcc, html
 
-from app_configs import (
-    DESCRIPTION,
-    MAIN_HEADER,
-    NUM_CLIENT_LOCATIONS,
-    NUM_VEHICLES,
-    SOLVER_TIME,
-    THUMBNAIL,
-)
+from app_configs import (DESCRIPTION, MAIN_HEADER, NUM_CLIENT_LOCATIONS, NUM_VEHICLES, SOLVER_TIME,
+                         THUMBNAIL)
 
 map_width, map_height = 1000, 600
 
@@ -130,6 +124,16 @@ def set_html(app):
     app.layout = html.Div(
         id="app-container",
         children=[
+            # below are any temporary storage items, e.g., for sharing data between callbacks
+            dcc.Store(id="stored-results"),  # temporarily stored results table
+            dcc.Store(id="sampler-type"),  # solver type used for latest run
+            dcc.Store(
+                id="reset-results"
+            ),  # whether to reset the results tables before displaying the latest run
+            dcc.Store(
+                id="run-in-progress", data=False
+            ),  # callback blocker to signal that the run is complete
+            dcc.Store(id="parameter-hash"),  # hash string to detect changed parameters
             # Banner
             html.Div(id="banner", children=[html.Img(src=THUMBNAIL)]),
             # Left column
@@ -166,7 +170,7 @@ def set_html(app):
                                 children=[
                                     html.H3("Solution stats"),
                                     html.Table(
-                                        className="result-table",
+                                        id="solution-stats-table",
                                         children=[
                                             html.Tr(
                                                 [
@@ -212,10 +216,31 @@ def set_html(app):
                                         ],
                                     ),
                                     html.H3("Solution cost"),
-                                    html.Table(
-                                        className="result-table",
-                                        id="solution-cost-table",
-                                        children=[],  # add children dynamically using 'create_table_row' below
+                                    html.Div(
+                                        id="solution-cost-table-div",
+                                        className="result-table-div",
+                                        children=[
+                                            html.H4("Quantum Hybrid"),
+                                            html.Table(
+                                                title="Quantum Hybrid",
+                                                className="result-table",
+                                                id="solution-cost-table",
+                                                children=[],  # add children dynamically using 'create_table_row' below
+                                            ),
+                                        ],
+                                    ),
+                                    html.Div(
+                                        id="solution-cost-table-classical-div",
+                                        className="result-table-div",
+                                        children=[
+                                            html.H4("Classical (K-Means)"),
+                                            html.Table(
+                                                title="Classical (K-Means)",
+                                                className="result-table",
+                                                id="solution-cost-table-classical",
+                                                children=[],  # add children dynamically using 'create_table_row' below
+                                            ),
+                                        ],
                                     ),
                                 ],
                             ),
@@ -227,7 +252,9 @@ def set_html(app):
     )
 
 
-def create_table_row(num_vehicles: int, values_dicts: dict[int, dict], values_tot: list) -> list[html.Tr]:
+def create_table_row(
+    num_vehicles: int, values_dicts: dict[int, dict], values_tot: list
+) -> list[html.Tr]:
     """Create a row in the table dynamically.
 
     Args:
@@ -239,8 +266,8 @@ def create_table_row(num_vehicles: int, values_dicts: dict[int, dict], values_to
         html.Tr(
             [
                 html.Th("Vehicle", className="cost-heading"),
-                html.Th("Solution cost [m]", className="cost-heading"),
-                html.Th("Forces serviced", className="cost-heading"),
+                html.Th("Cost [m]", className="cost-heading"),
+                html.Th("Forces", className="cost-heading"),
                 html.Th("Water", className="cost-heading"),
                 html.Th("Food", className="cost-heading"),
                 html.Th("Other", className="cost-heading"),

@@ -15,22 +15,20 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from operator import itemgetter
 from pathlib import Path
 from typing import TYPE_CHECKING, Union
 
 import dash
 import diskcache
 import folium
-from dash import DiskcacheManager, ctx
+from dash import DiskcacheManager, callback_context, ctx
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 
 from dash_html import create_table_row, set_html
-from map import (
-    generate_mapping_information,
-    plot_solution_routes_on_map,
-    show_locations_on_initial_map,
-)
+from map import (generate_mapping_information, plot_solution_routes_on_map,
+                 show_locations_on_initial_map)
 from solver.solver import RoutingProblemParameters, SamplerType, Solver, VehicleType
 
 cache = diskcache.Cache("./cache")
@@ -99,11 +97,53 @@ def render_initial_map(num_clients: int, _) -> str:
 
     return open(map_path, "r").read()
 
-@app.long_callback(
-    # update map and results tabs
-    Output("solution-map", "srcDoc", allow_duplicate=True),
+
+@app.callback(
     Output("solution-cost-table", "children"),
-    # update table values in results tab
+    Output("solution-cost-table-classical", "children"),
+    inputs=[
+        Input("run-in-progress", "data"),
+        State("stored-results", "data"),
+        State("reset-results", "data"),
+        State("sampler-type", "data"),
+    ],
+    prevent_initial_call=True,
+)
+def update_tables(
+    run_in_progress, stored_results, reset_results, sampler_type
+) -> tuple[list, list]:
+    """Update the results tables each time a run is made.
+
+    Args:
+        run_in_progress: Whether or not the ``run_optimiation`` callback is running.
+        stored_results: The results tab from the latest run.
+        reset_results: Whether or not to reset the results tables before applying the new one.
+        sampler_type: The sampler type used in the latest run (``"quantum"`` or ``"classical"``)
+
+    Returns:
+        tuple: A tuple containing the two results tables.
+    """
+    empty_or_no_update = [] if reset_results else dash.no_update
+
+    if run_in_progress is True:
+        raise PreventUpdate
+
+    if sampler_type == "classical":
+        return empty_or_no_update, stored_results
+
+    return stored_results, empty_or_no_update
+
+
+@app.long_callback(
+    # update map and results
+    Output("solution-map", "srcDoc", allow_duplicate=True),
+    Output("stored-results", "data"),
+    # store the solver used, whether or not to reset results tabs and the
+    # parameter hash value used to detect parameter changes
+    Output("sampler-type", "data"),
+    Output("reset-results", "data"),
+    Output("parameter-hash", "data"),
+    # update table values in top results tab
     Output("problem-size", "children"),
     Output("search-space", "children"),
     Output("wall-clock-time", "children"),
@@ -118,6 +158,7 @@ def render_initial_map(num_clients: int, _) -> str:
         State("num-clients-select", "value"),
         # input and output result table (to update it dynamically)
         State("solution-cost-table", "children"),
+        State("parameter-hash", "data"),
     ],
     running=[
         # show cancel button and disable run button, and disable and animate results tab
@@ -127,6 +168,8 @@ def render_initial_map(num_clients: int, _) -> str:
         (Output("results-tab", "className"), "tab-loading", "tab"),
         # switch to map tab while running
         (Output("tabs", "value"), "map-tab", "map-tab"),
+        # block certain callbacks from running until this is done
+        (Output("run-in-progress", "data"), True, False),
     ],
     cancel=[Input("cancel-button", "n_clicks")],
     prevent_initial_call=True,
@@ -139,6 +182,7 @@ def run_optimiation(
     time_limit: float,
     num_clients: int,
     cost_table: list[html.Tr],
+    previous_parameter_hash: str,
 ) -> tuple[str, list[html.Tr], int, str, str, int, int]:
     """Run the optimization and update map and results tables.
 
@@ -164,7 +208,10 @@ def run_optimiation(
 
             solution-map: Updates the 'srcDoc' entry for the 'solution-map' IFrame in the map tab.
                 This is the map (initial and solution map).
-            solution-cost-table: Updates the Solution cost table in the results tab.
+            stored-results: Stores the Solution cost table in the results tab.
+            sampler-type: The sampler used (``"quantum"`` or ``"classical"``).
+            reset-results: Whether or not to reset the results tables before applying the new one.
+            parameter-hash: Hash string to detect changed parameters.
             problem-size: Updates the problem-size entry in the Solution stats table.
             search-space: Updates the search-space entry in the Solution stats table.
             wall-clock-time: Updates the wall-clock-time entry in the Solution stats table.
@@ -173,7 +220,6 @@ def run_optimiation(
     """
     if run_click == 0 or ctx.triggered_id != "run-button":
         return ""
-
     if isinstance(vehicle_type, int):
         vehicle_type = VehicleType(vehicle_type)
 
@@ -219,9 +265,19 @@ def run_optimiation(
             num_vehicles, list(solution_cost.values()), list(total_cost.values())
         )
         solution_map.save("solution_map.html")
+
+        parameter_hash = _get_parameter_hash(**callback_context.states)
+        if parameter_hash != previous_parameter_hash:
+            reset_results = True
+        else:
+            reset_results = False
+
         return (
             open("solution_map.html", "r").read(),
             cost_table,
+            "classical" if sampler_type is SamplerType.KMEANS else "quantum",
+            reset_results,
+            str(parameter_hash),
             problem_size,
             search_space,
             wall_clock_time,
@@ -230,6 +286,22 @@ def run_optimiation(
         )
 
     raise PreventUpdate
+
+
+def _get_parameter_hash(**states) -> str:
+    """Calculate a hash string for parameters which reset the results tables."""
+    # list of parameter values that will reset the results tables
+    # when changed in the app; must be hashable
+    items = [
+        "vehicle-type-select.value",
+        "num-vehicles-select.value",
+        "num-clients-select.value",
+        "solver-time-limit.value",
+    ]
+    try:
+        return str(hash(itemgetter(*items)(states)))
+    except TypeError as e:
+        raise TypeError("unhashable problem parameter value") from e
 
 
 # import the html code and sets it in the app

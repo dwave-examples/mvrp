@@ -124,9 +124,27 @@ H4 {
     vertical-align: top;
 }
 
-.result-table {
+#solution-stats-table {
     font-size: 1.6rem;
-    width: 80rem;
+}
+
+.result-table-div {
+    display: inline-block;
+    padding-right: 4rem;
+}
+
+.result-table {
+    width: 48rem;
+    font-size: 1.6rem;
+    border-left: 6px solid #074c916b;
+}
+
+#solution-cost-table-div:not(:has(> table > tr)) {
+    display: none;
+}
+
+#solution-cost-table-classical-div:not(:has(> table > tr)) {
+    display: none;
 }
 
 .cost-row {
