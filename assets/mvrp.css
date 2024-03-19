@@ -31,6 +31,18 @@ Apache License, Version 2.0
 
 */
 
+:root {
+    --blue-light: #2A7DE1;
+    --blue-dark: #074C91;
+    --red-light: #C70039;
+    --red-dark: #900C3F;
+    --orange: #FF7006;
+    --teal-light: #06ECDC;
+    --teal-dark: #17BEBB;
+    --teal-darker: #008C82;
+    --grey-dark: #222222;
+}
+
 #app-container {
     width: auto !important;
     min-width: 100rem;
@@ -45,7 +57,7 @@ Apache License, Version 2.0
 
 body {
     background-color: #f9f9f9;
-    color: #333333;
+    color: var(--grey-dark);
     font-size: 1.4rem;
     margin: 0rem;
 }
@@ -62,41 +74,49 @@ hr {
 
 #banner {
     height: 5.5rem;
-    background-color: #074c91;
+    background-color: var(--blue-dark);
 
     /* set width so that banner covers window (left + right col + padding) */
-    min-width: calc(100rem + 40rem + 8rem);
+    min-width: calc(100rem + 36rem + 8rem);
     display: flex;
     flex-direction: row;
     align-items: center;
 }
 
-#banner Img {
+#banner img {
     position: relative;
     height: 3rem;
     width: auto;
     margin-left: 2rem;
 }
 
-H1, H2, H3, H4, H5, H6 {
-    color: #074c91;
-    font-weight: 300;
+h1, h2, h3, h4, h5, h6, td, th, span, a, p {
     font-family: Acumin, "Helvetica Neue", sans-serif;
 }
 
-H2 {
+h1, h2, h3, h4, h5, h6 {
+    color: var(--blue-dark);
+    font-weight: 300;
+}
+
+h1 {
     font-size: 3rem;
-    padding-top: 1rem;
+    margin-top: 3rem;
 }
 
-H3 {
+h3 {
     font-size: 2.5rem;
-    padding-top: 1rem;
+    margin: 2.5rem 0 1rem;
 }
 
-H4 {
+h4 {
     font-size: 2rem;
-    padding-top: 1rem;
+    margin-top: 2rem;
+}
+
+h4.table-label {
+    margin: 0;
+    font-weight: 500;
 }
 
 #left-column {
@@ -105,7 +125,7 @@ H4 {
     flex-direction: column;
     align-items: center;
 
-    width: 40rem;
+    width: 36rem;
     height: calc(100vh - 5.5rem);
 
     display: inline-block;
@@ -115,10 +135,10 @@ H4 {
 
 #right-column {
     background-color: #f4f4f4;
-    padding: 0rem 2rem;
+    padding: 1rem;
 
     /* set width to viewport width - left col width - padding */
-    width: calc(100vw - 40rem - 8rem);
+    width: calc(100vw - 36rem - 8rem);
     min-width: 100rem;
     display: inline-block;
     vertical-align: top;
@@ -136,37 +156,46 @@ H4 {
 .result-table {
     width: 48rem;
     font-size: 1.6rem;
-    border-left: 6px solid #074c916b;
+    border: 4px var(--blue-dark);
+    border-style: solid none none solid;
 }
 
-#solution-cost-table-div:not(:has(> table > tr)) {
-    display: none;
-}
-
+#solution-cost-table-div:not(:has(> table > tr)),
 #solution-cost-table-classical-div:not(:has(> table > tr)) {
     display: none;
 }
 
-.cost-row {
-    text-align: right;
+th {
+    color: white;
+    background-color: var(--blue-dark);
 }
-.cost-heading {
-    text-align: right;
+
+td {
+    color: var(--grey-dark);
 }
-.total-cost-row {
-    text-align: right;
+
+th, td {
+    padding: 0.6rem 1.2rem;
+}
+
+th:first-child, td:first-child {
+    padding-left: 1.2rem;
+}
+
+th:last-child, td:last-child {
+    padding-right: 1.2rem;
+}
+
+.total-cost-row td {
     font-weight: 600;
 }
-.stats-row {
-    text-align: right;
-    font-weight: 600;
-}
-.stats-heading {
-    text-align: right;
+
+.select {
+    padding-left: 6px !important;
 }
 
 #solution-map {
-    border: 2px solid transparent !important;
+    border: none;
 
     width: 100%;
     /* set height to viewport - (banner + tabs) */
@@ -178,63 +207,47 @@ H4 {
     font-weight: bold;
 }
 
+button {
+    width: 100%;
+    font-size: 1.4rem;
+    line-height: 1.4rem;
+    padding: 1.8rem;
+    height: auto;
+    color: white;
+    transition: background-color 0.2s ease-in-out;
+    margin-bottom: 2rem;
+}
+
 #run-button {
-    width: 40rem;
-    font-size: 1.4rem;
-    background-color: #2a7de1;
-    color: white;
-    margin-right:5px;
-}
-
-#run-button:disabled {
-    font-size: 1.4rem;
-    background-color: gray;
-    color: white;
-    opacity: 0.5;
-}
-
-#run-button:disabled:hover {
-    font-size: 1.4rem;
-    background-color: gray;
-    color: white;
-    opacity: 0.5;
+    background-color: var(--blue-light);
 }
 
 #run-button:hover {
-    background-color: #074c91;
-    color: white;
+    background-color: var(--blue-dark);
 }
 
 #cancel-button {
-    width: 40rem;
-    font-size: 1.4rem;
-    background-color: #C70039;
-    color: white;
+    background-color: var(--red-light);
 }
 
 #cancel-button:hover {
-    background-color: #900C3F;
-    color: white;
+    background-color: var(--red-dark);
 }
 
 .tab-fail {
-    border-top: 2px solid red !important;
+    border-top: 2px solid var(--red-light) !important;
 }
 
 .tab-success {
-    border-top: 2px solid green !important;
+    border-top: 2px solid var(--teal-darker) !important;
 }
 
 .tab-warning {
-    border-top: 2px solid orange !important;
-}
-
-.control-p {
-    margin-top:1rem;
+    border-top: 2px solid var(--orange) !important;
 }
 
 #solver-time-limit {
-    margin-bottom:2rem;
+    margin-bottom: 2rem;
 }
 
 .tab-loading {
@@ -254,8 +267,8 @@ H4 {
 .tab-loading::before {
     top: 0;
     left: 0;
-    border-top-color: #60daaa;
-    border-right-color: #60daaa;
+    border-top-color: var(--teal-light);
+    border-right-color: var(--teal-light);
     animation: border1 2s infinite;
 }
 
@@ -285,12 +298,12 @@ H4 {
 }
 @keyframes borderColor1 {
     0% {
-        border-bottom-color: #60daaa;
-        border-left-color: #60daaa;
+        border-bottom-color: var(--teal-light);
+        border-left-color: var(--teal-light);
     }
     50% {
-        border-bottom-color: #60daaa;
-        border-left-color: #60daaa;
+        border-bottom-color: var(--teal-light);
+        border-left-color: var(--teal-light);
     }
     51% {
         border-bottom-color: transparent;

@@ -32,7 +32,7 @@ def description_card():
     """A Div containing dashboard title & descriptions."""
     return html.Div(
         id="description-card",
-        children=[html.H2(MAIN_HEADER), html.P(DESCRIPTION)],
+        children=[html.H1(MAIN_HEADER), html.P(DESCRIPTION)],
     )
 
 
@@ -50,9 +50,8 @@ def generate_control_card() -> html.Div:
 
     return html.Div(
         id="control-card",
-        style={"padding-top": "20px", "padding-right": "20px"},
         children=[
-            html.H4("Vehicle Type", className="control-p"),
+            html.H4("Vehicle Type"),
             dcc.Dropdown(
                 id="vehicle-type-select",
                 options=vehicle_options,
@@ -60,7 +59,7 @@ def generate_control_card() -> html.Div:
                 clearable=False,
                 searchable=False,
             ),
-            html.H4("Sampler", className="control-p"),
+            html.H4("Sampler"),
             dcc.Dropdown(
                 id="sampler-type-select",
                 options=sampler_options,
@@ -68,9 +67,10 @@ def generate_control_card() -> html.Div:
                 clearable=False,
                 searchable=False,
             ),
-            html.H4("Number of vehicles to deploy", className="control-p"),
+            html.H4("Number of vehicles to deploy"),
             dcc.Slider(
                 id="num-vehicles-select",
+                className="select",
                 **NUM_VEHICLES,
                 marks={
                     NUM_VEHICLES["min"]: str(NUM_VEHICLES["min"]),
@@ -79,12 +79,12 @@ def generate_control_card() -> html.Div:
                 tooltip={
                     "placement": "top",
                     "always_visible": True,
-                    # "style": {"color": "LightSteelBlue", "fontSize": "20px"}
                 },
             ),
-            html.H4("Number of force locations", className="control-p"),
+            html.H4("Number of force locations"),
             dcc.Slider(
                 id="num-clients-select",
+                className="select",
                 **NUM_CLIENT_LOCATIONS,
                 marks={
                     NUM_CLIENT_LOCATIONS["min"]: str(NUM_CLIENT_LOCATIONS["min"]),
@@ -95,7 +95,7 @@ def generate_control_card() -> html.Div:
                     "always_visible": True,
                 },
             ),
-            html.H4("Solver Time Limit", className="control-p"),
+            html.H4("Solver Time Limit"),
             dcc.Input(
                 id="solver-time-limit",
                 type="number",
@@ -149,7 +149,6 @@ def set_html(app):
             # Right column
             html.Div(
                 id="right-column",
-                style={"padding": "10px"},
                 children=[
                     dcc.Tabs(
                         id="tabs",
@@ -168,9 +167,10 @@ def set_html(app):
                                 className="tab",
                                 disabled=True,
                                 children=[
-                                    html.H3("Solution stats"),
+                                    html.H3("Solution Stats"),
                                     html.Table(
                                         id="solution-stats-table",
+                                        className="result-table",
                                         children=[
                                             html.Tr(
                                                 [
@@ -215,12 +215,12 @@ def set_html(app):
                                             ),
                                         ],
                                     ),
-                                    html.H3("Solution cost"),
+                                    html.H3("Solution Cost"),
                                     html.Div(
                                         id="solution-cost-table-div",
                                         className="result-table-div",
                                         children=[
-                                            html.H4("Quantum Hybrid"),
+                                            html.H4("Quantum Hybrid", className="table-label"),
                                             html.Table(
                                                 title="Quantum Hybrid",
                                                 className="result-table",
@@ -233,7 +233,7 @@ def set_html(app):
                                         id="solution-cost-table-classical-div",
                                         className="result-table-div",
                                         children=[
-                                            html.H4("Classical (K-Means)"),
+                                            html.H4("Classical (K-Means)", className="table-label"),
                                             html.Table(
                                                 title="Classical (K-Means)",
                                                 className="result-table",
@@ -265,12 +265,12 @@ def create_table_row(
     table_row = [
         html.Tr(
             [
-                html.Th("Vehicle", className="cost-heading"),
-                html.Th("Cost [m]", className="cost-heading"),
-                html.Th("Forces", className="cost-heading"),
-                html.Th("Water", className="cost-heading"),
-                html.Th("Food", className="cost-heading"),
-                html.Th("Other", className="cost-heading"),
+                html.Th("Vehicle"),
+                html.Th("Cost [m]"),
+                html.Th("Forces"),
+                html.Th("Water"),
+                html.Th("Food"),
+                html.Th("Other"),
             ]
         )
     ]
@@ -279,12 +279,12 @@ def create_table_row(
 
         row = html.Tr(
             [
-                html.Td(i + 1, className="cost-row"),
-                html.Td(round(values[0]), className="cost-row"),
-                html.Td(values[1], className="cost-row"),
-                html.Td(values[2], className="cost-row"),
-                html.Td(values[3], className="cost-row"),
-                html.Td(values[4], className="cost-row"),
+                html.Td(i + 1),
+                html.Td(round(values[0])),
+                html.Td(values[1]),
+                html.Td(values[2]),
+                html.Td(values[3]),
+                html.Td(values[4]),
             ]
         )
 
@@ -293,13 +293,14 @@ def create_table_row(
     table_row.append(
         html.Tr(
             [
-                html.Td("Total", className="total-cost-row"),
-                html.Td(round(values_tot[0]), className="total-cost-row"),
-                html.Td(values_tot[1], className="total-cost-row"),
-                html.Td(values_tot[2], className="total-cost-row"),
-                html.Td(values_tot[3], className="total-cost-row"),
-                html.Td(values_tot[4], className="total-cost-row"),
-            ]
+                html.Td("Total"),
+                html.Td(round(values_tot[0])),
+                html.Td(values_tot[1]),
+                html.Td(values_tot[2]),
+                html.Td(values_tot[3]),
+                html.Td(values_tot[4]),
+            ],
+            className="total-cost-row"
         )
     )
     return table_row
