@@ -51,7 +51,7 @@ def generate_control_card() -> html.Div:
     return html.Div(
         id="control-card",
         children=[
-            html.H4("Vehicle Type"),
+            html.Label("Vehicle Type"),
             dcc.Dropdown(
                 id="vehicle-type-select",
                 options=vehicle_options,
@@ -59,7 +59,7 @@ def generate_control_card() -> html.Div:
                 clearable=False,
                 searchable=False,
             ),
-            html.H4("Sampler"),
+            html.Label("Sampler"),
             dcc.Dropdown(
                 id="sampler-type-select",
                 options=sampler_options,
@@ -67,7 +67,7 @@ def generate_control_card() -> html.Div:
                 clearable=False,
                 searchable=False,
             ),
-            html.H4("Number of vehicles to deploy"),
+            html.Label("Vehicles to Deploy"),
             dcc.Slider(
                 id="num-vehicles-select",
                 className="select",
@@ -81,7 +81,7 @@ def generate_control_card() -> html.Div:
                     "always_visible": True,
                 },
             ),
-            html.H4("Number of force locations"),
+            html.Label("Locations"),
             dcc.Slider(
                 id="num-clients-select",
                 className="select",
@@ -95,7 +95,7 @@ def generate_control_card() -> html.Div:
                     "always_visible": True,
                 },
             ),
-            html.H4("Solver Time Limit"),
+            html.Label("Solver Time Limit (seconds)"),
             dcc.Input(
                 id="solver-time-limit",
                 type="number",
