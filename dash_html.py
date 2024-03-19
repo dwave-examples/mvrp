@@ -174,43 +174,20 @@ def set_html(app):
                                         children=[
                                             html.Tr(
                                                 [
-                                                    html.Th(
-                                                        "Problem size", className="stats-heading"
-                                                    ),
-                                                    html.Th(
-                                                        "Search space", className="stats-heading"
-                                                    ),
-                                                    html.Th(
-                                                        "Wall clock time [s]",
-                                                        className="stats-heading",
-                                                    ),
-                                                    html.Th(
-                                                        "Force elements", className="stats-heading"
-                                                    ),
-                                                    html.Th(
-                                                        "Vehicles deployed",
-                                                        className="stats-heading",
-                                                    ),
+                                                    html.Th("Problem Size"),
+                                                    html.Th("Search Space"),
+                                                    html.Th("Wall Clock Time (s)"),
+                                                    html.Th("Locations"),
+                                                    html.Th("Vehicles Deployed"),
                                                 ]
                                             ),
                                             html.Tr(
                                                 [
-                                                    html.Td(
-                                                        id="problem-size", className="stats-row"
-                                                    ),
-                                                    html.Td(
-                                                        id="search-space", className="stats-row"
-                                                    ),
-                                                    html.Td(
-                                                        id="wall-clock-time", className="stats-row"
-                                                    ),
-                                                    html.Td(
-                                                        id="force-elements", className="stats-row"
-                                                    ),
-                                                    html.Td(
-                                                        id="vehicles-deployed",
-                                                        className="stats-row",
-                                                    ),
+                                                    html.Td(id="problem-size"),
+                                                    html.Td(id="search-space"),
+                                                    html.Td(id="wall-clock-time"),
+                                                    html.Td(id="force-elements"),
+                                                    html.Td(id="vehicles-deployed"),
                                                 ]
                                             ),
                                         ],
@@ -266,7 +243,7 @@ def create_table_row(
         html.Tr(
             [
                 html.Th("Vehicle"),
-                html.Th("Cost [m]"),
+                html.Th("Cost (m)"),
                 html.Th("Forces"),
                 html.Th("Water"),
                 html.Th("Food"),
@@ -280,7 +257,7 @@ def create_table_row(
         row = html.Tr(
             [
                 html.Td(i + 1),
-                html.Td(round(values[0])),
+                html.Td(str(round(values[0])) + "m"),
                 html.Td(values[1]),
                 html.Td(values[2]),
                 html.Td(values[3]),
@@ -294,7 +271,7 @@ def create_table_row(
         html.Tr(
             [
                 html.Td("Total"),
-                html.Td(round(values_tot[0])),
+                html.Td(str(round(values_tot[0])) + "m"),
                 html.Td(values_tot[1]),
                 html.Td(values_tot[2]),
                 html.Td(values_tot[3]),
