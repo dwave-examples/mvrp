@@ -162,8 +162,8 @@ def update_tables(
     ],
     running=[
         # show cancel button and disable run button, and disable and animate results tab
-        (Output("cancel-button", "style"), {"visibility": "visible"}, {"visibility": "hidden"}),
-        (Output("run-button", "disabled"), True, False),
+        (Output("cancel-button", "style"), {"display": "inline-block"}, {"display": "none"}),
+        (Output("run-button", "style"), {"display": "none"}, {"display": "inline-block"}),
         (Output("results-tab", "disabled"), True, False),
         (Output("results-tab", "className"), "tab-loading", "tab"),
         # switch to map tab while running

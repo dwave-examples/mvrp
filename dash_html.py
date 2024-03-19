@@ -111,7 +111,7 @@ def generate_control_card() -> html.Div:
                         id="cancel-button",
                         children="Cancel Optimization",
                         n_clicks=0,
-                        style={"visibility": "hidden"},
+                        style={"display": "none"},
                     ),
                 ],
             ),
