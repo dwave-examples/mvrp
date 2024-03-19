@@ -32,6 +32,7 @@ Apache License, Version 2.0
 */
 
 :root {
+    --blue-bright: #03B8FF;
     --blue-light: #2A7DE1;
     --blue-dark: #074C91;
     --red-light: #C70039;
@@ -40,13 +41,9 @@ Apache License, Version 2.0
     --teal-light: #06ECDC;
     --teal-dark: #17BEBB;
     --teal-darker: #008C82;
+    --grey-light: #EEEEEE;
+    --grey: #DDDDDD;
     --grey-dark: #222222;
-}
-
-#app-container {
-    width: auto !important;
-    min-width: 100rem;
-    white-space: nowrap;
 }
 
 @font-face {
@@ -74,8 +71,6 @@ hr {
     height: 5.5rem;
     background-color: var(--blue-dark);
 
-    /* set width so that banner covers window (left + right col + padding) */
-    min-width: calc(100rem + 38rem + 8rem);
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -122,29 +117,19 @@ label {
     font-weight: 500;
 }
 
-#left-column {
-    padding: 0rem 2rem;
+#columns {
     display: flex;
-    flex-direction: column;
-    align-items: center;
+}
 
-    width: 38rem;
-    height: calc(100vh - 5.5rem);
-
-    display: inline-block;
-    vertical-align: top;
-    white-space: normal;
+#left-column {
+    padding: 0 2rem;
+    flex: 0 0 38rem;
 }
 
 #right-column {
-    background-color: #f4f4f4;
-    padding: 1rem;
-
-    /* set width to viewport width - left col width - padding */
-    width: calc(100vw - 38rem - 8rem);
-    min-width: 100rem;
-    display: inline-block;
-    vertical-align: top;
+    background-color: var(--grey);
+    padding: 2rem 0 0;
+    width: 100%;
 }
 
 #solution-stats-table {
@@ -153,14 +138,14 @@ label {
 
 .result-table-div {
     display: inline-block;
-    padding-right: 4rem;
+    margin-right: 3rem;
 }
 
 .result-table {
-    width: 48rem;
     font-size: 1.6rem;
     border: 4px var(--blue-dark);
     border-style: solid none none solid;
+    background-color: white;
 }
 
 #solution-cost-table-div:not(:has(> table > tr)),
@@ -196,6 +181,22 @@ th:last-child, td:last-child {
 
 .select {
     padding-left: 6px !important;
+}
+
+.rc-slider-handle,
+.rc-slider-dot-active {
+    border-color: var(--blue-light);
+}
+
+.rc-slider-handle:active,
+.rc-slider-handle:hover,
+.rc-slider-handle-click-focused,
+.rc-slider-handle-click-focused:focus {
+    border-color: var(--blue-dark);
+}
+
+.rc-slider-track {
+    background-color: var(--blue-light);
 }
 
 #solution-map {
@@ -236,6 +237,43 @@ button {
 
 #cancel-button:hover {
     background-color: var(--red-dark);
+}
+
+.tab-container {
+    border-bottom: 2px solid var(--blue-light);
+}
+
+.tab {
+    margin: 0 2rem;
+    border-top-left-radius: 0.6rem;
+    border-top-right-radius: 0.6rem;
+}
+
+div.tab.tab--selected {
+    border: 2px solid var(--blue-light) !important;
+    border-bottom: none !important;
+    cursor: default !important;
+    box-shadow: 0 4px 0 -2px white;
+}
+
+div.tab.tab--disabled {
+    cursor: not-allowed !important;
+}
+
+.tab:first-child {
+    margin-right: 1rem;
+}
+
+.tab:last-child {
+    margin-left: 1rem;
+}
+
+.tab-content {
+    background-color: white;
+}
+
+.tab-content--results {
+    padding: 0 3rem 3rem;
 }
 
 .tab-fail {

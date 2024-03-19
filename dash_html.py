@@ -136,100 +136,110 @@ def set_html(app):
             dcc.Store(id="parameter-hash"),  # hash string to detect changed parameters
             # Banner
             html.Div(id="banner", children=[html.Img(src=THUMBNAIL)]),
-            # Left column
             html.Div(
-                id="left-column",
-                className="four-columns",
+                id="columns",
                 children=[
-                    description_card(),
-                    generate_control_card(),
-                    html.Div(["initial child"], id="output-clientside", style={"display": "none"}),
-                ],
-            ),
-            # Right column
-            html.Div(
-                id="right-column",
-                children=[
-                    dcc.Tabs(
-                        id="tabs",
-                        value="map-tab",
+                    # Left column
+                    html.Div(
+                        id="left-column",
+                        className="four-columns",
                         children=[
-                            dcc.Tab(
-                                label="Map",
-                                id="map-tab",
-                                value="map-tab",  # used for switching to programatically
-                                className="tab",
+                            description_card(),
+                            generate_control_card(),
+                            html.Div(["initial child"], id="output-clientside", style={"display": "none"}),
+                        ],
+                    ),
+                    # Right column
+                    html.Div(
+                        id="right-column",
+                        children=[
+                            dcc.Tabs(
+                                id="tabs",
+                                value="map-tab",
                                 children=[
-                                    dcc.Loading(
-                                        id="loading",
-                                        type="circle",
-                                        children=html.Iframe(id="solution-map")
-                                    ),],
-                            ),
-                            dcc.Tab(
-                                label="Results",
-                                id="results-tab",
-                                className="tab",
-                                disabled=True,
-                                children=[
-                                    html.H3("Solution Stats"),
-                                    html.Table(
-                                        id="solution-stats-table",
-                                        className="result-table",
+                                    dcc.Tab(
+                                        label="Map",
+                                        id="map-tab",
+                                        value="map-tab",  # used for switching to programatically
+                                        className="tab",
                                         children=[
-                                            html.Tr(
-                                                [
-                                                    html.Th("Problem Size"),
-                                                    html.Th("Search Space"),
-                                                    html.Th("Wall Clock Time (s)"),
-                                                    html.Th("Locations"),
-                                                    html.Th("Vehicles Deployed"),
-                                                ]
-                                            ),
-                                            html.Tr(
-                                                [
-                                                    html.Td(id="problem-size"),
-                                                    html.Td(id="search-space"),
-                                                    html.Td(id="wall-clock-time"),
-                                                    html.Td(id="force-elements"),
-                                                    html.Td(id="vehicles-deployed"),
-                                                ]
-                                            ),
-                                        ],
+                                            dcc.Loading(
+                                                id="loading",
+                                                type="circle",
+                                                children=html.Iframe(id="solution-map")
+                                            ),],
                                     ),
-                                    html.H3("Solution Cost"),
-                                    html.Div(
-                                        id="solution-cost-table-div",
-                                        className="result-table-div",
+                                    dcc.Tab(
+                                        label="Results",
+                                        id="results-tab",
+                                        className="tab",
+                                        disabled=True,
                                         children=[
-                                            html.H4("Quantum Hybrid", className="table-label"),
-                                            html.Table(
-                                                title="Quantum Hybrid",
-                                                className="result-table",
-                                                id="solution-cost-table",
-                                                children=[],  # add children dynamically using 'create_table_row' below
-                                            ),
-                                        ],
-                                    ),
-                                    html.Div(
-                                        id="solution-cost-table-classical-div",
-                                        className="result-table-div",
-                                        children=[
-                                            html.H4("Classical (K-Means)", className="table-label"),
-                                            html.Table(
-                                                title="Classical (K-Means)",
-                                                className="result-table",
-                                                id="solution-cost-table-classical",
-                                                children=[],  # add children dynamically using 'create_table_row' below
-                                            ),
+                                            html.Div(
+                                                className="tab-content--results",
+                                                children=[
+                                                    html.H3("Solution Stats"),
+                                                    html.Table(
+                                                        id="solution-stats-table",
+                                                        className="result-table",
+                                                        children=[
+                                                            html.Tr(
+                                                                [
+                                                                    html.Th("Problem Size"),
+                                                                    html.Th("Search Space"),
+                                                                    html.Th("Wall Clock Time (s)"),
+                                                                    html.Th("Locations"),
+                                                                    html.Th("Vehicles Deployed"),
+                                                                ]
+                                                            ),
+                                                            html.Tr(
+                                                                [
+                                                                    html.Td(id="problem-size"),
+                                                                    html.Td(id="search-space"),
+                                                                    html.Td(id="wall-clock-time"),
+                                                                    html.Td(id="force-elements"),
+                                                                    html.Td(id="vehicles-deployed"),
+                                                                ]
+                                                            ),
+                                                        ],
+                                                    ),
+                                                    html.H3("Solution Cost"),
+                                                    html.Div(
+                                                        id="solution-cost-table-div",
+                                                        className="result-table-div",
+                                                        children=[
+                                                            html.H4("Quantum Hybrid", className="table-label"),
+                                                            html.Table(
+                                                                title="Quantum Hybrid",
+                                                                className="result-table",
+                                                                id="solution-cost-table",
+                                                                children=[],  # add children dynamically using 'create_table_row' below
+                                                            ),
+                                                        ],
+                                                    ),
+                                                    html.Div(
+                                                        id="solution-cost-table-classical-div",
+                                                        className="result-table-div",
+                                                        children=[
+                                                            html.H4("Classical (K-Means)", className="table-label"),
+                                                            html.Table(
+                                                                title="Classical (K-Means)",
+                                                                className="result-table",
+                                                                id="solution-cost-table-classical",
+                                                                children=[],  # add children dynamically using 'create_table_row' below
+                                                            ),
+                                                        ],
+                                                    ),
+                                                ]
+                                            )
                                         ],
                                     ),
                                 ],
-                            ),
+                            )
                         ],
-                    )
-                ],
-            ),
+                    ),
+                ]
+            )
         ],
     )
 
