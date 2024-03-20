@@ -46,12 +46,6 @@ Apache License, Version 2.0
     --grey-dark: #222222;
 }
 
-@font-face {
-    font-family: Acumin;
-    font-weight: bold;
-    src: url("Acumin-BdPro.otf") format("opentype");
-}
-
 body {
     background-color: #f9f9f9;
     color: var(--grey-dark);
@@ -84,7 +78,7 @@ hr {
 }
 
 h1, h2, h3, h4, h5, h6, td, th, span, a, p, label {
-    font-family: Acumin, "Helvetica Neue", sans-serif;
+    font-family: "Helvetica Neue", sans-serif;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -148,9 +142,13 @@ label {
     background-color: white;
 }
 
-#solution-cost-table-div:not(:has(> table > tr)),
-#solution-cost-table-classical-div:not(:has(> table > tr)) {
+#solution-cost-table-div:not(:has(> table > thead)),
+#solution-cost-table-classical-div:not(:has(> table > thead)) {
     display: none;
+}
+
+table {
+    margin-bottom: 2rem;
 }
 
 th {
@@ -266,6 +264,11 @@ div.tab.tab--disabled {
 
 .tab:last-child {
     margin-left: 1rem;
+}
+
+.tab-content,
+.tab-parent {
+    height: 100%;
 }
 
 .tab-content {

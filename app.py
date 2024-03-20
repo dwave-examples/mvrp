@@ -26,7 +26,7 @@ from dash import DiskcacheManager, callback_context, ctx
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 
-from dash_html import create_table_row, set_html
+from dash_html import create_table, set_html
 from map import (generate_mapping_information, plot_solution_routes_on_map,
                  show_locations_on_initial_map)
 from solver.solver import RoutingProblemParameters, SamplerType, Solver, VehicleType
@@ -261,8 +261,8 @@ def run_optimiation(
             for key, value in cost_info_dict.items():
                 total_cost[key] += value
 
-        cost_table = create_table_row(
-            num_vehicles, list(solution_cost.values()), list(total_cost.values())
+        cost_table = create_table(
+            list(solution_cost.values()), list(total_cost.values())
         )
         solution_map.save("solution_map.html")
 

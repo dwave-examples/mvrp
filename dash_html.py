@@ -183,24 +183,32 @@ def set_html(app):
                                                         id="solution-stats-table",
                                                         className="result-table",
                                                         children=[
-                                                            html.Tr(
+                                                            html.Thead(
                                                                 [
-                                                                    html.Th("Problem Size"),
-                                                                    html.Th("Search Space"),
-                                                                    html.Th("Wall Clock Time (s)"),
-                                                                    html.Th("Locations"),
-                                                                    html.Th("Vehicles Deployed"),
+                                                                    html.Tr(
+                                                                        [
+                                                                            html.Th("Problem Size"),
+                                                                            html.Th("Search Space"),
+                                                                            html.Th("Wall Clock Time (s)"),
+                                                                            html.Th("Locations"),
+                                                                            html.Th("Vehicles Deployed"),
+                                                                        ]
+                                                                    )
                                                                 ]
                                                             ),
-                                                            html.Tr(
+                                                            html.Tbody(
                                                                 [
-                                                                    html.Td(id="problem-size"),
-                                                                    html.Td(id="search-space"),
-                                                                    html.Td(id="wall-clock-time"),
-                                                                    html.Td(id="force-elements"),
-                                                                    html.Td(id="vehicles-deployed"),
+                                                                    html.Tr(
+                                                                        [
+                                                                            html.Td(id="problem-size"),
+                                                                            html.Td(id="search-space"),
+                                                                            html.Td(id="wall-clock-time"),
+                                                                            html.Td(id="force-elements"),
+                                                                            html.Td(id="vehicles-deployed"),
+                                                                        ]
+                                                                    )
                                                                 ]
-                                                            ),
+                                                            )
                                                         ],
                                                     ),
                                                     html.H3("Solution Cost"),
@@ -213,7 +221,7 @@ def set_html(app):
                                                                 title="Quantum Hybrid",
                                                                 className="result-table",
                                                                 id="solution-cost-table",
-                                                                children=[],  # add children dynamically using 'create_table_row' below
+                                                                children=[],  # add children dynamically using 'create_table' below
                                                             ),
                                                         ],
                                                     ),
@@ -226,7 +234,7 @@ def set_html(app):
                                                                 title="Classical (K-Means)",
                                                                 className="result-table",
                                                                 id="solution-cost-table-classical",
-                                                                children=[],  # add children dynamically using 'create_table_row' below
+                                                                children=[],  # add children dynamically using 'create_table' below
                                                             ),
                                                         ],
                                                     ),
@@ -243,56 +251,60 @@ def set_html(app):
         ],
     )
 
+def create_row_cells(values: list) -> list[html.Td]:
+    return [ # List required to execute loop, unpack after to maintain required structure
+                html.Td(
+                    str(round(value)) + "m" if iteration == 0 else value # Round and add unit to first iteration (cost)
+                )
+                for iteration, value in enumerate(values)
+            ]
 
-def create_table_row(
-    num_vehicles: int, values_dicts: dict[int, dict], values_tot: list
-) -> list[html.Tr]:
+def create_table(
+    values_dicts: dict[int, dict], values_tot: list
+) -> list[html.Thead, html.Tbody, html.Tfoot]:
     """Create a row in the table dynamically.
 
     Args:
-        num_vehicles: Number of vehicles (i.e., number of table rows).
         values_dicts: List of dictionaries with vehicle number as results data as values.
         values_tot: List of total results data (sum of individual vehicle data).
     """
-    table_row = [
-        html.Tr(
+
+    table = [
+        html.Thead(
             [
-                html.Th("Vehicle"),
-                html.Th("Cost (m)"),
-                html.Th("Forces"),
-                html.Th("Water"),
-                html.Th("Food"),
-                html.Th("Other"),
+                html.Tr(
+                    [
+                        html.Th("Vehicle"),
+                        html.Th("Cost (m)"),
+                        html.Th("Forces"),
+                        html.Th("Water"),
+                        html.Th("Food"),
+                        html.Th("Other"),
+                    ]
+                )
+            ]
+        ),
+        html.Tbody(
+            [
+                html.Tr(
+                    [
+                        html.Td(index + 1),
+                        *create_row_cells(list(vehicle.values())), # Unpack list to maintain required structure
+                    ]
+                ) for index, vehicle in enumerate(values_dicts)
+            ]
+        ),
+        html.Tfoot(
+            [
+                html.Tr(
+                    [
+                        html.Td("Total"),
+                        *create_row_cells(values_tot), # Unpack list to maintain required structure
+                    ],
+                    className="total-cost-row"
+                )
             ]
         )
     ]
-    for i in range(num_vehicles):
-        values = list(values_dicts[i].values())
 
-        row = html.Tr(
-            [
-                html.Td(i + 1),
-                html.Td(str(round(values[0])) + "m"),
-                html.Td(values[1]),
-                html.Td(values[2]),
-                html.Td(values[3]),
-                html.Td(values[4]),
-            ]
-        )
-
-        table_row.append(row)
-
-    table_row.append(
-        html.Tr(
-            [
-                html.Td("Total"),
-                html.Td(str(round(values_tot[0])) + "m"),
-                html.Td(values_tot[1]),
-                html.Td(values_tot[2]),
-                html.Td(values_tot[3]),
-                html.Td(values_tot[4]),
-            ],
-            className="total-cost-row"
-        )
-    )
-    return table_row
+    return table
