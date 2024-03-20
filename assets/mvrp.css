@@ -238,7 +238,7 @@ button {
 }
 
 .tab-container {
-    border-bottom: 2px solid var(--blue-light);
+    border-bottom: 3px solid var(--blue-light);
 }
 
 .tab {
@@ -248,10 +248,10 @@ button {
 }
 
 div.tab.tab--selected {
-    border: 2px solid var(--blue-light) !important;
+    border: 3px solid var(--blue-light) !important;
     border-bottom: none !important;
     cursor: default !important;
-    box-shadow: 0 4px 0 -2px white;
+    box-shadow: 0 6px 0 -3px white;
 }
 
 div.tab.tab--disabled {
@@ -298,28 +298,33 @@ div.tab.tab--disabled {
 .tab-loading {
     overflow: hidden;
     position: relative;
-  }
+}
 
-.tab-loading::before, .tab-loading::after {
+.tab-loading::before,
+.tab-loading::after {
     content: '';
     box-sizing: border-box;
     position: absolute;
-    border: 2px solid transparent;
+    border: 3px solid transparent;
+    border-top-left-radius: 0.6rem;
+    border-top-right-radius: 0.6rem;
     width: 0;
     height: 0;
 }
 
 .tab-loading::before {
-    top: 0;
+    bottom: 0;
     left: 0;
-    border-top-color: var(--teal-light);
-    border-right-color: var(--teal-light);
+    border-left-color: var(--teal-dark);
+    border-top-color: var(--teal-dark);
     animation: border1 2s infinite;
 }
 
 .tab-loading::after {
-    bottom: 0;
+    top: 0;
     right: 0;
+    border-bottom-color: var(--teal-dark);
+    border-right-color: var(--teal-dark);
     animation: border1 2s 1s infinite, borderColor1 2s 1s infinite;
 }
 
@@ -329,8 +334,8 @@ div.tab.tab--disabled {
         height: 0;
     }
     25% {
-        width: 100%;
-        height: 0;
+        width: 0;
+        height: 100%;
     }
     50% {
         width: 100%;
@@ -341,21 +346,22 @@ div.tab.tab--disabled {
         height: 100%;
     }
 }
+
 @keyframes borderColor1 {
     0% {
-        border-bottom-color: var(--teal-light);
-        border-left-color: var(--teal-light);
+        border-bottom-color: var(--teal-dark);
+        border-right-color: var(--teal-dark);
     }
     50% {
-        border-bottom-color: var(--teal-light);
-        border-left-color: var(--teal-light);
+        border-bottom-color: var(--teal-dark);
+        border-right-color: var(--teal-dark);
     }
     51% {
         border-bottom-color: transparent;
-        border-left-color: transparent;
+        border-right-color: transparent;
     }
     100% {
         border-bottom-color: transparent;
-        border-left-color: transparent;
+        border-right-color: transparent;
     }
 }
