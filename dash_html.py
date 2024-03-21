@@ -59,14 +59,6 @@ def generate_control_card() -> html.Div:
                 clearable=False,
                 searchable=False,
             ),
-            html.Label("Sampler"),
-            dcc.Dropdown(
-                id="sampler-type-select",
-                options=sampler_options,
-                value=sampler_options[0]["value"],
-                clearable=False,
-                searchable=False,
-            ),
             html.Label("Vehicles to Deploy"),
             dcc.Slider(
                 id="num-vehicles-select",
@@ -94,6 +86,14 @@ def generate_control_card() -> html.Div:
                     "placement": "top",
                     "always_visible": True,
                 },
+            ),
+            html.Label("Solver"),
+            dcc.Dropdown(
+                id="sampler-type-select",
+                options=sampler_options,
+                value=sampler_options[0]["value"],
+                clearable=False,
+                searchable=False,
             ),
             html.Label("Solver Time Limit (seconds)"),
             dcc.Input(
