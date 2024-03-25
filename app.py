@@ -181,9 +181,9 @@ def run_optimiation(
     num_vehicles: int,
     time_limit: float,
     num_clients: int,
-    cost_table: list[html.Tr],
+    cost_table: list[html.Thead, html.Tbody, html.Tfoot],
     previous_parameter_hash: str,
-) -> tuple[str, list[html.Tr], int, str, str, int, int]:
+) -> tuple[str, list[html.Thead, html.Tbody, html.Tfoot], int, str, str, int, int]:
     """Run the optimization and update map and results tables.
 
     This is the main optimization function which is called when the Run optimization button is
