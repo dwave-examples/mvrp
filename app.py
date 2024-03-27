@@ -280,7 +280,7 @@ def run_optimiation(
             str(parameter_hash),
             problem_size,
             search_space,
-            wall_clock_time + "s",
+            wall_clock_time,
             num_clients,
             num_vehicles,
         )

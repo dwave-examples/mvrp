@@ -69,7 +69,7 @@ def generate_control_card() -> html.Div:
                     NUM_VEHICLES["max"]: str(NUM_VEHICLES["max"]),
                 },
                 tooltip={
-                    "placement": "top",
+                    "placement": "bottom",
                     "always_visible": True,
                 },
             ),
@@ -83,7 +83,7 @@ def generate_control_card() -> html.Div:
                     NUM_CLIENT_LOCATIONS["max"]: str(NUM_CLIENT_LOCATIONS["max"]),
                 },
                 tooltip={
-                    "placement": "top",
+                    "placement": "bottom",
                     "always_visible": True,
                 },
             ),
@@ -255,7 +255,7 @@ def set_html(app):
 def create_row_cells(values: list) -> list[html.Td]:
     return [ # List required to execute loop, unpack after to maintain required structure
                 html.Td(
-                    str(round(value)) + "m" if iteration == 0 else value # Round and add unit to first iteration (cost)
+                    round(value)
                 )
                 for iteration, value in enumerate(values)
             ]

@@ -41,8 +41,10 @@ Apache License, Version 2.0
     --teal-light: #06ECDC;
     --teal-dark: #17BEBB;
     --teal-darker: #008C82;
-    --grey-light: #EEEEEE;
-    --grey: #DDDDDD;
+    --grey-lighter: #EEEEEE;
+    --grey-light: #DDDDDD;
+    --grey: #AAAAAA;
+    --grey-medium: #777777;
     --grey-dark: #222222;
 }
 
@@ -121,7 +123,7 @@ label {
 }
 
 #right-column {
-    background-color: var(--grey);
+    background-color: var(--grey-light);
     padding: 2rem 0 0;
     width: 100%;
 }
@@ -163,6 +165,7 @@ td {
 
 th, td {
     padding: 0.6rem 1.2rem;
+    text-align: right;
 }
 
 th:first-child, td:first-child {
@@ -197,6 +200,52 @@ th:last-child, td:last-child {
     background-color: var(--blue-light);
 }
 
+.rc-slider-tooltip-inner {
+    background-color: white;
+    color: var(--grey-dark);
+    border: 1px solid var(--grey);
+    border-radius: 2px;
+}
+
+.rc-slider-tooltip .rc-slider-tooltip-arrow {
+    display: none;
+}
+
+.rc-slider-tooltip-inner:before,
+.rc-slider-tooltip-inner:after {
+    content: '';
+    display: block;
+    position: absolute;
+    width: 0;
+    height: 0;
+}
+
+.rc-slider-tooltip-inner:before {
+    left: 6px;
+    top: -11px;
+    border: 6px solid transparent;
+    border-bottom-color: var(--grey);
+}
+
+.rc-slider-tooltip-inner:after {
+    left: 7px;
+    top: -9px;
+    border: 5px solid transparent;
+    border-bottom-color: white;
+}
+
+.rc-slider-tooltip-placement-top .rc-slider-tooltip-inner:before {
+    bottom: -3px;
+    top: auto;
+    transform: rotate(180deg);
+}
+
+.rc-slider-tooltip-placement-top .rc-slider-tooltip-inner:after {
+    bottom: -1px;
+    top: auto;
+    transform: rotate(180deg);
+}
+
 #solution-map {
     border: none;
 
@@ -219,6 +268,7 @@ button {
     color: white;
     transition: background-color 0.2s ease-in-out;
     margin-bottom: 2rem;
+    border: none;
 }
 
 #run-button {
