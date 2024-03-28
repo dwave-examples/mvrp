@@ -118,8 +118,22 @@ label {
 }
 
 #left-column {
+    display: flex;
+}
+
+#left-column > div > div {
     padding: 0 2rem;
-    flex: 0 0 38rem;
+    width: 38rem;
+}
+
+#left-column > div:first-child {
+    width: 42rem;
+    transition: width 0.6s ease-in-out;
+    overflow: hidden;
+}
+
+#left-column.collapsed > div:first-child {
+    width: 0;
 }
 
 #right-column {
@@ -259,7 +273,7 @@ th:last-child, td:last-child {
     font-weight: bold;
 }
 
-button {
+button:not(#left-column-collapse) {
     width: 100%;
     font-size: 1.4rem;
     line-height: 1.4rem;
@@ -269,6 +283,30 @@ button {
     transition: background-color 0.2s ease-in-out;
     margin-bottom: 2rem;
     border: none;
+}
+
+#left-column-collapse {
+    background: white;
+    border: none;
+    height: 100%;
+    border-radius: 0;
+    padding: 0 0.2rem 0 1rem;
+}
+
+#left-column-collapse div {
+    border-right: 4px solid var(--grey-light);
+    border-bottom: 4px solid var(--grey-light);
+    transform: rotate(135deg) skew(165deg, 165deg);
+    height: 2rem;
+    width: 2rem;
+}
+
+.collapsed #left-column-collapse {
+    padding: 0 1rem 0 0.2rem;
+}
+
+.collapsed #left-column-collapse div {
+    transform: rotate(315deg) skew(165deg, 165deg);
 }
 
 #run-button {

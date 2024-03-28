@@ -54,6 +54,20 @@ BASE_PATH = Path(__file__).parent.resolve()
 DATA_PATH = BASE_PATH.joinpath("input").resolve()
 
 
+@app.callback(
+    Output("left-column", "className"),
+    inputs=[
+        Input("left-column-collapse", "n_clicks"),
+        State("left-column", "className"),
+    ],
+    prevent_initial_call=True,
+)
+def toggle_left_column(left_column, class_name):
+    if class_name:
+        return ""
+    return "collapsed"
+
+
 def generate_inital_map(num_clients: int) -> folium.Map:
     """Generates the initial map.
 
