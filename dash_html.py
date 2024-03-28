@@ -185,7 +185,7 @@ def set_html(app):
                                             html.Div(
                                                 className="tab-content--results",
                                                 children=[
-                                                    html.H3("Solution Stats"),
+                                                    html.H3("Problem Details"),
                                                     html.Table(
                                                         id="solution-stats-table",
                                                         className="result-table",
@@ -196,7 +196,6 @@ def set_html(app):
                                                                         [
                                                                             html.Th("Problem Size"),
                                                                             html.Th("Search Space"),
-                                                                            html.Th("Wall Clock Time (s)"),
                                                                             html.Th("Locations"),
                                                                             html.Th("Vehicles Deployed"),
                                                                         ]
@@ -209,7 +208,6 @@ def set_html(app):
                                                                         [
                                                                             html.Td(id="problem-size"),
                                                                             html.Td(id="search-space"),
-                                                                            html.Td(id="wall-clock-time"),
                                                                             html.Td(id="force-elements"),
                                                                             html.Td(id="vehicles-deployed"),
                                                                         ]
@@ -223,7 +221,13 @@ def set_html(app):
                                                         id="solution-cost-table-div",
                                                         className="result-table-div",
                                                         children=[
-                                                            html.H4("Quantum Hybrid", className="table-label"),
+                                                            html.H4(
+                                                                children=[
+                                                                    "Quantum Hybrid ",
+                                                                    html.Span(id="wall-clock-time-quantum")
+                                                                ],
+                                                                className="table-label"
+                                                            ),
                                                             html.Table(
                                                                 title="Quantum Hybrid",
                                                                 className="result-table",
@@ -236,7 +240,13 @@ def set_html(app):
                                                         id="solution-cost-table-classical-div",
                                                         className="result-table-div",
                                                         children=[
-                                                            html.H4("Classical (K-Means)", className="table-label"),
+                                                            html.H4(
+                                                                children=[
+                                                                    "Classical (K-Means) ",
+                                                                    html.Span(id="wall-clock-time-classical")
+                                                                ],
+                                                                className="table-label"
+                                                            ),
                                                             html.Table(
                                                                 title="Classical (K-Means)",
                                                                 className="result-table",

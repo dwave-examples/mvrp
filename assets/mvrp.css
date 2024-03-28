@@ -106,6 +106,13 @@ h4 {
 
 h4.table-label {
     margin: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: self-end;
+}
+
+h4.table-label span {
+    font-size: 1.8rem;
 }
 
 label {

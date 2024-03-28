@@ -160,7 +160,8 @@ def update_tables(
     # update table values in top results tab
     Output("problem-size", "children"),
     Output("search-space", "children"),
-    Output("wall-clock-time", "children"),
+    Output("wall-clock-time-classical", "children"),
+    Output("wall-clock-time-quantum", "children"),
     Output("force-elements", "children"),
     Output("vehicles-deployed", "children"),
     inputs=[
@@ -197,7 +198,7 @@ def run_optimiation(
     num_clients: int,
     cost_table: list[html.Thead, html.Tbody, html.Tfoot],
     previous_parameter_hash: str,
-) -> tuple[str, list[html.Thead, html.Tbody, html.Tfoot], int, str, str, int, int]:
+) -> tuple[str, list[html.Thead, html.Tbody, html.Tfoot], int, str, str, str, int, int]:
     """Run the optimization and update map and results tables.
 
     This is the main optimization function which is called when the Run optimization button is
@@ -294,7 +295,8 @@ def run_optimiation(
             str(parameter_hash),
             problem_size,
             search_space,
-            wall_clock_time,
+            "Clock time: " + wall_clock_time + "s" if sampler_type is SamplerType.KMEANS else "",
+            "" if sampler_type is SamplerType.KMEANS else "Clock time: " + wall_clock_time + "s",
             num_clients,
             num_vehicles,
         )
