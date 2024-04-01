@@ -120,8 +120,15 @@ label {
     font-weight: 500;
 }
 
+#app-container {
+    min-width: 1000px;
+}
+
 #columns {
     display: flex;
+
+    /* Height of screen minus height of banner */
+    height: calc(100vh - 5.5rem);
 }
 
 #left-column {
@@ -269,11 +276,8 @@ th:last-child, td:last-child {
 
 #solution-map {
     border: none;
-
     width: 100%;
-    /* set height to viewport - (banner + tabs) */
-    height: calc(100vh - 15rem);
-    min-height: 70rem;
+    height: 100%;
 }
 
 #control-card > p {
@@ -288,16 +292,17 @@ button:not(#left-column-collapse) {
     height: auto;
     color: white;
     transition: background-color 0.2s ease-in-out;
-    margin-bottom: 2rem;
+    margin-bottom: 4rem;
     border: none;
 }
 
 #left-column-collapse {
     background: white;
-    border: none;
+    border: 1px var(--grey-lighter);
+    border-style: none solid none none;
     height: 100%;
     border-radius: 0;
-    padding: 0 0.2rem 0 1rem;
+    padding: 0 0 0 0.8rem;
 }
 
 #left-column-collapse div {
@@ -309,7 +314,7 @@ button:not(#left-column-collapse) {
 }
 
 .collapsed #left-column-collapse {
-    padding: 0 1rem 0 0.2rem;
+    padding: 0 0.8rem 0 0;
 }
 
 .collapsed #left-column-collapse div {
@@ -334,12 +339,14 @@ button:not(#left-column-collapse) {
 
 .tab-container {
     border-bottom: 3px solid var(--blue-light);
+    flex-direction: row !important;
 }
 
 .tab {
     margin: 0 2rem;
     border-top-left-radius: 0.6rem;
     border-top-right-radius: 0.6rem;
+    width: calc(100% / 2) !important;
 }
 
 div.tab.tab--selected {
@@ -366,12 +373,16 @@ div.tab.tab--disabled {
     height: 100%;
 }
 
+.tab-content > div:not(.tab-content--results) {
+    height: inherit;
+}
+
 .tab-content {
     background-color: white;
 }
 
 .tab-content--results {
-    padding: 0 3rem 3rem;
+    padding: 0 3rem;
 }
 
 .tab-fail {
