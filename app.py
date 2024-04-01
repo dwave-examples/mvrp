@@ -174,6 +174,8 @@ def update_tables(
         # input and output result table (to update it dynamically)
         State("solution-cost-table", "children"),
         State("parameter-hash", "data"),
+        State("wall-clock-time-classical", "children"),
+        State("wall-clock-time-quantum", "children"),
     ],
     running=[
         # show cancel button and disable run button, and disable and animate results tab
@@ -198,6 +200,8 @@ def run_optimiation(
     num_clients: int,
     cost_table: list[html.Thead, html.Tbody, html.Tfoot],
     previous_parameter_hash: str,
+    wall_clock_time_classical: str,
+    wall_clock_time_quantum: str,
 ) -> tuple[str, list[html.Thead, html.Tbody, html.Tfoot], int, str, str, str, int, int]:
     """Run the optimization and update map and results tables.
 
@@ -287,6 +291,11 @@ def run_optimiation(
         else:
             reset_results = False
 
+        if sampler_type is SamplerType.KMEANS:
+            wall_clock_time_classical = "Wall clock time: " + wall_clock_time + "s"
+        else:
+            wall_clock_time_quantum = "Wall clock time: " + wall_clock_time + "s"
+
         return (
             open("solution_map.html", "r").read(),
             cost_table,
@@ -295,8 +304,8 @@ def run_optimiation(
             str(parameter_hash),
             problem_size,
             search_space,
-            "Clock time: " + wall_clock_time + "s" if sampler_type is SamplerType.KMEANS else "",
-            "" if sampler_type is SamplerType.KMEANS else "Clock time: " + wall_clock_time + "s",
+            wall_clock_time_classical,
+            wall_clock_time_quantum,
             num_clients,
             num_vehicles,
         )

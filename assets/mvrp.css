@@ -128,7 +128,7 @@ label {
     display: flex;
 
     /* Height of screen minus height of banner */
-    height: calc(100vh - 5.5rem);
+    min-height: calc(100vh - 5.5rem);
 }
 
 #left-column {
@@ -302,7 +302,7 @@ button:not(#left-column-collapse) {
     border-style: none solid none none;
     height: 100%;
     border-radius: 0;
-    padding: 0 0 0 0.8rem;
+    padding: 0 0 0 0.5rem;
 }
 
 #left-column-collapse div {
@@ -311,14 +311,20 @@ button:not(#left-column-collapse) {
     transform: rotate(135deg) skew(165deg, 165deg);
     height: 2rem;
     width: 2rem;
+    margin-right: -0.3rem;
+    transition: border-color 0.25s ease-in-out;
+}
+
+#left-column-collapse:hover div {
+    border-color: var(--grey);
 }
 
 .collapsed #left-column-collapse {
-    padding: 0 0.8rem 0 0;
+    padding: 0 0.5rem 0 0;
 }
 
 .collapsed #left-column-collapse div {
-    transform: rotate(315deg) skew(165deg, 165deg);
+    transform: rotate(315deg) skew(160deg, 160deg);
 }
 
 #run-button {
