@@ -178,7 +178,7 @@ def update_tables(
         State("wall-clock-time-quantum", "children"),
     ],
     running=[
-        # show cancel button and disable run button, and disable and animate results tab
+        # show cancel button and hide run button, and disable and animate results tab
         (Output("cancel-button", "style"), {"display": "inline-block"}, {"display": "none"}),
         (Output("run-button", "style"), {"display": "none"}, {"display": "inline-block"}),
         (Output("results-tab", "disabled"), True, False),
