@@ -162,7 +162,6 @@ label {
 
 .result-table-div {
     display: inline-block;
-    margin-right: 3rem;
 }
 
 .result-table {
@@ -170,6 +169,10 @@ label {
     border: 4px var(--blue-dark);
     border-style: solid none none solid;
     background-color: white;
+}
+
+#solution-cost-table-div {
+    margin-right: 3rem;
 }
 
 #solution-cost-table-div:not(:has(> table > thead)),

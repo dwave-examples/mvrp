@@ -183,8 +183,6 @@ def update_tables(
         # input and output result table (to update it dynamically)
         State("solution-cost-table", "children"),
         State("parameter-hash", "data"),
-        State("wall-clock-time-classical", "children"),
-        State("wall-clock-time-quantum", "children"),
     ],
     running=[
         # show cancel button and hide run button, and disable and animate results tab
@@ -209,8 +207,6 @@ def run_optimization(
     num_clients: int,
     cost_table: list,
     previous_parameter_hash: str,
-    wall_clock_time_classical: str,
-    wall_clock_time_quantum: str,
 ) -> tuple[str, list, str, bool, str, int, str, str, str, int, int]:
     """Run the optimization and update map and results tables.
 
@@ -229,6 +225,7 @@ def run_optimization(
         time_limit: The solver time limit.
         num_clients: The number of force locations.
         cost_table: The html 'Solution cost' table. Used to update it dynamically.
+        previous_parameter_hash: Previous hash string to detect changed parameters
 
     Returns:
         A tuple containing all outputs to be used when updating the HTML template (in
@@ -242,8 +239,8 @@ def run_optimization(
             parameter-hash: Hash string to detect changed parameters.
             problem-size: Updates the problem-size entry in the Solution stats table.
             search-space: Updates the search-space entry in the Solution stats table.
-            wall-clock-time-classical: Updates the wall clock time in the Classical table header.
-            wall-clock-time-quantum: Updates the wall clock time in the Hybrid Quantum table header.
+            wall-clock-time: Updates the wall clock time in the Classical table header.
+            wall-clock-time: Updates the wall clock time in the Hybrid Quantum table header.
             force-elements: Updates the force-elements entry in the Solution stats table.
             vehicles-deployed: Updates the vehicles-deployed entry in the Solution stats table.
     """
@@ -282,7 +279,7 @@ def run_optimization(
 
         problem_size = num_vehicles * num_clients
         search_space = f"{num_vehicles**num_clients:.2e}"
-        wall_clock_time = f"{wall_clock_time:.3f}"
+        wall_clock_time = f"Wall clock time: {wall_clock_time:.3f}s"
 
         solution_cost = dict(sorted(solution_cost.items()))
         total_cost = defaultdict(int)
@@ -301,11 +298,6 @@ def run_optimization(
         else:
             reset_results = False
 
-        if sampler_type is SamplerType.KMEANS:
-            wall_clock_time_classical = "Wall clock time: " + wall_clock_time + "s"
-        else:
-            wall_clock_time_quantum = "Wall clock time: " + wall_clock_time + "s"
-
         return (
             open("solution_map.html", "r").read(),
             cost_table,
@@ -314,8 +306,8 @@ def run_optimization(
             str(parameter_hash),
             problem_size,
             search_space,
-            wall_clock_time_classical,
-            wall_clock_time_quantum,
+            wall_clock_time if sampler_type is SamplerType.KMEANS else dash.no_update,
+            wall_clock_time if sampler_type is SamplerType.DQM else dash.no_update,
             num_clients,
             num_vehicles,
         )
