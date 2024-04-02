@@ -235,6 +235,10 @@ th:last-child, td:last-child {
     border-radius: 2px;
 }
 
+.rc-slider-tooltip {
+    z-index: -1;
+}
+
 .rc-slider-tooltip .rc-slider-tooltip-arrow {
     display: none;
 }
