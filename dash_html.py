@@ -269,12 +269,8 @@ def set_html(app):
     )
 
 def create_row_cells(values: list) -> list[html.Td]:
-    return [ # List required to execute loop, unpack after to maintain required structure
-                html.Td(
-                    round(value)
-                )
-                for iteration, value in enumerate(values)
-            ]
+    """List required to execute loop, unpack after to maintain required structure."""
+    return [html.Td(round(value)) for iteration, value in enumerate(values)]
 
 def create_table(
     values_dicts: dict[int, dict], values_tot: list
