@@ -62,7 +62,16 @@ DATA_PATH = BASE_PATH.joinpath("input").resolve()
     ],
     prevent_initial_call=True,
 )
-def toggle_left_column(left_column, class_name):
+def toggle_left_column(left_column_collapse: int, class_name: str) -> str:
+    """Toggles left column 'collapsed' class that hides and shows the left column.
+
+    Args:
+        left_column_collapse (int): The (total) number of times the collapse button has been clicked.
+        class_name (str): Current class name of the left column, 'collapsed' if not visible, empty string if visible
+
+    Returns:
+        str: The new class name of the left column.
+    """
     if class_name:
         return ""
     return "collapsed"
