@@ -138,7 +138,7 @@ def update_tables(
     """Update the results tables each time a run is made.
 
     Args:
-        run_in_progress: Whether or not the ``run_optimiation`` callback is running.
+        run_in_progress: Whether or not the ``run_optimization`` callback is running.
         stored_results: The results tab from the latest run.
         reset_results: Whether or not to reset the results tables before applying the new one.
         sampler_type: The sampler type used in the latest run (``"quantum"`` or ``"classical"``)
@@ -200,18 +200,18 @@ def update_tables(
     cancel=[Input("cancel-button", "n_clicks")],
     prevent_initial_call=True,
 )
-def run_optimiation(
+def run_optimization(
     run_click: int,
     vehicle_type: Union[VehicleType, int],
     sampler_type: Union[SamplerType, int],
     num_vehicles: int,
     time_limit: float,
     num_clients: int,
-    cost_table: list[html.Thead, html.Tbody, html.Tfoot],
+    cost_table: list,
     previous_parameter_hash: str,
     wall_clock_time_classical: str,
     wall_clock_time_quantum: str,
-) -> tuple[str, list[html.Thead, html.Tbody, html.Tfoot], int, str, str, str, int, int]:
+) -> tuple[str, list, str, bool, str, int, str, str, str, int, int]:
     """Run the optimization and update map and results tables.
 
     This is the main optimization function which is called when the Run optimization button is
@@ -242,7 +242,8 @@ def run_optimiation(
             parameter-hash: Hash string to detect changed parameters.
             problem-size: Updates the problem-size entry in the Solution stats table.
             search-space: Updates the search-space entry in the Solution stats table.
-            wall-clock-time: Updates the wall-clock-time entry in the Solution stats table.
+            wall-clock-time-classical: Updates the wall clock time in the Classical table header.
+            wall-clock-time-quantum: Updates the wall clock time in the Hybrid Quantum table header.
             force-elements: Updates the force-elements entry in the Solution stats table.
             vehicles-deployed: Updates the vehicles-deployed entry in the Solution stats table.
     """

@@ -274,7 +274,7 @@ def create_row_cells(values: list) -> list[html.Td]:
 
 def create_table(
     values_dicts: dict[int, dict], values_tot: list
-) -> list[html.Thead, html.Tbody, html.Tfoot]:
+) -> list:
     """Create a row in the table dynamically.
 
     Args:
