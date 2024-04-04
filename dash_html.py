@@ -143,8 +143,8 @@ def set_html(app):
                     html.Div(
                         id="left-column",
                         children=[
-                            html.Div([
-                                html.Div([
+                            html.Div([ # Fixed width Div to collapse
+                                html.Div([ # Padding and content wrapper
                                     description_card(),
                                     generate_control_card(),
                                     html.Div(["initial child"], id="output-clientside", style={"display": "none"}),
