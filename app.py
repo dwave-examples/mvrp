@@ -239,8 +239,8 @@ def run_optimization(
             parameter-hash: Hash string to detect changed parameters.
             problem-size: Updates the problem-size entry in the Solution stats table.
             search-space: Updates the search-space entry in the Solution stats table.
-            wall-clock-time: Updates the wall clock time in the Classical table header.
-            wall-clock-time: Updates the wall clock time in the Hybrid Quantum table header.
+            wall-clock-time-classical: Updates the wall clock time in the Classical table header.
+            wall-clock-time-quantum: Updates the wall clock time in the Hybrid Quantum table header.
             force-elements: Updates the force-elements entry in the Solution stats table.
             vehicles-deployed: Updates the vehicles-deployed entry in the Solution stats table.
     """
