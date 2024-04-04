@@ -32,7 +32,7 @@ def description_card():
     """A Div containing dashboard title & descriptions."""
     return html.Div(
         id="description-card",
-        children=[html.H2(MAIN_HEADER), html.P(DESCRIPTION)],
+        children=[html.H1(MAIN_HEADER), html.P(DESCRIPTION)],
     )
 
 
@@ -50,9 +50,8 @@ def generate_control_card() -> html.Div:
 
     return html.Div(
         id="control-card",
-        style={"padding-top": "20px", "padding-right": "20px"},
         children=[
-            html.H4("Vehicle Type", className="control-p"),
+            html.Label("Vehicle Type"),
             dcc.Dropdown(
                 id="vehicle-type-select",
                 options=vehicle_options,
@@ -60,7 +59,35 @@ def generate_control_card() -> html.Div:
                 clearable=False,
                 searchable=False,
             ),
-            html.H4("Sampler", className="control-p"),
+            html.Label("Vehicles to Deploy"),
+            dcc.Slider(
+                id="num-vehicles-select",
+                className="select",
+                **NUM_VEHICLES,
+                marks={
+                    NUM_VEHICLES["min"]: str(NUM_VEHICLES["min"]),
+                    NUM_VEHICLES["max"]: str(NUM_VEHICLES["max"]),
+                },
+                tooltip={
+                    "placement": "bottom",
+                    "always_visible": True,
+                },
+            ),
+            html.Label("Locations"),
+            dcc.Slider(
+                id="num-clients-select",
+                className="select",
+                **NUM_CLIENT_LOCATIONS,
+                marks={
+                    NUM_CLIENT_LOCATIONS["min"]: str(NUM_CLIENT_LOCATIONS["min"]),
+                    NUM_CLIENT_LOCATIONS["max"]: str(NUM_CLIENT_LOCATIONS["max"]),
+                },
+                tooltip={
+                    "placement": "bottom",
+                    "always_visible": True,
+                },
+            ),
+            html.Label("Solver"),
             dcc.Dropdown(
                 id="sampler-type-select",
                 options=sampler_options,
@@ -68,34 +95,7 @@ def generate_control_card() -> html.Div:
                 clearable=False,
                 searchable=False,
             ),
-            html.H4("Number of vehicles to deploy", className="control-p"),
-            dcc.Slider(
-                id="num-vehicles-select",
-                **NUM_VEHICLES,
-                marks={
-                    NUM_VEHICLES["min"]: str(NUM_VEHICLES["min"]),
-                    NUM_VEHICLES["max"]: str(NUM_VEHICLES["max"]),
-                },
-                tooltip={
-                    "placement": "top",
-                    "always_visible": True,
-                    # "style": {"color": "LightSteelBlue", "fontSize": "20px"}
-                },
-            ),
-            html.H4("Number of force locations", className="control-p"),
-            dcc.Slider(
-                id="num-clients-select",
-                **NUM_CLIENT_LOCATIONS,
-                marks={
-                    NUM_CLIENT_LOCATIONS["min"]: str(NUM_CLIENT_LOCATIONS["min"]),
-                    NUM_CLIENT_LOCATIONS["max"]: str(NUM_CLIENT_LOCATIONS["max"]),
-                },
-                tooltip={
-                    "placement": "top",
-                    "always_visible": True,
-                },
-            ),
-            html.H4("Solver Time Limit", className="control-p"),
+            html.Label("Solver Time Limit (seconds)"),
             dcc.Input(
                 id="solver-time-limit",
                 type="number",
@@ -111,7 +111,7 @@ def generate_control_card() -> html.Div:
                         id="cancel-button",
                         children="Cancel Optimization",
                         n_clicks=0,
-                        style={"visibility": "hidden"},
+                        style={"display": "none"},
                     ),
                 ],
             ),
@@ -136,170 +136,182 @@ def set_html(app):
             dcc.Store(id="parameter-hash"),  # hash string to detect changed parameters
             # Banner
             html.Div(id="banner", children=[html.Img(src=THUMBNAIL)]),
-            # Left column
             html.Div(
-                id="left-column",
-                className="four-columns",
+                id="columns",
                 children=[
-                    description_card(),
-                    generate_control_card(),
-                    html.Div(["initial child"], id="output-clientside", style={"display": "none"}),
-                ],
-            ),
-            # Right column
-            html.Div(
-                id="right-column",
-                style={"padding": "10px"},
-                children=[
-                    dcc.Tabs(
-                        id="tabs",
-                        value="map-tab",
+                    # Left column
+                    html.Div(
+                        id="left-column",
                         children=[
-                            dcc.Tab(
-                                label="Map",
-                                id="map-tab",
-                                value="map-tab",  # used for switching to programatically
-                                className="tab",
-                                children=[html.Iframe(id="solution-map")],
-                            ),
-                            dcc.Tab(
-                                label="Results",
-                                id="results-tab",
-                                className="tab",
-                                disabled=True,
+                            html.Div([ # Fixed width Div to collapse
+                                html.Div([ # Padding and content wrapper
+                                    description_card(),
+                                    generate_control_card(),
+                                    html.Div(["initial child"], id="output-clientside", style={"display": "none"}),
+                                ])
+                            ]),
+                            html.Div(
+                                html.Button(id="left-column-collapse", children=[html.Div()]),
+                            )
+                        ],
+                    ),
+                    # Right column
+                    html.Div(
+                        id="right-column",
+                        children=[
+                            dcc.Tabs(
+                                id="tabs",
+                                value="map-tab",
                                 children=[
-                                    html.H3("Solution stats"),
-                                    html.Table(
-                                        id="solution-stats-table",
+                                    dcc.Tab(
+                                        label="Map",
+                                        id="map-tab",
+                                        value="map-tab",  # used for switching to programatically
+                                        className="tab",
+                                        children=html.Iframe(id="solution-map")
+                                    ),
+                                    dcc.Tab(
+                                        label="Results",
+                                        id="results-tab",
+                                        className="tab",
+                                        disabled=True,
                                         children=[
-                                            html.Tr(
-                                                [
-                                                    html.Th(
-                                                        "Problem size", className="stats-heading"
+                                            html.Div(
+                                                className="tab-content--results",
+                                                children=[
+                                                    html.H3("Problem Details"),
+                                                    html.Table(
+                                                        id="solution-stats-table",
+                                                        className="result-table",
+                                                        children=[
+                                                            html.Thead(
+                                                                [
+                                                                    html.Tr(
+                                                                        [
+                                                                            html.Th("Problem Size"),
+                                                                            html.Th("Search Space"),
+                                                                            html.Th("Locations"),
+                                                                            html.Th("Vehicles Deployed"),
+                                                                        ]
+                                                                    )
+                                                                ]
+                                                            ),
+                                                            html.Tbody(
+                                                                [
+                                                                    html.Tr(
+                                                                        [
+                                                                            html.Td(id="problem-size"),
+                                                                            html.Td(id="search-space"),
+                                                                            html.Td(id="force-elements"),
+                                                                            html.Td(id="vehicles-deployed"),
+                                                                        ]
+                                                                    )
+                                                                ]
+                                                            )
+                                                        ],
                                                     ),
-                                                    html.Th(
-                                                        "Search space", className="stats-heading"
+                                                    html.H3("Solution Cost"),
+                                                    html.Div(
+                                                        id="solution-cost-table-div",
+                                                        className="result-table-div",
+                                                        children=[
+                                                            html.H4(
+                                                                children=[
+                                                                    "Quantum Hybrid ",
+                                                                    html.Span(id="wall-clock-time-quantum")
+                                                                ],
+                                                                className="table-label"
+                                                            ),
+                                                            html.Table(
+                                                                title="Quantum Hybrid",
+                                                                className="result-table",
+                                                                id="solution-cost-table",
+                                                                children=[],  # add children dynamically using 'create_table' below
+                                                            ),
+                                                        ],
                                                     ),
-                                                    html.Th(
-                                                        "Wall clock time [s]",
-                                                        className="stats-heading",
-                                                    ),
-                                                    html.Th(
-                                                        "Force elements", className="stats-heading"
-                                                    ),
-                                                    html.Th(
-                                                        "Vehicles deployed",
-                                                        className="stats-heading",
+                                                    html.Div(
+                                                        id="solution-cost-table-classical-div",
+                                                        className="result-table-div",
+                                                        children=[
+                                                            html.H4(
+                                                                children=[
+                                                                    "Classical (K-Means) ",
+                                                                    html.Span(id="wall-clock-time-classical")
+                                                                ],
+                                                                className="table-label"
+                                                            ),
+                                                            html.Table(
+                                                                title="Classical (K-Means)",
+                                                                className="result-table",
+                                                                id="solution-cost-table-classical",
+                                                                children=[],  # add children dynamically using 'create_table' below
+                                                            ),
+                                                        ],
                                                     ),
                                                 ]
-                                            ),
-                                            html.Tr(
-                                                [
-                                                    html.Td(
-                                                        id="problem-size", className="stats-row"
-                                                    ),
-                                                    html.Td(
-                                                        id="search-space", className="stats-row"
-                                                    ),
-                                                    html.Td(
-                                                        id="wall-clock-time", className="stats-row"
-                                                    ),
-                                                    html.Td(
-                                                        id="force-elements", className="stats-row"
-                                                    ),
-                                                    html.Td(
-                                                        id="vehicles-deployed",
-                                                        className="stats-row",
-                                                    ),
-                                                ]
-                                            ),
-                                        ],
-                                    ),
-                                    html.H3("Solution cost"),
-                                    html.Div(
-                                        id="solution-cost-table-div",
-                                        className="result-table-div",
-                                        children=[
-                                            html.H4("Quantum Hybrid"),
-                                            html.Table(
-                                                title="Quantum Hybrid",
-                                                className="result-table",
-                                                id="solution-cost-table",
-                                                children=[],  # add children dynamically using 'create_table_row' below
-                                            ),
-                                        ],
-                                    ),
-                                    html.Div(
-                                        id="solution-cost-table-classical-div",
-                                        className="result-table-div",
-                                        children=[
-                                            html.H4("Classical (K-Means)"),
-                                            html.Table(
-                                                title="Classical (K-Means)",
-                                                className="result-table",
-                                                id="solution-cost-table-classical",
-                                                children=[],  # add children dynamically using 'create_table_row' below
-                                            ),
+                                            )
                                         ],
                                     ),
                                 ],
-                            ),
+                            )
                         ],
-                    )
-                ],
-            ),
+                    ),
+                ]
+            )
         ],
     )
 
+def create_row_cells(values: list) -> list[html.Td]:
+    """List required to execute loop, unpack after to maintain required structure."""
+    return [html.Td(round(value)) for iteration, value in enumerate(values)]
 
-def create_table_row(
-    num_vehicles: int, values_dicts: dict[int, dict], values_tot: list
-) -> list[html.Tr]:
+def create_table(
+    values_dicts: dict[int, dict], values_tot: list
+) -> list:
     """Create a row in the table dynamically.
 
     Args:
-        num_vehicles: Number of vehicles (i.e., number of table rows).
         values_dicts: List of dictionaries with vehicle number as results data as values.
         values_tot: List of total results data (sum of individual vehicle data).
     """
-    table_row = [
-        html.Tr(
+
+    table = [
+        html.Thead(
             [
-                html.Th("Vehicle", className="cost-heading"),
-                html.Th("Cost [m]", className="cost-heading"),
-                html.Th("Forces", className="cost-heading"),
-                html.Th("Water", className="cost-heading"),
-                html.Th("Food", className="cost-heading"),
-                html.Th("Other", className="cost-heading"),
+                html.Tr(
+                    [
+                        html.Th("Vehicle"),
+                        html.Th("Cost (m)"),
+                        html.Th("Forces"),
+                        html.Th("Water"),
+                        html.Th("Food"),
+                        html.Th("Other"),
+                    ]
+                )
+            ]
+        ),
+        html.Tbody(
+            [
+                html.Tr(
+                    [
+                        html.Td(index + 1),
+                        *create_row_cells(list(vehicle.values())), # Unpack list to maintain required structure
+                    ]
+                ) for index, vehicle in enumerate(values_dicts)
+            ]
+        ),
+        html.Tfoot(
+            [
+                html.Tr(
+                    [
+                        html.Td("Total"),
+                        *create_row_cells(values_tot), # Unpack list to maintain required structure
+                    ],
+                    className="total-cost-row"
+                )
             ]
         )
     ]
-    for i in range(num_vehicles):
-        values = list(values_dicts[i].values())
 
-        row = html.Tr(
-            [
-                html.Td(i + 1, className="cost-row"),
-                html.Td(round(values[0]), className="cost-row"),
-                html.Td(values[1], className="cost-row"),
-                html.Td(values[2], className="cost-row"),
-                html.Td(values[3], className="cost-row"),
-                html.Td(values[4], className="cost-row"),
-            ]
-        )
-
-        table_row.append(row)
-
-    table_row.append(
-        html.Tr(
-            [
-                html.Td("Total", className="total-cost-row"),
-                html.Td(round(values_tot[0]), className="total-cost-row"),
-                html.Td(values_tot[1], className="total-cost-row"),
-                html.Td(values_tot[2], className="total-cost-row"),
-                html.Td(values_tot[3], className="total-cost-row"),
-                html.Td(values_tot[4], className="total-cost-row"),
-            ]
-        )
-    )
-    return table_row
+    return table

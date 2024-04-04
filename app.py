@@ -26,7 +26,7 @@ from dash import DiskcacheManager, callback_context, ctx
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 
-from dash_html import create_table_row, set_html
+from dash_html import create_table, set_html
 from map import (generate_mapping_information, plot_solution_routes_on_map,
                  show_locations_on_initial_map)
 from solver.solver import RoutingProblemParameters, SamplerType, Solver, VehicleType
@@ -52,6 +52,29 @@ app.config.suppress_callback_exceptions = True
 
 BASE_PATH = Path(__file__).parent.resolve()
 DATA_PATH = BASE_PATH.joinpath("input").resolve()
+
+
+@app.callback(
+    Output("left-column", "className"),
+    inputs=[
+        Input("left-column-collapse", "n_clicks"),
+        State("left-column", "className"),
+    ],
+    prevent_initial_call=True,
+)
+def toggle_left_column(left_column_collapse: int, class_name: str) -> str:
+    """Toggles left column 'collapsed' class that hides and shows the left column.
+
+    Args:
+        left_column_collapse (int): The (total) number of times the collapse button has been clicked.
+        class_name (str): Current class name of the left column, 'collapsed' if not visible, empty string if visible
+
+    Returns:
+        str: The new class name of the left column.
+    """
+    if class_name:
+        return ""
+    return "collapsed"
 
 
 def generate_inital_map(num_clients: int) -> folium.Map:
@@ -115,7 +138,7 @@ def update_tables(
     """Update the results tables each time a run is made.
 
     Args:
-        run_in_progress: Whether or not the ``run_optimiation`` callback is running.
+        run_in_progress: Whether or not the ``run_optimization`` callback is running.
         stored_results: The results tab from the latest run.
         reset_results: Whether or not to reset the results tables before applying the new one.
         sampler_type: The sampler type used in the latest run (``"quantum"`` or ``"classical"``)
@@ -146,7 +169,8 @@ def update_tables(
     # update table values in top results tab
     Output("problem-size", "children"),
     Output("search-space", "children"),
-    Output("wall-clock-time", "children"),
+    Output("wall-clock-time-classical", "children"),
+    Output("wall-clock-time-quantum", "children"),
     Output("force-elements", "children"),
     Output("vehicles-deployed", "children"),
     inputs=[
@@ -161,9 +185,9 @@ def update_tables(
         State("parameter-hash", "data"),
     ],
     running=[
-        # show cancel button and disable run button, and disable and animate results tab
-        (Output("cancel-button", "style"), {"visibility": "visible"}, {"visibility": "hidden"}),
-        (Output("run-button", "disabled"), True, False),
+        # show cancel button and hide run button, and disable and animate results tab
+        (Output("cancel-button", "style"), {"display": "inline-block"}, {"display": "none"}),
+        (Output("run-button", "style"), {"display": "none"}, {"display": "inline-block"}),
         (Output("results-tab", "disabled"), True, False),
         (Output("results-tab", "className"), "tab-loading", "tab"),
         # switch to map tab while running
@@ -174,16 +198,16 @@ def update_tables(
     cancel=[Input("cancel-button", "n_clicks")],
     prevent_initial_call=True,
 )
-def run_optimiation(
+def run_optimization(
     run_click: int,
     vehicle_type: Union[VehicleType, int],
     sampler_type: Union[SamplerType, int],
     num_vehicles: int,
     time_limit: float,
     num_clients: int,
-    cost_table: list[html.Tr],
+    cost_table: list,
     previous_parameter_hash: str,
-) -> tuple[str, list[html.Tr], int, str, str, int, int]:
+) -> tuple[str, list, str, bool, str, int, str, str, str, int, int]:
     """Run the optimization and update map and results tables.
 
     This is the main optimization function which is called when the Run optimization button is
@@ -201,6 +225,7 @@ def run_optimiation(
         time_limit: The solver time limit.
         num_clients: The number of force locations.
         cost_table: The html 'Solution cost' table. Used to update it dynamically.
+        previous_parameter_hash: Previous hash string to detect changed parameters
 
     Returns:
         A tuple containing all outputs to be used when updating the HTML template (in
@@ -214,7 +239,8 @@ def run_optimiation(
             parameter-hash: Hash string to detect changed parameters.
             problem-size: Updates the problem-size entry in the Solution stats table.
             search-space: Updates the search-space entry in the Solution stats table.
-            wall-clock-time: Updates the wall-clock-time entry in the Solution stats table.
+            wall-clock-time-classical: Updates the wall clock time in the Classical table header.
+            wall-clock-time-quantum: Updates the wall clock time in the Hybrid Quantum table header.
             force-elements: Updates the force-elements entry in the Solution stats table.
             vehicles-deployed: Updates the vehicles-deployed entry in the Solution stats table.
     """
@@ -253,7 +279,7 @@ def run_optimiation(
 
         problem_size = num_vehicles * num_clients
         search_space = f"{num_vehicles**num_clients:.2e}"
-        wall_clock_time = f"{wall_clock_time:.3f}"
+        wall_clock_time = f"Wall clock time: {wall_clock_time:.3f}s"
 
         solution_cost = dict(sorted(solution_cost.items()))
         total_cost = defaultdict(int)
@@ -261,8 +287,8 @@ def run_optimiation(
             for key, value in cost_info_dict.items():
                 total_cost[key] += value
 
-        cost_table = create_table_row(
-            num_vehicles, list(solution_cost.values()), list(total_cost.values())
+        cost_table = create_table(
+            list(solution_cost.values()), list(total_cost.values())
         )
         solution_map.save("solution_map.html")
 
@@ -280,7 +306,8 @@ def run_optimiation(
             str(parameter_hash),
             problem_size,
             search_space,
-            wall_clock_time,
+            wall_clock_time if sampler_type is SamplerType.KMEANS else dash.no_update,
+            wall_clock_time if sampler_type is SamplerType.DQM else dash.no_update,
             num_clients,
             num_vehicles,
         )
