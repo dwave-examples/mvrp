@@ -55,10 +55,6 @@ body {
     margin: 0rem;
 }
 
-hr {
-    margin: 0.3rem 0rem;
-}
-
 #description-card {
     margin: 2rem 0rem;
 }
@@ -396,18 +392,6 @@ div.tab.tab--disabled {
 
 .tab-content--results {
     padding: 0 3rem;
-}
-
-.tab-fail {
-    border-top: 2px solid var(--red-light) !important;
-}
-
-.tab-success {
-    border-top: 2px solid var(--teal-darker) !important;
-}
-
-.tab-warning {
-    border-top: 2px solid var(--orange) !important;
 }
 
 #solver-time-limit {
