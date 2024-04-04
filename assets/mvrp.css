@@ -239,7 +239,7 @@ th:last-child, td:last-child {
 }
 
 .rc-slider-tooltip {
-    z-index: -1;
+    pointer-events: none;
 }
 
 .rc-slider-tooltip .rc-slider-tooltip-arrow {
