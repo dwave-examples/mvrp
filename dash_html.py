@@ -168,13 +168,7 @@ def set_html(app):
                                         id="map-tab",
                                         value="map-tab",  # used for switching to programatically
                                         className="tab",
-                                        children=[
-                                            dcc.Loading(
-                                                id="loading",
-                                                type="circle",
-                                                color="#17BEBB",
-                                                children=html.Iframe(id="solution-map")
-                                            ),],
+                                        children=html.Iframe(id="solution-map")
                                     ),
                                     dcc.Tab(
                                         label="Results",
