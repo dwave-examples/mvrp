@@ -36,19 +36,25 @@ force_icon_path = Path(__file__).parent / "assets/force_location.png"
 depot_icon = folium.CustomIcon(str(depot_icon_path), icon_size=(32, 37))
 
 
-def _find_node_index_central_to_network(node_index_map: dict) -> int:
-    """Finds node index central to network."""
+def _get_coordinates(node_index_map: dict) -> np.ndarray:
+    """Returns an array of coordinates for all nodes."""
     coordinates = np.zeros((len(node_index_map), 2))
     for node_index, node in node_index_map.items():
         coordinates[node_index][0] = node[1]["y"]
         coordinates[node_index][1] = node[1]["x"]
 
+    return coordinates
+
+
+def _find_node_index_central_to_network(node_index_map: dict) -> int:
+    """Finds node index central to network."""
+    coordinates = _get_coordinates(node_index_map)
     centroid = np.sum(coordinates, 0) / len(node_index_map)
     kd_tree = cKDTree(coordinates)
     return kd_tree.query(centroid)[1]
 
 
-def generate_mapping_information(num_clients: int) -> tuple[nx.MultiDiGraph, int, list]:
+def generate_mapping_information(num_clients: int) -> tuple[nx.MultiDiGraph, int, list, list]:
     """Return ``nx.MultiDiGraph`` with client demand, depot id in graph, client ids in graph.
 
     Args:
@@ -58,6 +64,7 @@ def generate_mapping_information(num_clients: int) -> tuple[nx.MultiDiGraph, int
         map_network: ``nx.MultiDiGraph`` where nodes and edges represent locations and routes.
         depot_id: Node ID of the depot location.
         client_subset: List of client IDs in the map's graph.
+        map_bounds: list of lower and upper bound locations for map
     """
     random.seed(num_clients)
 
@@ -85,7 +92,11 @@ def generate_mapping_information(num_clients: int) -> tuple[nx.MultiDiGraph, int
             + map_network.nodes[node_id]["demand_other"]
         )
 
-    return map_network, depot_id, client_subset
+    # Get min and max coordinates to determine map bounds
+    coordinates = _get_coordinates(node_index_map)
+    map_bounds = [coordinates.min(0).tolist(), coordinates.max(0).tolist()]
+
+    return map_network, depot_id, client_subset, map_bounds
 
 
 def _get_nodes(G: nx.Graph, force_id: int) -> tuple[folium.CustomIcon, list[int]]:
@@ -96,7 +107,7 @@ def _get_nodes(G: nx.Graph, force_id: int) -> tuple[folium.CustomIcon, list[int]
 
 
 def show_locations_on_initial_map(
-    G: nx.MultiDiGraph, depot_id: int, client_subset: list
+    G: nx.MultiDiGraph, depot_id: int, client_subset: list, map_bounds: list[list]
 ) -> folium.Map:
     """Prepare map to be rendered initially on app screen.
 
@@ -109,11 +120,13 @@ def show_locations_on_initial_map(
         folium.Map: Map with depot, client locations and tooltip popups.
     """
     # create folium map on which to plot depots
-    tiles = "cartodb positron"
+    tiles = "cartodb positron" # foilum map theme
 
     folium_map = ox.graph_to_gdfs(G, nodes=False, node_geometry=False).explore(
         style_kwds={"opacity": 0.0}, tiles=tiles
     )
+
+    folium_map.fit_bounds(map_bounds)
 
     # add marker to the depot location
     folium.Marker(

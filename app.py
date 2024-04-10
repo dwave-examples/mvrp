@@ -86,8 +86,8 @@ def generate_inital_map(num_clients: int) -> folium.Map:
     Returns:
         folium.Map: Initial map shown on the map tab.
     """
-    map_network, depot_id, force_locations = generate_mapping_information(num_clients)
-    initial_map = show_locations_on_initial_map(map_network, depot_id, force_locations)
+    map_network, depot_id, force_locations, map_bounds = generate_mapping_information(num_clients)
+    initial_map = show_locations_on_initial_map(map_network, depot_id, force_locations, map_bounds)
     return initial_map
 
 
@@ -189,7 +189,7 @@ def update_tables(
         (Output("cancel-button", "style"), {"display": "inline-block"}, {"display": "none"}),
         (Output("run-button", "style"), {"display": "none"}, {"display": "inline-block"}),
         (Output("results-tab", "disabled"), True, False),
-        (Output("results-tab", "className"), "tab-loading", "tab"),
+        (Output("results-tab", "label"), "Loading...", "Results"),
         # switch to map tab while running
         (Output("tabs", "value"), "map-tab", "map-tab"),
         # block certain callbacks from running until this is done
@@ -253,8 +253,8 @@ def run_optimization(
         sampler_type = SamplerType(sampler_type)
 
     if ctx.triggered_id == "run-button":
-        map_network, depot_id, force_locations = generate_mapping_information(num_clients)
-        initial_map = show_locations_on_initial_map(map_network, depot_id, force_locations)
+        map_network, depot_id, force_locations, map_bounds = generate_mapping_information(num_clients)
+        initial_map = show_locations_on_initial_map(map_network, depot_id, force_locations, map_bounds)
 
         routing_problem_parameters = RoutingProblemParameters(
             map_network=map_network,
