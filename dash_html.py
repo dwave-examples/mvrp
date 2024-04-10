@@ -172,7 +172,7 @@ def set_html(app):
                                             dcc.Loading(
                                                 id="loading",
                                                 type="circle",
-                                                color="#17BEBB",
+                                                color="#2A7DE1",
                                                 children=html.Iframe(id="solution-map")
                                             ),
                                         ],
