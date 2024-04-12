@@ -21,6 +21,7 @@ import folium
 import folium.plugins as plugins
 import networkx as nx
 import numpy as np
+from numpy.typing import NDArray
 import osmnx as ox
 from scipy.spatial import cKDTree
 
@@ -36,7 +37,7 @@ force_icon_path = Path(__file__).parent / "assets/force_location.png"
 depot_icon = folium.CustomIcon(str(depot_icon_path), icon_size=(32, 37))
 
 
-def _get_coordinates(node_index_map: dict) -> np.ndarray:
+def _get_coordinates(node_index_map: dict) -> NDArray:
     """Returns an array of coordinates for all nodes."""
     coordinates = np.zeros((len(node_index_map), 2))
     for node_index, node in node_index_map.items():
@@ -64,7 +65,7 @@ def generate_mapping_information(num_clients: int) -> tuple[nx.MultiDiGraph, int
         map_network: ``nx.MultiDiGraph`` where nodes and edges represent locations and routes.
         depot_id: Node ID of the depot location.
         client_subset: List of client IDs in the map's graph.
-        map_bounds: list of lower and upper bound locations for map
+        map_bounds: List of lower and upper bound locations for map
     """
     random.seed(num_clients)
 
