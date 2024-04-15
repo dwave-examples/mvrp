@@ -134,6 +134,7 @@ def set_html(app):
                 id="run-in-progress", data=False
             ),  # callback blocker to signal that the run is complete
             dcc.Store(id="parameter-hash"),  # hash string to detect changed parameters
+            dcc.Store(id="cost-comparison"),  # dictionary with solver keys and run values
             # Banner
             html.Div(id="banner", children=[html.Img(src=THUMBNAIL)]),
             html.Div(
@@ -186,7 +187,51 @@ def set_html(app):
                                             html.Div(
                                                 className="tab-content--results",
                                                 children=[
-                                                    html.H3("Problem Details"),
+                                                    html.Div(
+                                                        className="results-tables",
+                                                        children=[
+                                                            html.Div(
+                                                                id="solution-cost-table-div",
+                                                                className="result-table-div",
+                                                                children=[
+                                                                    html.H3(
+                                                                        children=[
+                                                                            "Quantum Hybrid ",
+                                                                            html.Span(id="wall-clock-time-quantum")
+                                                                        ],
+                                                                        className="table-label"
+                                                                    ),
+                                                                    html.Table(
+                                                                        title="Quantum Hybrid",
+                                                                        className="result-table",
+                                                                        id="solution-cost-table",
+                                                                        children=[],  # add children dynamically using 'create_table' below
+                                                                    ),
+                                                                ],
+                                                            ),
+                                                            html.Div(
+                                                                id="solution-cost-table-classical-div",
+                                                                className="result-table-div",
+                                                                children=[
+                                                                    html.H3(
+                                                                        children=[
+                                                                            "Classical (K-Means) ",
+                                                                            html.Span(id="wall-clock-time-classical")
+                                                                        ],
+                                                                        className="table-label"
+                                                                    ),
+                                                                    html.Table(
+                                                                        title="Classical (K-Means)",
+                                                                        className="result-table",
+                                                                        id="solution-cost-table-classical",
+                                                                        children=[],  # add children dynamically using 'create_table' below
+                                                                    ),
+                                                                ],
+                                                            ),
+                                                        ]
+                                                    ),
+                                                    html.H4(id="performance-improvement-quantum"),
+                                                    html.H5("Problem Details"),
                                                     html.Table(
                                                         id="solution-stats-table",
                                                         className="result-table",
@@ -215,45 +260,6 @@ def set_html(app):
                                                                     )
                                                                 ]
                                                             )
-                                                        ],
-                                                    ),
-                                                    html.H3("Solution Cost"),
-                                                    html.Div(
-                                                        id="solution-cost-table-div",
-                                                        className="result-table-div",
-                                                        children=[
-                                                            html.H4(
-                                                                children=[
-                                                                    "Quantum Hybrid ",
-                                                                    html.Span(id="wall-clock-time-quantum")
-                                                                ],
-                                                                className="table-label"
-                                                            ),
-                                                            html.Table(
-                                                                title="Quantum Hybrid",
-                                                                className="result-table",
-                                                                id="solution-cost-table",
-                                                                children=[],  # add children dynamically using 'create_table' below
-                                                            ),
-                                                        ],
-                                                    ),
-                                                    html.Div(
-                                                        id="solution-cost-table-classical-div",
-                                                        className="result-table-div",
-                                                        children=[
-                                                            html.H4(
-                                                                children=[
-                                                                    "Classical (K-Means) ",
-                                                                    html.Span(id="wall-clock-time-classical")
-                                                                ],
-                                                                className="table-label"
-                                                            ),
-                                                            html.Table(
-                                                                title="Classical (K-Means)",
-                                                                className="result-table",
-                                                                id="solution-cost-table-classical",
-                                                                children=[],  # add children dynamically using 'create_table' below
-                                                            ),
                                                         ],
                                                     ),
                                                 ]
@@ -289,8 +295,8 @@ def create_table(
                 html.Tr(
                     [
                         html.Th("Vehicle"),
-                        html.Th("Cost (m)"),
-                        html.Th("Forces"),
+                        html.Th("Distance (m)"),
+                        html.Th("Locations"),
                         html.Th("Water"),
                         html.Th("Food"),
                         html.Th("Other"),

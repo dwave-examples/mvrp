@@ -14,6 +14,8 @@
 
 """This file stores input parameters for the app."""
 
+DEBUG = True # Sets Dash debug. Set to True if developing and False if demoing. App should be restarted to see change.
+
 ADDRESS = "Cambridge Ln, Rockhampton QLD 4700, Australia"
 DISTANCE = 1700  # bounding box distance (in meters) around address
 THUMBNAIL = "assets/dwave_logo.svg"
@@ -48,8 +50,8 @@ NUM_CLIENT_LOCATIONS = {
 
 # solver time limits in seconds (value means default)
 SOLVER_TIME = {
-    "min": 5,
+    "min": 10,
     "max": 300,
     "step": 5,
-    "value": 5,
+    "value": 10,
 }

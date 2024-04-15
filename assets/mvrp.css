@@ -152,23 +152,38 @@ label {
     width: 100%;
 }
 
+.results-tables {
+    display: flex;
+}
+
+@media screen and (max-width: 1430px) {
+    .results-tables {
+        flex-direction: column;
+    }
+}
+
 #solution-stats-table {
-    font-size: 1.6rem;
+    font-size: 1.5rem;
 }
 
 .result-table-div {
-    display: inline-block;
+    width: 100%;
+    max-width: 65rem;
+}
+
+.result-table-div table {
+    width: 100%;
 }
 
 .result-table {
-    font-size: 1.6rem;
-    border: 4px var(--blue-dark);
-    border-style: solid none none solid;
+    font-size: 1.5rem;
+    border: 3px var(--blue-dark);
+    border-style: solid solid none;
     background-color: white;
 }
 
 #solution-cost-table-div {
-    margin-right: 3rem;
+    margin-right: 2.6rem;
 }
 
 #solution-cost-table-div:not(:has(> table > thead)),
@@ -191,7 +206,7 @@ td {
 }
 
 th, td {
-    padding: 0.6rem 1.2rem;
+    padding: 0.5rem 1rem;
     text-align: right;
 }
 

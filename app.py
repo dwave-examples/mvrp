@@ -31,6 +31,8 @@ from map import (generate_mapping_information, plot_solution_routes_on_map,
                  show_locations_on_initial_map)
 from solver.solver import RoutingProblemParameters, SamplerType, Solver, VehicleType
 
+from app_configs import DEBUG
+
 cache = diskcache.Cache("./cache")
 background_callback_manager = DiskcacheManager(cache)
 
@@ -169,10 +171,10 @@ def update_tables(
     # update table values in top results tab
     Output("problem-size", "children"),
     Output("search-space", "children"),
-    Output("wall-clock-time-classical", "children"),
-    Output("wall-clock-time-quantum", "children"),
+    Output("performance-improvement-quantum", "children"),
     Output("force-elements", "children"),
     Output("vehicles-deployed", "children"),
+    Output("cost-comparison", "data"),
     inputs=[
         Input("run-button", "n_clicks"),
         State("vehicle-type-select", "value"),
@@ -183,6 +185,7 @@ def update_tables(
         # input and output result table (to update it dynamically)
         State("solution-cost-table", "children"),
         State("parameter-hash", "data"),
+        State("cost-comparison", "data"),
     ],
     running=[
         # show cancel button and hide run button, and disable and animate results tab
@@ -207,7 +210,8 @@ def run_optimization(
     num_clients: int,
     cost_table: list,
     previous_parameter_hash: str,
-) -> tuple[str, list, str, bool, str, int, str, str, str, int, int]:
+    cost_comparison: dict,
+) -> tuple[str, list, str, bool, str, int, str, str, int, int, dict]:
     """Run the optimization and update map and results tables.
 
     This is the main optimization function which is called when the Run optimization button is
@@ -226,6 +230,7 @@ def run_optimization(
         num_clients: The number of force locations.
         cost_table: The html 'Solution cost' table. Used to update it dynamically.
         previous_parameter_hash: Previous hash string to detect changed parameters
+        cost_comparison: Dictionary with solver keys and run cost values
 
     Returns:
         A tuple containing all outputs to be used when updating the HTML template (in
@@ -240,9 +245,10 @@ def run_optimization(
             problem-size: Updates the problem-size entry in the Solution stats table.
             search-space: Updates the search-space entry in the Solution stats table.
             wall-clock-time-classical: Updates the wall clock time in the Classical table header.
-            wall-clock-time-quantum: Updates the wall clock time in the Hybrid Quantum table header.
+            performance-improvement-quantum: Updates quatum performance improvement message.
             force-elements: Updates the force-elements entry in the Solution stats table.
             vehicles-deployed: Updates the vehicles-deployed entry in the Solution stats table.
+            cost-comparison: Keeps track of the difference between classical and hybrid run costs
     """
     if run_click == 0 or ctx.triggered_id != "run-button":
         return ""
@@ -298,6 +304,15 @@ def run_optimization(
         else:
             reset_results = False
 
+        # Calculates cost improvement between DQM and KMEANS
+        cost_comparison_percent = 0
+        if reset_results:
+            cost_comparison = {str(sampler_type.value): total_cost["optimized_cost"]} # Dict keys must be strings because Dash stores data as JSON
+        else:
+            cost_comparison[str(sampler_type.value)] = total_cost["optimized_cost"]
+            if len(cost_comparison) == 2:
+                cost_comparison_percent = (1 - cost_comparison[str(SamplerType.DQM.value)]/cost_comparison[str(SamplerType.KMEANS.value)])*100
+
         return (
             open("solution_map.html", "r").read(),
             cost_table,
@@ -306,10 +321,10 @@ def run_optimization(
             str(parameter_hash),
             problem_size,
             search_space,
-            wall_clock_time if sampler_type is SamplerType.KMEANS else dash.no_update,
-            wall_clock_time if sampler_type is SamplerType.DQM else dash.no_update,
+            "The vehicles travel " + str(round(cost_comparison_percent, 2)) + "% less distance using the quantum hybrid solution." if cost_comparison_percent > 0 else "",
             num_clients,
             num_vehicles,
+            cost_comparison
         )
 
     raise PreventUpdate
@@ -337,4 +352,4 @@ set_html(app)
 
 # Run the server
 if __name__ == "__main__":
-    app.run_server(debug=True)
+    app.run_server(debug=DEBUG)
