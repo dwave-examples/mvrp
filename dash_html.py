@@ -19,8 +19,8 @@ import html
 
 from dash import dcc, html
 
-from app_configs import (DESCRIPTION, MAIN_HEADER, NUM_CLIENT_LOCATIONS, NUM_VEHICLES, SOLVER_TIME,
-                         THUMBNAIL)
+from app_configs import (DESCRIPTION, LOCATIONS_LABEL, MAIN_HEADER, NUM_CLIENT_LOCATIONS, NUM_VEHICLES, SOLVER_TIME,
+                         THEME_COLOR, THUMBNAIL)
 
 map_width, map_height = 1000, 600
 
@@ -73,7 +73,7 @@ def generate_control_card() -> html.Div:
                     "always_visible": True,
                 },
             ),
-            html.Label("Locations"),
+            html.Label(LOCATIONS_LABEL),
             dcc.Slider(
                 id="num-clients-select",
                 className="select",
@@ -111,7 +111,7 @@ def generate_control_card() -> html.Div:
                         id="cancel-button",
                         children="Cancel Optimization",
                         n_clicks=0,
-                        style={"display": "none"},
+                        className="display-none",
                     ),
                 ],
             ),
@@ -142,7 +142,8 @@ def set_html(app):
                 children=[
                     # Left column
                     html.Div(
-                        id="left-column",
+                        id={'type': 'to-collapse-class', 'index': 0},
+                        className="left-column",
                         children=[
                             html.Div([ # Fixed width Div to collapse
                                 html.Div([ # Padding and content wrapper
@@ -152,7 +153,14 @@ def set_html(app):
                                 ])
                             ]),
                             html.Div(
-                                html.Button(id="left-column-collapse", children=[html.Div()]),
+                                html.Button(
+                                    id={
+                                        'type': 'collapse-trigger',
+                                        'index': 0
+                                    },
+                                    className="left-column-collapse",
+                                    children=[html.Div(className="collapse-arrow")
+                                ]),
                             )
                         ],
                     ),
@@ -163,6 +171,7 @@ def set_html(app):
                             dcc.Tabs(
                                 id="tabs",
                                 value="map-tab",
+                                mobile_breakpoint=0,
                                 children=[
                                     dcc.Tab(
                                         label="Map",
@@ -173,7 +182,7 @@ def set_html(app):
                                             dcc.Loading(
                                                 id="loading",
                                                 type="circle",
-                                                color="#2A7DE1",
+                                                color=THEME_COLOR,
                                                 children=html.Iframe(id="solution-map")
                                             ),
                                         ],
@@ -195,10 +204,7 @@ def set_html(app):
                                                                 className="result-table-div",
                                                                 children=[
                                                                     html.H3(
-                                                                        children=[
-                                                                            "Quantum Hybrid ",
-                                                                            html.Span(id="wall-clock-time-quantum")
-                                                                        ],
+                                                                        children=["Quantum Hybrid"],
                                                                         className="table-label"
                                                                     ),
                                                                     html.Table(
@@ -214,10 +220,7 @@ def set_html(app):
                                                                 className="result-table-div",
                                                                 children=[
                                                                     html.H3(
-                                                                        children=[
-                                                                            "Classical (K-Means) ",
-                                                                            html.Span(id="wall-clock-time-classical")
-                                                                        ],
+                                                                        children=["Classical (K-Means)"],
                                                                         className="table-label"
                                                                     ),
                                                                     html.Table(
@@ -231,37 +234,58 @@ def set_html(app):
                                                         ]
                                                     ),
                                                     html.H4(id="performance-improvement-quantum"),
-                                                    html.H5("Problem Details"),
-                                                    html.Table(
-                                                        id="solution-stats-table",
-                                                        className="result-table",
+                                                    html.Div(
+                                                        id={'type': 'to-collapse-class', 'index': 1},
+                                                        className="collapsed",
                                                         children=[
-                                                            html.Thead(
-                                                                [
-                                                                    html.Tr(
-                                                                        [
-                                                                            html.Th("Problem Size"),
-                                                                            html.Th("Search Space"),
-                                                                            html.Th("Locations"),
-                                                                            html.Th("Vehicles Deployed"),
-                                                                        ]
-                                                                    )
+                                                            html.Button(
+                                                                id={
+                                                                    'type': 'collapse-trigger',
+                                                                    'index': 1
+                                                                },
+                                                                className="details-collapse",
+                                                                children=[
+                                                                    html.H5("Problem Details"),
+                                                                    html.Div(className="collapse-arrow")
                                                                 ]
                                                             ),
-                                                            html.Tbody(
-                                                                [
-                                                                    html.Tr(
-                                                                        [
-                                                                            html.Td(id="problem-size"),
-                                                                            html.Td(id="search-space"),
-                                                                            html.Td(id="force-elements"),
-                                                                            html.Td(id="vehicles-deployed"),
-                                                                        ]
-                                                                    )
+                                                            html.Div(
+                                                                className="details-to-collapse",
+                                                                children=[
+                                                                    html.Table(
+                                                                        id="solution-stats-table",
+                                                                        className="result-table",
+                                                                        children=[
+                                                                            html.Thead(
+                                                                                [
+                                                                                    html.Tr(
+                                                                                        [
+                                                                                            html.Th("Problem Size"),
+                                                                                            html.Th("Search Space"),
+                                                                                            html.Th(LOCATIONS_LABEL),
+                                                                                            html.Th("Vehicles Deployed"),
+                                                                                        ]
+                                                                                    )
+                                                                                ]
+                                                                            ),
+                                                                            html.Tbody(
+                                                                                [
+                                                                                    html.Tr(
+                                                                                        [
+                                                                                            html.Td(id="problem-size"),
+                                                                                            html.Td(id="search-space"),
+                                                                                            html.Td(id="force-elements"),
+                                                                                            html.Td(id="vehicles-deployed"),
+                                                                                        ]
+                                                                                    )
+                                                                                ]
+                                                                            )
+                                                                        ],
+                                                                    ),
                                                                 ]
                                                             )
-                                                        ],
-                                                    ),
+                                                        ]
+                                                    )
                                                 ]
                                             )
                                         ],
@@ -296,7 +320,7 @@ def create_table(
                     [
                         html.Th("Vehicle"),
                         html.Th("Distance (m)"),
-                        html.Th("Locations"),
+                        html.Th(LOCATIONS_LABEL),
                         html.Th("Water"),
                         html.Th("Food"),
                         html.Th("Other"),

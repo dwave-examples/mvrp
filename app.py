@@ -22,9 +22,11 @@ from typing import TYPE_CHECKING, Union
 import dash
 import diskcache
 import folium
-from dash import DiskcacheManager, callback_context, ctx
+from dash import DiskcacheManager, callback_context, ctx, MATCH
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
+
+import cssutils
 
 from dash_html import create_table, set_html
 from map import (generate_mapping_information, plot_solution_routes_on_map,
@@ -36,7 +38,7 @@ from app_configs import DEBUG
 cache = diskcache.Cache("./cache")
 background_callback_manager = DiskcacheManager(cache)
 
-from app_configs import APP_TITLE
+from app_configs import APP_TITLE, THEME_COLOR
 
 if TYPE_CHECKING:
     from dash import html
@@ -55,28 +57,42 @@ app.config.suppress_callback_exceptions = True
 BASE_PATH = Path(__file__).parent.resolve()
 DATA_PATH = BASE_PATH.joinpath("input").resolve()
 
+# Generates css file and variable using THEME_COLOR setting
+css = f'''/* Generated theme settings css file, see app.py */
+:root {{
+    --theme: {THEME_COLOR};
+}}
+'''
+sheet = cssutils.parseString(css)
+cssTextDecoded = sheet.cssText.decode('ascii')
+with open("assets/theme.css", 'w') as f:
+    f.write(cssTextDecoded)
+
 
 @app.callback(
-    Output("left-column", "className"),
+    Output({'type': 'to-collapse-class', 'index': MATCH}, "className"),
     inputs=[
-        Input("left-column-collapse", "n_clicks"),
-        State("left-column", "className"),
+        Input({'type': 'collapse-trigger', 'index': MATCH}, "n_clicks"),
+        State({'type': 'to-collapse-class', 'index': MATCH}, "className"),
     ],
     prevent_initial_call=True,
 )
-def toggle_left_column(left_column_collapse: int, class_name: str) -> str:
-    """Toggles left column 'collapsed' class that hides and shows the left column.
+def toggle_left_column(collapse_trigger: int, to_collapse_class: str) -> str:
+    """Toggles a 'collapsed' class that hides and shows some aspect of the UI.
 
     Args:
-        left_column_collapse (int): The (total) number of times the collapse button has been clicked.
-        class_name (str): Current class name of the left column, 'collapsed' if not visible, empty string if visible
+        collapse_trigger (int): The (total) number of times a collapse button has been clicked.
+        to_collapse_class (str): Current class name of the thing to collapse, 'collapsed' if not visible, empty string if visible
 
     Returns:
-        str: The new class name of the left column.
+        str: The new class name of the thing to collapse.
     """
-    if class_name:
-        return ""
-    return "collapsed"
+
+    classes = to_collapse_class.split(" ") if to_collapse_class else []
+    if "collapsed" in classes:
+        classes.remove("collapsed")
+        return " ".join(classes)
+    return to_collapse_class + " collapsed" if to_collapse_class else "collapsed"
 
 
 def generate_inital_map(num_clients: int) -> folium.Map:
@@ -189,8 +205,8 @@ def update_tables(
     ],
     running=[
         # show cancel button and hide run button, and disable and animate results tab
-        (Output("cancel-button", "style"), {"display": "inline-block"}, {"display": "none"}),
-        (Output("run-button", "style"), {"display": "none"}, {"display": "inline-block"}),
+        (Output("cancel-button", "className"), "", "display-none"),
+        (Output("run-button", "className"), "display-none", ""),
         (Output("results-tab", "disabled"), True, False),
         (Output("results-tab", "label"), "Loading...", "Results"),
         # switch to map tab while running

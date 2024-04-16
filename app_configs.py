@@ -16,6 +16,8 @@
 
 DEBUG = True # Sets Dash debug. Set to True if developing and False if demoing. App should be restarted to see change.
 
+THEME_COLOR = "#074C91" # Color should pass accessibility checks with white https://webaim.org/resources/contrastchecker/ D-Wave Blue default #074C91
+
 ADDRESS = "Cambridge Ln, Rockhampton QLD 4700, Australia"
 DISTANCE = 1700  # bounding box distance (in meters) around address
 THUMBNAIL = "assets/dwave_logo.svg"
@@ -27,6 +29,8 @@ Run the Multi Vehicle Routing Problem (MVRP) problem for several different scena
 between delivery drones (flight path) and trucks (roads), the number of vehicles and client
 locations.
 """
+
+LOCATIONS_LABEL = "Locations" # Either "Locations" or business specific location type
 
 #######################################
 # Sliders, buttons and option entries #
