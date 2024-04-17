@@ -16,7 +16,9 @@
 
 DEBUG = True # Sets Dash debug. Set to True if developing and False if demoing. App should be restarted to see change.
 
-THEME_COLOR = "#074C91" # Color should pass accessibility checks with white https://webaim.org/resources/contrastchecker/ D-Wave Blue default #074C91
+# Color should pass accessibility checks with white: https://webaim.org/resources/contrastchecker/
+THEME_COLOR = "#074C91" # Dark color for button, text, and banner, D-Wave dark blue default #074C91
+THEME_COLOR_SECONDARY = "#2A7DE1" # Dark or light color for sliders, loading icon, and tab highlights, D-Wave blue default #2A7DE1
 
 ADDRESS = "Cambridge Ln, Rockhampton QLD 4700, Australia"
 DISTANCE = 1700  # bounding box distance (in meters) around address

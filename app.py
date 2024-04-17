@@ -38,7 +38,7 @@ from app_configs import DEBUG
 cache = diskcache.Cache("./cache")
 background_callback_manager = DiskcacheManager(cache)
 
-from app_configs import APP_TITLE, THEME_COLOR
+from app_configs import APP_TITLE, THEME_COLOR, THEME_COLOR_SECONDARY
 
 if TYPE_CHECKING:
     from dash import html
@@ -61,6 +61,7 @@ DATA_PATH = BASE_PATH.joinpath("input").resolve()
 css = f'''/* Generated theme settings css file, see app.py */
 :root {{
     --theme: {THEME_COLOR};
+    --theme-secondary: {THEME_COLOR_SECONDARY};
 }}
 '''
 sheet = cssutils.parseString(css)
@@ -184,13 +185,15 @@ def update_tables(
     Output("sampler-type", "data"),
     Output("reset-results", "data"),
     Output("parameter-hash", "data"),
-    # update table values in top results tab
+    Output("performance-improvement-quantum", "children"),
+    Output("cost-comparison", "data"),
+    # updates problem details table
     Output("problem-size", "children"),
     Output("search-space", "children"),
-    Output("performance-improvement-quantum", "children"),
-    Output("force-elements", "children"),
+    Output("wall-clock-time-classical", "children"),
+    Output("wall-clock-time-quantum", "children"),
+    Output("num-locations", "children"),
     Output("vehicles-deployed", "children"),
-    Output("cost-comparison", "data"),
     inputs=[
         Input("run-button", "n_clicks"),
         State("vehicle-type-select", "value"),
@@ -227,7 +230,7 @@ def run_optimization(
     cost_table: list,
     previous_parameter_hash: str,
     cost_comparison: dict,
-) -> tuple[str, list, str, bool, str, int, str, str, int, int, dict]:
+) -> tuple[str, list, str, bool, str, str, dict, int, str, str, str, int, int]:
     """Run the optimization and update map and results tables.
 
     This is the main optimization function which is called when the Run optimization button is
@@ -258,13 +261,14 @@ def run_optimization(
             sampler-type: The sampler used (``"quantum"`` or ``"classical"``).
             reset-results: Whether or not to reset the results tables before applying the new one.
             parameter-hash: Hash string to detect changed parameters.
-            problem-size: Updates the problem-size entry in the Solution stats table.
-            search-space: Updates the search-space entry in the Solution stats table.
-            wall-clock-time-classical: Updates the wall clock time in the Classical table header.
             performance-improvement-quantum: Updates quatum performance improvement message.
-            force-elements: Updates the force-elements entry in the Solution stats table.
-            vehicles-deployed: Updates the vehicles-deployed entry in the Solution stats table.
-            cost-comparison: Keeps track of the difference between classical and hybrid run costs
+            cost-comparison: Keeps track of the difference between classical and hybrid run costs.
+            problem-size: Updates the problem-size entry in the problem details table.
+            search-space: Updates the search-space entry in the problem details table.
+            wall-clock-time-classical: Updates the wall clock time in the Classical table header.
+            wall-clock-time-quantum: Updates the wall clock time in the Hybrid Quantum table header.
+            num-locations: Updates the number of locations in the problem details table.
+            vehicles-deployed: Updates the vehicles-deployed entry in the problem details table.
     """
     if run_click == 0 or ctx.triggered_id != "run-button":
         return ""
@@ -301,7 +305,7 @@ def run_optimization(
 
         problem_size = num_vehicles * num_clients
         search_space = f"{num_vehicles**num_clients:.2e}"
-        wall_clock_time = f"Wall clock time: {wall_clock_time:.3f}s"
+        wall_clock_time = f"{wall_clock_time:.3f}s"
 
         solution_cost = dict(sorted(solution_cost.items()))
         total_cost = defaultdict(int)
@@ -335,12 +339,14 @@ def run_optimization(
             "classical" if sampler_type is SamplerType.KMEANS else "quantum",
             reset_results,
             str(parameter_hash),
+            "The total distance travelled is " + str(round(cost_comparison_percent, 2)) + "% less using the quantum hybrid solution." if cost_comparison_percent > 0 else "",
+            cost_comparison,
             problem_size,
             search_space,
-            "The vehicles travel " + str(round(cost_comparison_percent, 2)) + "% less distance using the quantum hybrid solution." if cost_comparison_percent > 0 else "",
+            wall_clock_time if sampler_type is SamplerType.KMEANS else "" if reset_results else dash.no_update,
+            wall_clock_time if sampler_type is SamplerType.DQM else  "" if reset_results else dash.no_update,
             num_clients,
             num_vehicles,
-            cost_comparison
         )
 
     raise PreventUpdate

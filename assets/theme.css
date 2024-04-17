@@ -1,4 +1,5 @@
 /* Generated theme settings css file, see app.py */
 :root {
-    --theme: #074C91
+    --theme: #074C91;
+    --theme-secondary: #2A7DE1
     }
