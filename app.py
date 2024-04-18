@@ -19,7 +19,6 @@ from operator import itemgetter
 from pathlib import Path
 from typing import TYPE_CHECKING, Union
 
-import cssutils
 import dash
 import diskcache
 import folium
@@ -58,17 +57,15 @@ app.config.suppress_callback_exceptions = True
 BASE_PATH = Path(__file__).parent.resolve()
 DATA_PATH = BASE_PATH.joinpath("input").resolve()
 
-# Generates css file and variable using THEME_COLOR setting
+# Generates css file and variable using THEME_COLOR and THEME_COLOR_SECONDARY settings
 css = f"""/* Generated theme settings css file, see app.py */
 :root {{
     --theme: {THEME_COLOR};
     --theme-secondary: {THEME_COLOR_SECONDARY};
 }}
 """
-sheet = cssutils.parseString(css)
-cssTextDecoded = sheet.cssText.decode("ascii")
 with open("assets/theme.css", "w") as f:
-    f.write(cssTextDecoded)
+    f.write(css)
 
 
 @app.callback(
