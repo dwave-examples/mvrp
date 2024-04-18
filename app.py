@@ -19,21 +19,22 @@ from operator import itemgetter
 from pathlib import Path
 from typing import TYPE_CHECKING, Union
 
+import cssutils
 import dash
 import diskcache
 import folium
-from dash import DiskcacheManager, callback_context, ctx, MATCH
+from dash import MATCH, DiskcacheManager, callback_context, ctx
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 
-import cssutils
-
-from dash_html import create_table, set_html
-from map import (generate_mapping_information, plot_solution_routes_on_map,
-                 show_locations_on_initial_map)
-from solver.solver import RoutingProblemParameters, SamplerType, Solver, VehicleType
-
 from app_configs import DEBUG
+from dash_html import create_table, set_html
+from map import (
+    generate_mapping_information,
+    plot_solution_routes_on_map,
+    show_locations_on_initial_map,
+)
+from solver.solver import RoutingProblemParameters, SamplerType, Solver, VehicleType
 
 cache = diskcache.Cache("./cache")
 background_callback_manager = DiskcacheManager(cache)
@@ -58,23 +59,23 @@ BASE_PATH = Path(__file__).parent.resolve()
 DATA_PATH = BASE_PATH.joinpath("input").resolve()
 
 # Generates css file and variable using THEME_COLOR setting
-css = f'''/* Generated theme settings css file, see app.py */
+css = f"""/* Generated theme settings css file, see app.py */
 :root {{
     --theme: {THEME_COLOR};
     --theme-secondary: {THEME_COLOR_SECONDARY};
 }}
-'''
+"""
 sheet = cssutils.parseString(css)
-cssTextDecoded = sheet.cssText.decode('ascii')
-with open("assets/theme.css", 'w') as f:
+cssTextDecoded = sheet.cssText.decode("ascii")
+with open("assets/theme.css", "w") as f:
     f.write(cssTextDecoded)
 
 
 @app.callback(
-    Output({'type': 'to-collapse-class', 'index': MATCH}, "className"),
+    Output({"type": "to-collapse-class", "index": MATCH}, "className"),
     inputs=[
-        Input({'type': 'collapse-trigger', 'index': MATCH}, "n_clicks"),
-        State({'type': 'to-collapse-class', 'index': MATCH}, "className"),
+        Input({"type": "collapse-trigger", "index": MATCH}, "n_clicks"),
+        State({"type": "to-collapse-class", "index": MATCH}, "className"),
     ],
     prevent_initial_call=True,
 )
@@ -279,8 +280,12 @@ def run_optimization(
         sampler_type = SamplerType(sampler_type)
 
     if ctx.triggered_id == "run-button":
-        map_network, depot_id, force_locations, map_bounds = generate_mapping_information(num_clients)
-        initial_map = show_locations_on_initial_map(map_network, depot_id, force_locations, map_bounds)
+        map_network, depot_id, force_locations, map_bounds = generate_mapping_information(
+            num_clients
+        )
+        initial_map = show_locations_on_initial_map(
+            map_network, depot_id, force_locations, map_bounds
+        )
 
         routing_problem_parameters = RoutingProblemParameters(
             map_network=map_network,
@@ -313,9 +318,7 @@ def run_optimization(
             for key, value in cost_info_dict.items():
                 total_cost[key] += value
 
-        cost_table = create_table(
-            list(solution_cost.values()), list(total_cost.values())
-        )
+        cost_table = create_table(list(solution_cost.values()), list(total_cost.values()))
         solution_map.save("solution_map.html")
 
         parameter_hash = _get_parameter_hash(**callback_context.states)
@@ -327,11 +330,17 @@ def run_optimization(
         # Calculates cost improvement between DQM and KMEANS
         cost_comparison_percent = 0
         if reset_results:
-            cost_comparison = {str(sampler_type.value): total_cost["optimized_cost"]} # Dict keys must be strings because Dash stores data as JSON
+            cost_comparison = {
+                str(sampler_type.value): total_cost["optimized_cost"]
+            }  # Dict keys must be strings because Dash stores data as JSON
         else:
             cost_comparison[str(sampler_type.value)] = total_cost["optimized_cost"]
             if len(cost_comparison) == 2:
-                cost_comparison_percent = (1 - cost_comparison[str(SamplerType.DQM.value)]/cost_comparison[str(SamplerType.KMEANS.value)])*100
+                cost_comparison_percent = (
+                    1
+                    - cost_comparison[str(SamplerType.DQM.value)]
+                    / cost_comparison[str(SamplerType.KMEANS.value)]
+                ) * 100
 
         return (
             open("solution_map.html", "r").read(),
@@ -339,12 +348,26 @@ def run_optimization(
             "classical" if sampler_type is SamplerType.KMEANS else "quantum",
             reset_results,
             str(parameter_hash),
-            "The total distance travelled is " + str(round(cost_comparison_percent, 2)) + "% less using the quantum hybrid solution." if cost_comparison_percent > 0 else "",
+            (
+                "The total distance travelled is "
+                + str(round(cost_comparison_percent, 2))
+                + "% less using the quantum hybrid solution."
+                if cost_comparison_percent > 0
+                else ""
+            ),
             cost_comparison,
             problem_size,
             search_space,
-            wall_clock_time if sampler_type is SamplerType.KMEANS else "" if reset_results else dash.no_update,
-            wall_clock_time if sampler_type is SamplerType.DQM else  "" if reset_results else dash.no_update,
+            (
+                wall_clock_time
+                if sampler_type is SamplerType.KMEANS
+                else "" if reset_results else dash.no_update
+            ),
+            (
+                wall_clock_time
+                if sampler_type is SamplerType.DQM
+                else "" if reset_results else dash.no_update
+            ),
             num_clients,
             num_vehicles,
         )

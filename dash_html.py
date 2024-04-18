@@ -19,8 +19,16 @@ import html
 
 from dash import dcc, html
 
-from app_configs import (DESCRIPTION, LOCATIONS_LABEL, MAIN_HEADER, NUM_CLIENT_LOCATIONS, NUM_VEHICLES, SOLVER_TIME,
-                         THEME_COLOR_SECONDARY, THUMBNAIL)
+from app_configs import (
+    DESCRIPTION,
+    LOCATIONS_LABEL,
+    MAIN_HEADER,
+    NUM_CLIENT_LOCATIONS,
+    NUM_VEHICLES,
+    SOLVER_TIME,
+    THEME_COLOR_SECONDARY,
+    THUMBNAIL,
+)
 
 map_width, map_height = 1000, 600
 
@@ -142,26 +150,31 @@ def set_html(app):
                 children=[
                     # Left column
                     html.Div(
-                        id={'type': 'to-collapse-class', 'index': 0},
+                        id={"type": "to-collapse-class", "index": 0},
                         className="left-column",
                         children=[
-                            html.Div([ # Fixed width Div to collapse
-                                html.Div([ # Padding and content wrapper
-                                    description_card(),
-                                    generate_control_card(),
-                                    html.Div(["initial child"], id="output-clientside", style={"display": "none"}),
-                                ])
-                            ]),
+                            html.Div(
+                                [  # Fixed width Div to collapse
+                                    html.Div(
+                                        [  # Padding and content wrapper
+                                            description_card(),
+                                            generate_control_card(),
+                                            html.Div(
+                                                ["initial child"],
+                                                id="output-clientside",
+                                                style={"display": "none"},
+                                            ),
+                                        ]
+                                    )
+                                ]
+                            ),
                             html.Div(
                                 html.Button(
-                                    id={
-                                        'type': 'collapse-trigger',
-                                        'index': 0
-                                    },
+                                    id={"type": "collapse-trigger", "index": 0},
                                     className="left-column-collapse",
-                                    children=[html.Div(className="collapse-arrow")
-                                ]),
-                            )
+                                    children=[html.Div(className="collapse-arrow")],
+                                ),
+                            ),
                         ],
                     ),
                     # Right column
@@ -183,7 +196,7 @@ def set_html(app):
                                                 id="loading",
                                                 type="circle",
                                                 color=THEME_COLOR_SECONDARY,
-                                                children=html.Iframe(id="solution-map")
+                                                children=html.Iframe(id="solution-map"),
                                             ),
                                         ],
                                     ),
@@ -196,112 +209,171 @@ def set_html(app):
                                             html.Div(
                                                 className="tab-content--results",
                                                 children=[
-                                                    html.Div([
-                                                        html.Div(
-                                                            className="results-tables",
-                                                            children=[
-                                                                html.Div(
-                                                                    id="solution-cost-table-div",
-                                                                    className="result-table-div",
-                                                                    children=[
-                                                                        html.H3(
-                                                                            children=["Quantum Hybrid Results"],
-                                                                            className="table-label"
-                                                                        ),
-                                                                        html.Table(
-                                                                            title="Quantum Hybrid",
-                                                                            className="result-table",
-                                                                            id="solution-cost-table",
-                                                                            children=[],  # add children dynamically using 'create_table' below
-                                                                        ),
-                                                                    ],
-                                                                ),
-                                                                html.Div(
-                                                                    id="solution-cost-table-classical-div",
-                                                                    className="result-table-div",
-                                                                    children=[
-                                                                        html.H3(
-                                                                            children=["Classical (K-Means) Results"],
-                                                                            className="table-label"
-                                                                        ),
-                                                                        html.Table(
-                                                                            title="Classical (K-Means)",
-                                                                            className="result-table",
-                                                                            id="solution-cost-table-classical",
-                                                                            children=[],  # add children dynamically using 'create_table' below
-                                                                        ),
-                                                                    ],
-                                                                ),
-                                                            ]
-                                                        ),
-                                                        html.H4(id="performance-improvement-quantum"),
-                                                    ]),
-                                                    html.Div([
-                                                        html.Hr(),
-                                                        html.Div(
-                                                            id={'type': 'to-collapse-class', 'index': 1},
-                                                            className="details-collapse-wrapper collapsed",
-                                                            children=[
-                                                                html.Button(
-                                                                    id={
-                                                                        'type': 'collapse-trigger',
-                                                                        'index': 1
-                                                                    },
-                                                                    className="details-collapse",
-                                                                    children=[
-                                                                        html.H5("Problem Details"),
-                                                                        html.Div(className="collapse-arrow")
-                                                                    ]
-                                                                ),
-                                                                html.Div(
-                                                                    className="details-to-collapse",
-                                                                    children=[
-                                                                        html.Table(
-                                                                            id="solution-stats-table",
-                                                                            children=[
-                                                                                html.Thead(
-                                                                                    [
-                                                                                        html.Tr(
-                                                                                            [
-                                                                                                html.Th(colSpan=2, children=["Problem Specifics"]),
-                                                                                                html.Th(colSpan=2, children=["Wall Clock Time"]),
-                                                                                            ]
-                                                                                        )
-                                                                                    ]
-                                                                                ),
-                                                                                html.Tbody(
-                                                                                    id="problem-details",
-                                                                                    children=[
-                                                                                        html.Tr([
-                                                                                            html.Td(LOCATIONS_LABEL),
-                                                                                            html.Td(id="num-locations"),
-                                                                                            html.Td("Quantum Hybrid"),
-                                                                                            html.Td(id="wall-clock-time-quantum"),
-                                                                                        ]),
-                                                                                        html.Tr([
-                                                                                            html.Td("Vehicles Deployed"),
-                                                                                            html.Td(id="vehicles-deployed"),
-                                                                                            html.Td("Classical"),
-                                                                                            html.Td(id="wall-clock-time-classical"),
-                                                                                        ]),
-                                                                                        html.Tr([
-                                                                                            html.Td("Problem Size"),
-                                                                                            html.Td(id="problem-size"),
-                                                                                        ]),
-                                                                                        html.Tr([
-                                                                                            html.Td("Search Space"),
-                                                                                            html.Td(id="search-space"),
-                                                                                        ]),
-                                                                                    ]
-                                                                                )
-                                                                            ],
-                                                                        ),
-                                                                    ]
-                                                                )
-                                                            ]
-                                                        )
-                                                    ])
-                                                ]
+                                                    html.Div(
+                                                        [
+                                                            html.Div(
+                                                                className="results-tables",
+                                                                children=[
+                                                                    html.Div(
+                                                                        id="solution-cost-table-div",
+                                                                        className="result-table-div",
+                                                                        children=[
+                                                                            html.H3(
+                                                                                children=[
+                                                                                    "Quantum Hybrid Results"
+                                                                                ],
+                                                                                className="table-label",
+                                                                            ),
+                                                                            html.Table(
+                                                                                title="Quantum Hybrid",
+                                                                                className="result-table",
+                                                                                id="solution-cost-table",
+                                                                                children=[],  # add children dynamically using 'create_table' below
+                                                                            ),
+                                                                        ],
+                                                                    ),
+                                                                    html.Div(
+                                                                        id="solution-cost-table-classical-div",
+                                                                        className="result-table-div",
+                                                                        children=[
+                                                                            html.H3(
+                                                                                children=[
+                                                                                    "Classical (K-Means) Results"
+                                                                                ],
+                                                                                className="table-label",
+                                                                            ),
+                                                                            html.Table(
+                                                                                title="Classical (K-Means)",
+                                                                                className="result-table",
+                                                                                id="solution-cost-table-classical",
+                                                                                children=[],  # add children dynamically using 'create_table' below
+                                                                            ),
+                                                                        ],
+                                                                    ),
+                                                                ],
+                                                            ),
+                                                            html.H4(
+                                                                id="performance-improvement-quantum"
+                                                            ),
+                                                        ]
+                                                    ),
+                                                    html.Div(
+                                                        [
+                                                            html.Hr(),
+                                                            html.Div(
+                                                                id={
+                                                                    "type": "to-collapse-class",
+                                                                    "index": 1,
+                                                                },
+                                                                className="details-collapse-wrapper collapsed",
+                                                                children=[
+                                                                    html.Button(
+                                                                        id={
+                                                                            "type": "collapse-trigger",
+                                                                            "index": 1,
+                                                                        },
+                                                                        className="details-collapse",
+                                                                        children=[
+                                                                            html.H5(
+                                                                                "Problem Details"
+                                                                            ),
+                                                                            html.Div(
+                                                                                className="collapse-arrow"
+                                                                            ),
+                                                                        ],
+                                                                    ),
+                                                                    html.Div(
+                                                                        className="details-to-collapse",
+                                                                        children=[
+                                                                            html.Table(
+                                                                                id="solution-stats-table",
+                                                                                children=[
+                                                                                    html.Thead(
+                                                                                        [
+                                                                                            html.Tr(
+                                                                                                [
+                                                                                                    html.Th(
+                                                                                                        colSpan=2,
+                                                                                                        children=[
+                                                                                                            "Problem Specifics"
+                                                                                                        ],
+                                                                                                    ),
+                                                                                                    html.Th(
+                                                                                                        colSpan=2,
+                                                                                                        children=[
+                                                                                                            "Wall Clock Time"
+                                                                                                        ],
+                                                                                                    ),
+                                                                                                ]
+                                                                                            )
+                                                                                        ]
+                                                                                    ),
+                                                                                    html.Tbody(
+                                                                                        id="problem-details",
+                                                                                        children=[
+                                                                                            html.Tr(
+                                                                                                [
+                                                                                                    html.Td(
+                                                                                                        LOCATIONS_LABEL
+                                                                                                    ),
+                                                                                                    html.Td(
+                                                                                                        id="num-locations"
+                                                                                                    ),
+                                                                                                    html.Td(
+                                                                                                        "Quantum Hybrid"
+                                                                                                    ),
+                                                                                                    html.Td(
+                                                                                                        id="wall-clock-time-quantum"
+                                                                                                    ),
+                                                                                                ]
+                                                                                            ),
+                                                                                            html.Tr(
+                                                                                                [
+                                                                                                    html.Td(
+                                                                                                        "Vehicles Deployed"
+                                                                                                    ),
+                                                                                                    html.Td(
+                                                                                                        id="vehicles-deployed"
+                                                                                                    ),
+                                                                                                    html.Td(
+                                                                                                        "Classical"
+                                                                                                    ),
+                                                                                                    html.Td(
+                                                                                                        id="wall-clock-time-classical"
+                                                                                                    ),
+                                                                                                ]
+                                                                                            ),
+                                                                                            html.Tr(
+                                                                                                [
+                                                                                                    html.Td(
+                                                                                                        "Problem Size"
+                                                                                                    ),
+                                                                                                    html.Td(
+                                                                                                        id="problem-size"
+                                                                                                    ),
+                                                                                                ]
+                                                                                            ),
+                                                                                            html.Tr(
+                                                                                                [
+                                                                                                    html.Td(
+                                                                                                        "Search Space"
+                                                                                                    ),
+                                                                                                    html.Td(
+                                                                                                        id="search-space"
+                                                                                                    ),
+                                                                                                ]
+                                                                                            ),
+                                                                                        ],
+                                                                                    ),
+                                                                                ],
+                                                                            ),
+                                                                        ],
+                                                                    ),
+                                                                ],
+                                                            ),
+                                                        ]
+                                                    ),
+                                                ],
                                             )
                                         ],
                                     ),
@@ -309,18 +381,18 @@ def set_html(app):
                             )
                         ],
                     ),
-                ]
-            )
+                ],
+            ),
         ],
     )
+
 
 def create_row_cells(values: list) -> list[html.Td]:
     """List required to execute loop, unpack after to maintain required structure."""
     return [html.Td(round(value)) for value in values]
 
-def create_table(
-    values_dicts: dict[int, dict], values_tot: list
-) -> list:
+
+def create_table(values_dicts: dict[int, dict], values_tot: list) -> list:
     """Create a table dynamically.
 
     Args:
@@ -348,9 +420,12 @@ def create_table(
                 html.Tr(
                     [
                         html.Td(index + 1),
-                        *create_row_cells(list(vehicle.values())), # Unpack list to maintain required structure
+                        *create_row_cells(
+                            list(vehicle.values())
+                        ),  # Unpack list to maintain required structure
                     ]
-                ) for index, vehicle in enumerate(values_dicts)
+                )
+                for index, vehicle in enumerate(values_dicts)
             ]
         ),
         html.Tfoot(
@@ -358,12 +433,12 @@ def create_table(
                 html.Tr(
                     [
                         html.Td("Total"),
-                        *create_row_cells(values_tot), # Unpack list to maintain required structure
+                        *create_row_cells(values_tot),  # Unpack list to maintain required structure
                     ],
-                    className="total-cost-row"
+                    className="total-cost-row",
                 )
             ]
-        )
+        ),
     ]
 
     return table

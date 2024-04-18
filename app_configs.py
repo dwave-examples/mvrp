@@ -14,11 +14,11 @@
 
 """This file stores input parameters for the app."""
 
-DEBUG = True # Sets Dash debug. Set to True if developing and False if demoing. App should be restarted to see change.
+DEBUG = True  # Sets Dash debug. Set to True if developing and False if demoing. App should be restarted to see change.
 
 # Color should pass accessibility checks with white: https://webaim.org/resources/contrastchecker/
-THEME_COLOR = "#074C91" # Dark color for button, text, and banner, D-Wave dark blue default #074C91
-THEME_COLOR_SECONDARY = "#2A7DE1" # Dark or light color for sliders, loading icon, and tab highlights, D-Wave blue default #2A7DE1
+THEME_COLOR = "#074C91"  # Dark color for button, text, and banner, D-Wave dark blue default #074C91
+THEME_COLOR_SECONDARY = "#2A7DE1"  # Dark or light color for sliders, loading icon, and tab highlights, D-Wave blue default #2A7DE1
 
 ADDRESS = "Cambridge Ln, Rockhampton QLD 4700, Australia"
 DISTANCE = 1700  # bounding box distance (in meters) around address
@@ -32,7 +32,7 @@ between delivery drones (flight path) and trucks (roads), the number of vehicles
 locations.
 """
 
-LOCATIONS_LABEL = "Locations" # Either "Locations" or business specific location type
+LOCATIONS_LABEL = "Locations"  # Either "Locations" or business specific location type
 
 #######################################
 # Sliders, buttons and option entries #
