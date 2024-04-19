@@ -14,11 +14,16 @@
 
 """This file stores input parameters for the app."""
 
-DEBUG = True  # Sets Dash debug. Set to True if developing and False if demoing. App should be restarted to see change.
+# Sets Dash debug which hides and shows Dash debug menu.
+# Set to True if developing and False if demoing.
+# App should be restarted to see change.
+DEBUG = True
 
-# Color should pass accessibility checks with white: https://webaim.org/resources/contrastchecker/
-THEME_COLOR = "#074C91"  # Dark color for button, text, and banner, D-Wave dark blue default #074C91
-THEME_COLOR_SECONDARY = "#2A7DE1"  # Dark or light color for sliders, loading icon, and tab highlights, D-Wave blue default #2A7DE1
+# THEME_COLOR is used for the button, text, and banner and should be dark
+# and pass accessibility checks with white: https://webaim.org/resources/contrastchecker/
+# THEME_COLOR_SECONDARY can be light or dark and is used for sliders, loading icon, and tabs
+THEME_COLOR = "#074C91"  # D-Wave dark blue default #074C91
+THEME_COLOR_SECONDARY = "#2A7DE1"  # D-Wave blue default #2A7DE1
 
 ADDRESS = "Cambridge Ln, Rockhampton QLD 4700, Australia"
 DISTANCE = 1700  # bounding box distance (in meters) around address

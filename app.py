@@ -325,7 +325,7 @@ def run_optimization(
             reset_results = False
 
         # Calculates cost improvement between DQM and KMEANS
-        cost_comparison_percent = 0
+        cost_comparison_ratio = 1
         if reset_results:
             cost_comparison = {
                 str(sampler_type.value): total_cost["optimized_cost"]
@@ -333,11 +333,26 @@ def run_optimization(
         else:
             cost_comparison[str(sampler_type.value)] = total_cost["optimized_cost"]
             if len(cost_comparison) == 2:
-                cost_comparison_percent = (
-                    1
-                    - cost_comparison[str(SamplerType.DQM.value)]
-                    / cost_comparison[str(SamplerType.KMEANS.value)]
-                ) * 100
+                cost_dqm = cost_comparison[str(SamplerType.DQM.value)]
+                cost_kmeans = cost_comparison[str(SamplerType.KMEANS.value)]
+                cost_comparison_ratio = cost_dqm/cost_kmeans
+
+        performance_improvement_quantum = ""
+        if cost_comparison_ratio < 1:
+            performance_improvement_quantum = f"The total distance \
+                travelled is {1 - cost_comparison_ratio:.2%}% \
+                less using the quantum hybrid solution."
+
+        wall_clock_time_kmeans = ""
+        wall_clock_time_dqm = ""
+        if sampler_type is SamplerType.KMEANS:
+            wall_clock_time_kmeans = wall_clock_time
+            if not reset_results:
+                wall_clock_time_dqm = dash.no_update
+        else:
+            wall_clock_time_dqm = wall_clock_time
+            if not reset_results:
+                wall_clock_time_kmeans = dash.no_update
 
         return (
             open("solution_map.html", "r").read(),
@@ -345,26 +360,12 @@ def run_optimization(
             "classical" if sampler_type is SamplerType.KMEANS else "quantum",
             reset_results,
             str(parameter_hash),
-            (
-                "The total distance travelled is "
-                + str(round(cost_comparison_percent, 2))
-                + "% less using the quantum hybrid solution."
-                if cost_comparison_percent > 0
-                else ""
-            ),
+            performance_improvement_quantum,
             cost_comparison,
             problem_size,
             search_space,
-            (
-                wall_clock_time
-                if sampler_type is SamplerType.KMEANS
-                else "" if reset_results else dash.no_update
-            ),
-            (
-                wall_clock_time
-                if sampler_type is SamplerType.DQM
-                else "" if reset_results else dash.no_update
-            ),
+            wall_clock_time_kmeans,
+            wall_clock_time_dqm,
             num_clients,
             num_vehicles,
         )
