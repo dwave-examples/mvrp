@@ -44,6 +44,44 @@ def description_card():
     )
 
 
+def slider(label: str, id: str, config: dict) -> html.Div:
+    """Slider element for value selection."""
+    return html.Div(
+        children=[
+            html.Label(label),
+            dcc.Slider(
+                id=id,
+                className="slider",
+                **config,
+                marks={
+                    config["min"]: str(config["min"]),
+                    config["max"]: str(config["max"]),
+                },
+                tooltip={
+                    "placement": "bottom",
+                    "always_visible": True,
+                },
+            ),
+        ],
+    )
+
+
+def dropdown(label: str, id: str, options: list) -> html.Div:
+    """Slider element for value selection."""
+    return html.Div(
+        children=[
+            html.Label(label),
+            dcc.Dropdown(
+                id=id,
+                options=options,
+                value=options[0]["value"],
+                clearable=False,
+                searchable=False,
+            ),
+        ],
+    )
+
+
 def generate_control_card() -> html.Div:
     """
     This function generates the control card for the dashboard, which
@@ -59,49 +97,25 @@ def generate_control_card() -> html.Div:
     return html.Div(
         id="control-card",
         children=[
-            html.Label("Vehicle Type"),
-            dcc.Dropdown(
-                id="vehicle-type-select",
-                options=vehicle_options,
-                value=vehicle_options[0]["value"],
-                clearable=False,
-                searchable=False,
+            dropdown(
+                "Vehicle Type",
+                "vehicle-type-select",
+                vehicle_options,
             ),
-            html.Label("Vehicles to Deploy"),
-            dcc.Slider(
-                id="num-vehicles-select",
-                className="select",
-                **NUM_VEHICLES,
-                marks={
-                    NUM_VEHICLES["min"]: str(NUM_VEHICLES["min"]),
-                    NUM_VEHICLES["max"]: str(NUM_VEHICLES["max"]),
-                },
-                tooltip={
-                    "placement": "bottom",
-                    "always_visible": True,
-                },
+            slider(
+                "Vehicles to Deploy",
+                "num-vehicles-select",
+                NUM_VEHICLES,
             ),
-            html.Label(LOCATIONS_LABEL),
-            dcc.Slider(
-                id="num-clients-select",
-                className="select",
-                **NUM_CLIENT_LOCATIONS,
-                marks={
-                    NUM_CLIENT_LOCATIONS["min"]: str(NUM_CLIENT_LOCATIONS["min"]),
-                    NUM_CLIENT_LOCATIONS["max"]: str(NUM_CLIENT_LOCATIONS["max"]),
-                },
-                tooltip={
-                    "placement": "bottom",
-                    "always_visible": True,
-                },
+            slider(
+                LOCATIONS_LABEL,
+                "num-clients-select",
+                NUM_CLIENT_LOCATIONS,
             ),
-            html.Label("Solver"),
-            dcc.Dropdown(
-                id="sampler-type-select",
-                options=sampler_options,
-                value=sampler_options[0]["value"],
-                clearable=False,
-                searchable=False,
+            dropdown(
+                "Solver",
+                "sampler-type-select",
+                sampler_options,
             ),
             html.Label("Solver Time Limit (seconds)"),
             dcc.Input(
