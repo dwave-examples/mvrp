@@ -22,19 +22,23 @@ from typing import TYPE_CHECKING, Union
 import dash
 import diskcache
 import folium
-from dash import DiskcacheManager, callback_context, ctx
+from dash import MATCH, DiskcacheManager, callback_context, ctx
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 
+from app_configs import DEBUG
 from dash_html import create_table, set_html
-from map import (generate_mapping_information, plot_solution_routes_on_map,
-                 show_locations_on_initial_map)
+from map import (
+    generate_mapping_information,
+    plot_solution_routes_on_map,
+    show_locations_on_initial_map,
+)
 from solver.solver import RoutingProblemParameters, SamplerType, Solver, VehicleType
 
 cache = diskcache.Cache("./cache")
 background_callback_manager = DiskcacheManager(cache)
 
-from app_configs import APP_TITLE
+from app_configs import APP_TITLE, THEME_COLOR, THEME_COLOR_SECONDARY
 
 if TYPE_CHECKING:
     from dash import html
@@ -53,28 +57,41 @@ app.config.suppress_callback_exceptions = True
 BASE_PATH = Path(__file__).parent.resolve()
 DATA_PATH = BASE_PATH.joinpath("input").resolve()
 
+# Generates css file and variable using THEME_COLOR and THEME_COLOR_SECONDARY settings
+css = f"""/* Generated theme settings css file, see app.py */
+:root {{
+    --theme: {THEME_COLOR};
+    --theme-secondary: {THEME_COLOR_SECONDARY};
+}}
+"""
+with open("assets/theme.css", "w") as f:
+    f.write(css)
+
 
 @app.callback(
-    Output("left-column", "className"),
+    Output({"type": "to-collapse-class", "index": MATCH}, "className"),
     inputs=[
-        Input("left-column-collapse", "n_clicks"),
-        State("left-column", "className"),
+        Input({"type": "collapse-trigger", "index": MATCH}, "n_clicks"),
+        State({"type": "to-collapse-class", "index": MATCH}, "className"),
     ],
     prevent_initial_call=True,
 )
-def toggle_left_column(left_column_collapse: int, class_name: str) -> str:
-    """Toggles left column 'collapsed' class that hides and shows the left column.
+def toggle_left_column(collapse_trigger: int, to_collapse_class: str) -> str:
+    """Toggles a 'collapsed' class that hides and shows some aspect of the UI.
 
     Args:
-        left_column_collapse (int): The (total) number of times the collapse button has been clicked.
-        class_name (str): Current class name of the left column, 'collapsed' if not visible, empty string if visible
+        collapse_trigger (int): The (total) number of times a collapse button has been clicked.
+        to_collapse_class (str): Current class name of the thing to collapse, 'collapsed' if not visible, empty string if visible
 
     Returns:
-        str: The new class name of the left column.
+        str: The new class name of the thing to collapse.
     """
-    if class_name:
-        return ""
-    return "collapsed"
+
+    classes = to_collapse_class.split(" ") if to_collapse_class else []
+    if "collapsed" in classes:
+        classes.remove("collapsed")
+        return " ".join(classes)
+    return to_collapse_class + " collapsed" if to_collapse_class else "collapsed"
 
 
 def generate_inital_map(num_clients: int) -> folium.Map:
@@ -157,6 +174,76 @@ def update_tables(
     return stored_results, empty_or_no_update
 
 
+def calculate_cost_comparison(
+    cost_comparison: dict,
+    final_cost: int,
+    sampler_type: Union[SamplerType, int],
+    reset_results: bool
+) -> tuple[dict, str]:
+    """Calculates cost improvement between DQM and KMEANS.
+
+    Args:
+        cost_comparison: Dictionary with solver keys and run cost values.
+        final_cost: The total distance cost of the most recent run.
+        sampler_type: The sampler that was run. Either Quantum Hybrid (DQM) (``0`` or ``SamplerType.DQM``) or
+            Classical (K-Means) (``1`` or ``SamplerType.KMEANS``).
+        reset_results: Whether or not to reset wall clock times.
+
+    Returns:
+        cost_comparison: Updated dictionary with solver keys and run cost values.
+        performance_improvement_quantum: String stating the quantum hybrid performance improvement.
+    """
+    cost_comparison_ratio = 1
+    if reset_results:
+        cost_comparison = {
+            # Dict keys must be strings because Dash stores data as JSON
+            str(sampler_type.value): final_cost
+        }
+    else:
+        cost_comparison[str(sampler_type.value)] = final_cost
+        if len(cost_comparison) == 2:
+            cost_dqm = cost_comparison[str(SamplerType.DQM.value)]
+            cost_kmeans = cost_comparison[str(SamplerType.KMEANS.value)]
+            cost_comparison_ratio = cost_dqm/cost_kmeans
+
+    performance_improvement_quantum = ""
+    if cost_comparison_ratio < 1:
+        performance_improvement_quantum = f"The total distance \
+            travelled is {1 - cost_comparison_ratio:.2%} \
+            less using the quantum hybrid solution."
+    return cost_comparison, performance_improvement_quantum
+
+
+def get_updated_wall_clock_times(
+    wall_clock_time: float,
+    sampler_type: Union[SamplerType, int],
+    reset_results: bool
+) -> tuple[str, str]:
+    """Determine which wall clock times to update in the UI.
+
+    Args:
+        wall_clock_time: Total run time.
+        sampler_type: The sampler that was run. Either Quantum Hybrid (DQM) (``0`` or ``SamplerType.DQM``) or
+            Classical (K-Means) (``1`` or ``SamplerType.KMEANS``).
+        reset_results: Whether or not to reset wall clock times.
+
+    Returns:
+        wall_clock_time_kmeans: Updated kmeans wall clock time.
+        wall_clock_time_dqm: Updated dqm wall clock time.
+    """
+    wall_clock_time_kmeans = ""
+    wall_clock_time_dqm = ""
+    if sampler_type is SamplerType.KMEANS:
+        wall_clock_time_kmeans = f"{wall_clock_time:.3f}s"
+        if not reset_results:
+            wall_clock_time_dqm = dash.no_update
+    else:
+        wall_clock_time_dqm = f"{wall_clock_time:.3f}s"
+        if not reset_results:
+            wall_clock_time_kmeans = dash.no_update
+    return wall_clock_time_kmeans, wall_clock_time_dqm
+
+
 @app.long_callback(
     # update map and results
     Output("solution-map", "srcDoc", allow_duplicate=True),
@@ -166,12 +253,14 @@ def update_tables(
     Output("sampler-type", "data"),
     Output("reset-results", "data"),
     Output("parameter-hash", "data"),
-    # update table values in top results tab
+    Output("performance-improvement-quantum", "children"),
+    Output("cost-comparison", "data"),
+    # updates problem details table
     Output("problem-size", "children"),
     Output("search-space", "children"),
     Output("wall-clock-time-classical", "children"),
     Output("wall-clock-time-quantum", "children"),
-    Output("force-elements", "children"),
+    Output("num-locations", "children"),
     Output("vehicles-deployed", "children"),
     inputs=[
         Input("run-button", "n_clicks"),
@@ -183,11 +272,12 @@ def update_tables(
         # input and output result table (to update it dynamically)
         State("solution-cost-table", "children"),
         State("parameter-hash", "data"),
+        State("cost-comparison", "data"),
     ],
     running=[
         # show cancel button and hide run button, and disable and animate results tab
-        (Output("cancel-button", "style"), {"display": "inline-block"}, {"display": "none"}),
-        (Output("run-button", "style"), {"display": "none"}, {"display": "inline-block"}),
+        (Output("cancel-button", "className"), "", "display-none"),
+        (Output("run-button", "className"), "display-none", ""),
         (Output("results-tab", "disabled"), True, False),
         (Output("results-tab", "label"), "Loading...", "Results"),
         # switch to map tab while running
@@ -207,7 +297,8 @@ def run_optimization(
     num_clients: int,
     cost_table: list,
     previous_parameter_hash: str,
-) -> tuple[str, list, str, bool, str, int, str, str, str, int, int]:
+    cost_comparison: dict,
+) -> tuple[str, list, str, bool, str, str, dict, int, str, str, str, int, int]:
     """Run the optimization and update map and results tables.
 
     This is the main optimization function which is called when the Run optimization button is
@@ -226,6 +317,7 @@ def run_optimization(
         num_clients: The number of force locations.
         cost_table: The html 'Solution cost' table. Used to update it dynamically.
         previous_parameter_hash: Previous hash string to detect changed parameters
+        cost_comparison: Dictionary with solver keys and run cost values
 
     Returns:
         A tuple containing all outputs to be used when updating the HTML template (in
@@ -237,12 +329,14 @@ def run_optimization(
             sampler-type: The sampler used (``"quantum"`` or ``"classical"``).
             reset-results: Whether or not to reset the results tables before applying the new one.
             parameter-hash: Hash string to detect changed parameters.
-            problem-size: Updates the problem-size entry in the Solution stats table.
-            search-space: Updates the search-space entry in the Solution stats table.
+            performance-improvement-quantum: Updates quatum performance improvement message.
+            cost-comparison: Keeps track of the difference between classical and hybrid run costs.
+            problem-size: Updates the problem-size entry in the problem details table.
+            search-space: Updates the search-space entry in the problem details table.
             wall-clock-time-classical: Updates the wall clock time in the Classical table header.
             wall-clock-time-quantum: Updates the wall clock time in the Hybrid Quantum table header.
-            force-elements: Updates the force-elements entry in the Solution stats table.
-            vehicles-deployed: Updates the vehicles-deployed entry in the Solution stats table.
+            num-locations: Updates the number of locations in the problem details table.
+            vehicles-deployed: Updates the vehicles-deployed entry in the problem details table.
     """
     if run_click == 0 or ctx.triggered_id != "run-button":
         return ""
@@ -253,8 +347,12 @@ def run_optimization(
         sampler_type = SamplerType(sampler_type)
 
     if ctx.triggered_id == "run-button":
-        map_network, depot_id, force_locations, map_bounds = generate_mapping_information(num_clients)
-        initial_map = show_locations_on_initial_map(map_network, depot_id, force_locations, map_bounds)
+        map_network, depot_id, force_locations, map_bounds = generate_mapping_information(
+            num_clients
+        )
+        initial_map = show_locations_on_initial_map(
+            map_network, depot_id, force_locations, map_bounds
+        )
 
         routing_problem_parameters = RoutingProblemParameters(
             map_network=map_network,
@@ -279,7 +377,6 @@ def run_optimization(
 
         problem_size = num_vehicles * num_clients
         search_space = f"{num_vehicles**num_clients:.2e}"
-        wall_clock_time = f"Wall clock time: {wall_clock_time:.3f}s"
 
         solution_cost = dict(sorted(solution_cost.items()))
         total_cost = defaultdict(int)
@@ -287,9 +384,7 @@ def run_optimization(
             for key, value in cost_info_dict.items():
                 total_cost[key] += value
 
-        cost_table = create_table(
-            list(solution_cost.values()), list(total_cost.values())
-        )
+        cost_table = create_table(list(solution_cost.values()), list(total_cost.values()))
         solution_map.save("solution_map.html")
 
         parameter_hash = _get_parameter_hash(**callback_context.states)
@@ -298,16 +393,22 @@ def run_optimization(
         else:
             reset_results = False
 
+        cost_comparison, performance_improvement_quantum = calculate_cost_comparison(cost_comparison, total_cost["optimized_cost"], sampler_type, reset_results)
+
+        wall_clock_time_kmeans, wall_clock_time_dqm = get_updated_wall_clock_times(wall_clock_time, sampler_type, reset_results)
+
         return (
             open("solution_map.html", "r").read(),
             cost_table,
             "classical" if sampler_type is SamplerType.KMEANS else "quantum",
             reset_results,
             str(parameter_hash),
+            performance_improvement_quantum,
+            cost_comparison,
             problem_size,
             search_space,
-            wall_clock_time if sampler_type is SamplerType.KMEANS else dash.no_update,
-            wall_clock_time if sampler_type is SamplerType.DQM else dash.no_update,
+            wall_clock_time_kmeans,
+            wall_clock_time_dqm,
             num_clients,
             num_vehicles,
         )
@@ -337,4 +438,4 @@ set_html(app)
 
 # Run the server
 if __name__ == "__main__":
-    app.run_server(debug=True)
+    app.run_server(debug=DEBUG)

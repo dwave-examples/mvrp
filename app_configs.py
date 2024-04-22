@@ -14,6 +14,21 @@
 
 """This file stores input parameters for the app."""
 
+# Sets Dash debug which hides and shows Dash debug menu.
+# Set to True if developing and False if demoing.
+# App should be restarted to see change.
+DEBUG = False
+
+# Shows/hides Quantum Hybrid vs Classical cost comparison in the
+# results tab when both are run with the same settings.
+SHOW_COST_COMPARISON = False
+
+# THEME_COLOR is used for the button, text, and banner and should be dark
+# and pass accessibility checks with white: https://webaim.org/resources/contrastchecker/
+# THEME_COLOR_SECONDARY can be light or dark and is used for sliders, loading icon, and tabs
+THEME_COLOR = "#074C91"  # D-Wave dark blue default #074C91
+THEME_COLOR_SECONDARY = "#2A7DE1"  # D-Wave blue default #2A7DE1
+
 ADDRESS = "Cambridge Ln, Rockhampton QLD 4700, Australia"
 DISTANCE = 1700  # bounding box distance (in meters) around address
 THUMBNAIL = "assets/dwave_logo.svg"
@@ -25,6 +40,8 @@ Run the Multi Vehicle Routing Problem (MVRP) problem for several different scena
 between delivery drones (flight path) and trucks (roads), the number of vehicles and client
 locations.
 """
+
+LOCATIONS_LABEL = "Locations"  # Either "Locations" or business specific location type
 
 #######################################
 # Sliders, buttons and option entries #
@@ -48,8 +65,8 @@ NUM_CLIENT_LOCATIONS = {
 
 # solver time limits in seconds (value means default)
 SOLVER_TIME = {
-    "min": 5,
+    "min": 10,
     "max": 300,
     "step": 5,
-    "value": 5,
+    "value": 10,
 }

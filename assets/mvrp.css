@@ -31,6 +31,10 @@ Apache License, Version 2.0
 
 */
 
+
+/* theme.css is automatically generated, see app.py for more details */
+@import url("theme.css");
+
 :root {
     --blue-bright: #03B8FF;
     --blue-light: #2A7DE1;
@@ -46,6 +50,9 @@ Apache License, Version 2.0
     --grey: #AAAAAA;
     --grey-medium: #777777;
     --grey-dark: #222222;
+    --banner-height: 5.5rem;
+    --left-col-width: 42rem;
+    --problem-details-height: 18rem;
 }
 
 body {
@@ -55,13 +62,17 @@ body {
     margin: 0rem;
 }
 
+.display-none {
+    display: none;
+}
+
 #description-card {
     margin: 2rem 0rem;
 }
 
 #banner {
-    height: 5.5rem;
-    background-color: var(--blue-dark);
+    flex: 0 0 var(--banner-height);
+    background-color: var(--theme);
 
     display: flex;
     flex-direction: row;
@@ -80,7 +91,7 @@ h1, h2, h3, h4, h5, h6, td, th, span, a, p, label {
 }
 
 h1, h2, h3, h4, h5, h6 {
-    color: var(--blue-dark);
+    color: var(--theme);
     font-weight: 400;
 }
 
@@ -90,14 +101,19 @@ h1 {
 }
 
 h3 {
-    font-size: 2.5rem;
+    font-size: 2.4rem;
     margin: 2.5rem 0 1rem;
 }
 
 h4 {
     font-size: 2rem;
-    margin-top: 2rem;
+    margin-top: 0;
     font-weight: 500;
+}
+
+h5 {
+    font-size: 1.8rem;
+    font-weight: 600;
 }
 
 h4.table-label {
@@ -118,31 +134,32 @@ label {
 
 #app-container {
     min-width: 1000px;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
 #columns {
     display: flex;
-
-    /* Height of screen minus height of banner */
-    min-height: calc(100vh - 5.5rem);
+    flex: 1;
 }
 
-#left-column {
+.left-column {
     display: flex;
 }
 
-#left-column > div > div {
+.left-column > div > div {
     padding: 0 2rem;
-    width: 38rem;
+    width: calc(var(--left-col-width) - 4rem);
 }
 
-#left-column > div:first-child {
-    width: 42rem;
+.left-column > div:first-child {
+    width: var(--left-col-width);
     transition: width 0.6s ease-in-out;
     overflow: hidden;
 }
 
-#left-column.collapsed > div:first-child {
+.left-column.collapsed > div:first-child {
     width: 0;
 }
 
@@ -152,23 +169,52 @@ label {
     width: 100%;
 }
 
+.results-tables {
+    display: flex;
+}
+
+@media screen and (max-width: 1430px) {
+    .results-tables {
+        flex-direction: column;
+    }
+}
+
 #solution-stats-table {
-    font-size: 1.6rem;
+    font-size: 1.5rem;
+    border: 1px solid var(--grey-light);
+}
+
+#solution-stats-table th {
+    text-align: left;
+    border-right: 1px solid var(--grey-light);
+}
+
+#solution-stats-table td:nth-child(2n+1) {
+    text-align: left;
+}
+
+#solution-stats-table td:nth-child(2n) {
+    border-right: 1px solid var(--grey-light);
 }
 
 .result-table-div {
-    display: inline-block;
+    width: 100%;
+    max-width: 65rem;
+}
+
+.result-table-div table {
+    width: 100%;
 }
 
 .result-table {
-    font-size: 1.6rem;
-    border: 4px var(--blue-dark);
-    border-style: solid none none solid;
+    font-size: 1.5rem;
+    border: 3px var(--theme);
+    border-style: solid solid none;
     background-color: white;
 }
 
 #solution-cost-table-div {
-    margin-right: 3rem;
+    margin-right: 2.6rem;
 }
 
 #solution-cost-table-div:not(:has(> table > thead)),
@@ -180,9 +226,9 @@ table {
     margin-bottom: 2rem;
 }
 
-th {
+.result-table th {
     color: white;
-    background-color: var(--blue-dark);
+    background-color: var(--theme);
     font-weight: 400;
 }
 
@@ -191,7 +237,7 @@ td {
 }
 
 th, td {
-    padding: 0.6rem 1.2rem;
+    padding: 0.5rem 1rem;
     text-align: right;
 }
 
@@ -207,24 +253,39 @@ th:last-child, td:last-child {
     font-weight: 600;
 }
 
-.select {
+.VirtualizedSelectFocusedOption {
+    background-color: var(--grey-lighter);
+}
+
+.is-focused:not(.is-open)>.Select-control {
+    border-color: var(--theme-secondary);
+    box-shadow: none;
+}
+
+.slider {
     padding-left: 6px !important;
 }
 
 .rc-slider-handle,
 .rc-slider-dot-active {
-    border-color: var(--blue-light);
+    border-color: var(--theme-secondary);
+    transition: filter 0.1s ease-in-out;
+}
+
+.rc-slider-handle:active {
+    box-shadow: 0 0 5px var(--theme-secondary);
 }
 
 .rc-slider-handle:active,
 .rc-slider-handle:hover,
 .rc-slider-handle-click-focused,
 .rc-slider-handle-click-focused:focus {
-    border-color: var(--blue-dark);
+    border-color: var(--theme-secondary);
+    filter: brightness(80%)
 }
 
 .rc-slider-track {
-    background-color: var(--blue-light);
+    background-color: var(--theme-secondary);
 }
 
 .rc-slider-tooltip-inner {
@@ -280,7 +341,9 @@ th:last-child, td:last-child {
 #solution-map {
     border: none;
     width: 100%;
-    height: 100%;
+
+    /* -7px to fix map generator creating a gap at the bottom of the screen */
+    height: calc(100% - 7px);
 }
 
 #solution-map[data-dash-is-loading="true"] {
@@ -298,19 +361,22 @@ div.dash-sk-circle {
     font-weight: bold;
 }
 
-button:not(#left-column-collapse) {
+#run-button,
+#cancel-button {
     width: 100%;
     font-size: 1.4rem;
     line-height: 1.4rem;
     padding: 1.8rem;
     height: auto;
     color: white;
-    transition: background-color 0.2s ease-in-out;
+    transition: all 0.2s ease-in-out;
     margin-bottom: 4rem;
     border: none;
 }
 
-#left-column-collapse {
+.left-column-collapse,
+.left-column-collapse:hover,
+.left-column-collapse:focus {
     background: white;
     border: 1px var(--grey-lighter);
     border-style: none solid none none;
@@ -319,7 +385,28 @@ button:not(#left-column-collapse) {
     padding: 0 0 0 0.5rem;
 }
 
-#left-column-collapse div {
+.details-collapse,
+.details-collapse:hover,
+.details-collapse:focus {
+    border: none;
+    background: none;
+    display: flex;
+    padding: 0 2rem 0 0;
+    transition: filter 0.2s ease-in-out;
+    text-transform: none;
+    height: auto;
+}
+
+.details-collapse:hover {
+    filter: brightness(70%)
+}
+
+.details-collapse-wrapper {
+    margin-bottom: 2rem;
+    overflow: hidden;
+}
+
+.collapse-arrow {
     border-right: 4px solid var(--grey-light);
     border-bottom: 4px solid var(--grey-light);
     transform: rotate(135deg) skew(165deg, 165deg);
@@ -329,24 +416,47 @@ button:not(#left-column-collapse) {
     transition: border-color 0.25s ease-in-out;
 }
 
-#left-column-collapse:hover div {
+.details-collapse .collapse-arrow {
+    transform: rotate(225deg) skew(165deg, 165deg);
+    margin: 1.5rem 0 0 1.5rem;
+    border-color: var(--theme);
+    height: 1.2rem;
+    width: 1.2rem;
+}
+
+.left-column-collapse:hover .collapse-arrow {
     border-color: var(--grey);
 }
 
-.collapsed #left-column-collapse {
+.collapsed .left-column-collapse {
     padding: 0 0.5rem 0 0;
 }
 
-.collapsed #left-column-collapse div {
-    transform: rotate(315deg) skew(160deg, 160deg);
+.collapsed .left-column-collapse .collapse-arrow {
+    transform: rotate(315deg) skew(165deg, 165deg);
+}
+
+.collapsed .details-collapse .collapse-arrow {
+    margin-top: 1rem;
+    transform: rotate(45deg) skew(165deg, 165deg);
+}
+
+.details-to-collapse {
+    height: var(--problem-details-height);
+    transition: height 0.6s ease-in-out;
+    overflow: hidden;
+}
+
+.collapsed .details-to-collapse {
+    height: 0;
 }
 
 #run-button {
-    background-color: var(--blue-light);
+    background-color: var(--theme);
 }
 
 #run-button:hover {
-    background-color: var(--blue-dark);
+    filter: brightness(80%);
 }
 
 #cancel-button {
@@ -358,21 +468,21 @@ button:not(#left-column-collapse) {
 }
 
 .tab-container {
-    border-bottom: 3px solid var(--blue-light);
-    flex-direction: row !important;
+    border-bottom: 3px solid var(--theme-secondary);
+    flex-direction: row;
 }
 
 .tab {
     margin: 0 2rem;
     border-top-left-radius: 0.6rem;
     border-top-right-radius: 0.6rem;
-    width: calc(100% / 2) !important;
+    width: calc(100% / 2);
 }
 
 div.tab.tab--selected {
-    border: 3px solid var(--blue-light) !important;
+    border: 3px solid var(--theme-secondary) !important;
     border-bottom: none !important;
-    cursor: default !important;
+    cursor: default;
     box-shadow: 0 6px 0 -3px white;
 }
 
@@ -407,8 +517,16 @@ div.tab.tab--disabled {
 
 .tab-content--results {
     padding: 0 3rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
 }
 
 #solver-time-limit {
     margin-bottom: 2rem;
+}
+
+hr {
+    margin: 1rem 0;
 }
