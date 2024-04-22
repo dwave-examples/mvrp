@@ -19,6 +19,10 @@
 # App should be restarted to see change.
 DEBUG = False
 
+# Shows/hides Quantum Hybrid vs Classical cost comparison in the
+# results tab when both are run with the same settings.
+SHOW_COST_COMPARISON = True
+
 # THEME_COLOR is used for the button, text, and banner and should be dark
 # and pass accessibility checks with white: https://webaim.org/resources/contrastchecker/
 # THEME_COLOR_SECONDARY can be light or dark and is used for sliders, loading icon, and tabs

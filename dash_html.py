@@ -25,6 +25,7 @@ from app_configs import (
     MAIN_HEADER,
     NUM_CLIENT_LOCATIONS,
     NUM_VEHICLES,
+    SHOW_COST_COMPARISON,
     SOLVER_TIME,
     THEME_COLOR_SECONDARY,
     THUMBNAIL,
@@ -267,7 +268,8 @@ def set_html(app):
                                                                 ],
                                                             ),
                                                             html.H4(
-                                                                id="performance-improvement-quantum"
+                                                                id="performance-improvement-quantum",
+                                                                className="" if SHOW_COST_COMPARISON else "display-none"
                                                             ),
                                                         ]
                                                     ),

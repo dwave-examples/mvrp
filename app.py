@@ -174,6 +174,76 @@ def update_tables(
     return stored_results, empty_or_no_update
 
 
+def calculate_cost_comparison(
+    cost_comparison: dict,
+    final_cost: int,
+    sampler_type: Union[SamplerType, int],
+    reset_results: bool
+) -> tuple[dict, str]:
+    """Calculates cost improvement between DQM and KMEANS.
+
+    Args:
+        cost_comparison: Dictionary with solver keys and run cost values.
+        final_cost: The total distance cost of the most recent run.
+        sampler_type: The sampler that was run. Either Quantum Hybrid (DQM) (``0`` or ``SamplerType.DQM``) or
+            Classical (K-Means) (``1`` or ``SamplerType.KMEANS``).
+        reset_results: Whether or not to reset wall clock times.
+
+    Returns:
+        cost_comparison: Updated dictionary with solver keys and run cost values.
+        performance_improvement_quantum: String stating the quantum hybrid performance improvement.
+    """
+    cost_comparison_ratio = 1
+    if reset_results:
+        cost_comparison = {
+            # Dict keys must be strings because Dash stores data as JSON
+            str(sampler_type.value): final_cost
+        }
+    else:
+        cost_comparison[str(sampler_type.value)] = final_cost
+        if len(cost_comparison) == 2:
+            cost_dqm = cost_comparison[str(SamplerType.DQM.value)]
+            cost_kmeans = cost_comparison[str(SamplerType.KMEANS.value)]
+            cost_comparison_ratio = cost_dqm/cost_kmeans
+
+    performance_improvement_quantum = ""
+    if cost_comparison_ratio < 1:
+        performance_improvement_quantum = f"The total distance \
+            travelled is {1 - cost_comparison_ratio:.2%} \
+            less using the quantum hybrid solution."
+    return cost_comparison, performance_improvement_quantum
+
+
+def get_updated_wall_clock_times(
+    wall_clock_time: float,
+    sampler_type: Union[SamplerType, int],
+    reset_results: bool
+) -> tuple[str, str]:
+    """Determine which wall clock times to update in the UI.
+
+    Args:
+        wall_clock_time: Total run time.
+        sampler_type: The sampler that was run. Either Quantum Hybrid (DQM) (``0`` or ``SamplerType.DQM``) or
+            Classical (K-Means) (``1`` or ``SamplerType.KMEANS``).
+        reset_results: Whether or not to reset wall clock times.
+
+    Returns:
+        wall_clock_time_kmeans: Updated kmeans wall clock time.
+        wall_clock_time_dqm: Updated dqm wall clock time.
+    """
+    wall_clock_time_kmeans = ""
+    wall_clock_time_dqm = ""
+    if sampler_type is SamplerType.KMEANS:
+        wall_clock_time_kmeans = f"{wall_clock_time:.3f}s"
+        if not reset_results:
+            wall_clock_time_dqm = dash.no_update
+    else:
+        wall_clock_time_dqm = f"{wall_clock_time:.3f}s"
+        if not reset_results:
+            wall_clock_time_kmeans = dash.no_update
+    return wall_clock_time_kmeans, wall_clock_time_dqm
+
+
 @app.long_callback(
     # update map and results
     Output("solution-map", "srcDoc", allow_duplicate=True),
@@ -307,7 +377,6 @@ def run_optimization(
 
         problem_size = num_vehicles * num_clients
         search_space = f"{num_vehicles**num_clients:.2e}"
-        wall_clock_time = f"{wall_clock_time:.3f}s"
 
         solution_cost = dict(sorted(solution_cost.items()))
         total_cost = defaultdict(int)
@@ -324,35 +393,9 @@ def run_optimization(
         else:
             reset_results = False
 
-        # Calculates cost improvement between DQM and KMEANS
-        cost_comparison_ratio = 1
-        if reset_results:
-            cost_comparison = {
-                str(sampler_type.value): total_cost["optimized_cost"]
-            }  # Dict keys must be strings because Dash stores data as JSON
-        else:
-            cost_comparison[str(sampler_type.value)] = total_cost["optimized_cost"]
-            if len(cost_comparison) == 2:
-                cost_dqm = cost_comparison[str(SamplerType.DQM.value)]
-                cost_kmeans = cost_comparison[str(SamplerType.KMEANS.value)]
-                cost_comparison_ratio = cost_dqm/cost_kmeans
+        cost_comparison, performance_improvement_quantum = calculate_cost_comparison(cost_comparison, total_cost["optimized_cost"], sampler_type, reset_results)
 
-        performance_improvement_quantum = ""
-        if cost_comparison_ratio < 1:
-            performance_improvement_quantum = f"The total distance \
-                travelled is {1 - cost_comparison_ratio:.2%}% \
-                less using the quantum hybrid solution."
-
-        wall_clock_time_kmeans = ""
-        wall_clock_time_dqm = ""
-        if sampler_type is SamplerType.KMEANS:
-            wall_clock_time_kmeans = wall_clock_time
-            if not reset_results:
-                wall_clock_time_dqm = dash.no_update
-        else:
-            wall_clock_time_dqm = wall_clock_time
-            if not reset_results:
-                wall_clock_time_kmeans = dash.no_update
+        wall_clock_time_kmeans, wall_clock_time_dqm = get_updated_wall_clock_times(wall_clock_time, sampler_type, reset_results)
 
         return (
             open("solution_map.html", "r").read(),
