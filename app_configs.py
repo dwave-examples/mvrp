@@ -21,7 +21,7 @@ DEBUG = False
 
 # Shows/hides Quantum Hybrid vs Classical cost comparison in the
 # results tab when both are run with the same settings.
-SHOW_COST_COMPARISON = True
+SHOW_COST_COMPARISON = False
 
 # THEME_COLOR is used for the button, text, and banner and should be dark
 # and pass accessibility checks with white: https://webaim.org/resources/contrastchecker/
