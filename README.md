@@ -27,13 +27,13 @@ Configuration options can be found in the [app_configs.py](app_configs.py) file.
 
 ## Problem Description
 
-The Multi Vehicle Routing Problem concerns the task of delivering a set of resources to a set of
+The multi-vehicle routing problem is to deliver a set of resources to a set of
 predetermined locations using a limited number of vehicles, all of which start and finish at a
-specific depot location.
+single depot location.
 
 This problem can be seen as a generalized traveling salespersons problem (TSP) where each vehicle
-must traverse a local network of locations in the most effective way, while also optimizing for
-which set of locations each vehicle should cater.
+must traverse a local network of locations in the most effective way, while also optimizing 
+the distribution of sets of locations among the vehicles.
 
 In this demo a single central depot location is determined by choosing an address (can be set in
 [app_configs.py](app_configs.py)), after which a number of locations are placed randomly within a
