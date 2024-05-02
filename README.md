@@ -7,21 +7,29 @@ delivery drones (flight path) and trucks (roads), the number of vehicles and cli
 
 ![D-Wave Logo](assets/app.png)
 
-## Usage
+## Installation
+You can run this example without installation in cloud-based IDEs that support the [Development Containers specification](https://containers.dev/supporting) (aka "devcontainers").
 
-To run, install the requirements
+For development environments that do not support `devcontainers`, install requirements:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-and run the Dash application
+If you are cloning the repo to your local system, working in a [virtual environment](https://docs.python.org/3/library/venv.html) is recommended.
+
+## Usage
+Your development environment should be configured to [access Leap’s Solvers](https://docs.ocean.dwavesys.com/en/stable/overview/sapi.html). You can see information about supported IDEs and authorizing access to your Leap account [here](https://docs.dwavesys.com/docs/latest/doc_leap_dev_env.html).
+
+To run the demo:
 
 ```bash
 python app.py
 ```
 
-A browser should open running the web app.
+Access the user interface with your browser at http://127.0.0.1:8050/.
+
+The demo program opens an interface where you can configure problems and submit these problems to a solver.
 
 Configuration options can be found in the [app_configs.py](app_configs.py) file.
 
