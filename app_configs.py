@@ -43,6 +43,8 @@ locations.
 
 LOCATIONS_LABEL = "Locations"  # Either "Locations" or business specific location type
 
+SHOW_DQM = True  # Will hide DQM drop down option if False
+
 #######################################
 # Sliders, buttons and option entries #
 #######################################

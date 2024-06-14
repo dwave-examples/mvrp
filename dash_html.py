@@ -26,6 +26,7 @@ from app_configs import (
     NUM_CLIENT_LOCATIONS,
     NUM_VEHICLES,
     SHOW_COST_COMPARISON,
+    SHOW_DQM,
     SOLVER_TIME,
     THEME_COLOR_SECONDARY,
     THUMBNAIL,
@@ -34,7 +35,7 @@ from app_configs import (
 map_width, map_height = 1000, 600
 
 VEHICLE_TYPES = ["Trucks", "Delivery Drones"]
-SAMPLER_TYPES = ["Quantum Hybrid (DQM)", "Quantum Hybrid (NL)", "Classical (K-Means)"]
+SAMPLER_TYPES = ["Quantum Hybrid (DQM)", "Quantum Hybrid (NL)", "Classical (K-Means)"] if SHOW_DQM else ["Quantum Hybrid (NL)", "Classical (K-Means)"]
 
 
 def description_card():
@@ -93,7 +94,7 @@ def generate_control_card() -> html.Div:
         model, and solver.
     """
     vehicle_options = [{"label": vehicle, "value": i} for i, vehicle in enumerate(VEHICLE_TYPES)]
-    sampler_options = [{"label": sampler, "value": i} for i, sampler in enumerate(SAMPLER_TYPES)]
+    sampler_options = [{"label": sampler, "value": i if SHOW_DQM else i + 1} for i, sampler in enumerate(SAMPLER_TYPES)]
 
     return html.Div(
         id="control-card",
