@@ -185,8 +185,8 @@ def calculate_cost_comparison(
     Args:
         cost_comparison: Dictionary with solver keys and run cost values.
         final_cost: The total distance cost of the most recent run.
-        sampler_type: The sampler that was run. Either Quantum Hybrid (DQM) (``0`` or ``SamplerType.DQM``) or
-            Classical (K-Means) (``1`` or ``SamplerType.KMEANS``).
+        sampler_type: The sampler that was run. Either Quantum Hybrid (DQM) (``0`` or ``SamplerType.DQM``),
+            Quantum Hybrid (NL) (``1`` or ``SamplerType.NL``), or Classical (K-Means) (``2`` or ``SamplerType.KMEANS``).
         reset_results: Whether or not to reset wall clock times.
 
     Returns:
@@ -197,14 +197,25 @@ def calculate_cost_comparison(
     if reset_results:
         cost_comparison = {
             # Dict keys must be strings because Dash stores data as JSON
-            str(sampler_type.value): final_cost
+            str(
+                sampler_type.value
+                if sampler_type is SamplerType.KMEANS
+                else SamplerType.DQM.value
+            ): final_cost
         }
     else:
-        cost_comparison[str(sampler_type.value)] = final_cost
+        cost_comparison[
+            str(
+                sampler_type.value
+                if sampler_type is SamplerType.KMEANS
+                else SamplerType.DQM.value
+            )
+        ] = final_cost
         if len(cost_comparison) == 2:
             cost_dqm = cost_comparison[str(SamplerType.DQM.value)]
             cost_kmeans = cost_comparison[str(SamplerType.KMEANS.value)]
-            cost_comparison_ratio = cost_dqm/cost_kmeans
+            if cost_kmeans:
+                cost_comparison_ratio = cost_dqm / cost_kmeans
 
     performance_improvement_quantum = ""
     if cost_comparison_ratio < 1:
@@ -223,8 +234,8 @@ def get_updated_wall_clock_times(
 
     Args:
         wall_clock_time: Total run time.
-        sampler_type: The sampler that was run. Either Quantum Hybrid (DQM) (``0`` or ``SamplerType.DQM``) or
-            Classical (K-Means) (``1`` or ``SamplerType.KMEANS``).
+        sampler_type: The sampler that was run. Either Either Quantum Hybrid (DQM) (``0`` or ``SamplerType.DQM``),
+            Quantum Hybrid (NL) (``1`` or ``SamplerType.NL``), or Classical (K-Means) (``2`` or ``SamplerType.KMEANS``).
         reset_results: Whether or not to reset wall clock times.
 
     Returns:
@@ -310,8 +321,9 @@ def run_optimization(
         run_click: The (total) number of times the run button has been clicked.
         vehicle_type: Either Trucks (``0`` or ``VehicleType.TRUCKS``) or
             Delivery Drones (``1`` or ``VehicleType.DELIVERY_DRONES``).
-        sampler_type: Either Quantum Hybrid (DQM) (``0`` or ``SamplerType.DQM``) or
-            Classical (K-Means) (``1`` or ``SamplerType.KMEANS``).
+        sampler_type: Either Quantum Hybrid (DQM) (``0`` or ``SamplerType.DQM``),
+            Quantum Hybrid (NL) (``1`` or ``SamplerType.NL``), or Classical (K-Means)
+            (``2`` or ``SamplerType.KMEANS``).
         num_vehicles: The number of vehicles.
         time_limit: The solver time limit.
         num_clients: The number of force locations.
@@ -321,15 +333,15 @@ def run_optimization(
 
     Returns:
         A tuple containing all outputs to be used when updating the HTML template (in
-        ``dash_html,py``). These are:
+        ``dash_html.py``). These are:
 
-            solution-map: Updates the 'srcDoc' entry for the 'solution-map' IFrame in the map tab.
+            solution-map: Updates the 'srcDoc' entry for the 'solution-map' Iframe in the map tab.
                 This is the map (initial and solution map).
             stored-results: Stores the Solution cost table in the results tab.
             sampler-type: The sampler used (``"quantum"`` or ``"classical"``).
             reset-results: Whether or not to reset the results tables before applying the new one.
             parameter-hash: Hash string to detect changed parameters.
-            performance-improvement-quantum: Updates quatum performance improvement message.
+            performance-improvement-quantum: Updates quantum performance improvement message.
             cost-comparison: Keeps track of the difference between classical and hybrid run costs.
             problem-size: Updates the problem-size entry in the problem details table.
             search-space: Updates the search-space entry in the problem details table.

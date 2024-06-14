@@ -34,7 +34,7 @@ from app_configs import (
 map_width, map_height = 1000, 600
 
 VEHICLE_TYPES = ["Trucks", "Delivery Drones"]
-SAMPLER_TYPES = ["Quantum Hybrid", "Classical (K-Means)"]
+SAMPLER_TYPES = ["Quantum Hybrid (DQM)", "Quantum Hybrid (NL)", "Classical (K-Means)"]
 
 
 def description_card():

@@ -31,7 +31,8 @@ class VehicleType(Enum):
 
 class SamplerType(Enum):
     DQM = 0
-    KMEANS = 1
+    NL = 1
+    KMEANS = 2
 
 
 class RoutingProblemParameters(NamedTuple):
@@ -133,15 +134,18 @@ class Solver:
             for client_id in self.client_subset
         }
 
+        capacity = -(-sum(demand.values()) // self.num_vehicles)
         cvrp = CapacitatedVehicleRoutingProblem(cost_function=self.cost_between_nodes)
         cvrp.add_depots(depot)
         cvrp.add_clients(clients, demand)
         cvrp.add_vehicles(
-            {k: -(-sum(demand.values()) // self.num_vehicles) for k in range(self.num_vehicles)}
+            {k: capacity for k in range(self.num_vehicles)}
         )
 
         if self.sampler_type is SamplerType.KMEANS:
             cvrp.cluster_kmeans(time_limit=self.time_limit)
+        elif self.sampler_type is SamplerType.NL:
+            cvrp.hybrid_nl(capacity=capacity, time_limit=self.time_limit)
         else:
             try:
                 cvrp.cluster_dqm(
@@ -152,7 +156,11 @@ class Solver:
                 warnings.warn("Defaulting to minimum time limit for Leap Hybrid DQM Sampler.")
 
                 cvrp.cluster_dqm(capacity=1.0, time_limit=None)
-        cvrp.solve_tsp_heuristic()
+
+        if self.sampler_type is SamplerType.NL:
+            cvrp.parse_solution_nl(capacity=capacity)
+        else:
+            cvrp.solve_tsp_heuristic()
         wall_clock_time = time.perf_counter() - start_time
         self._solution = cvrp.solution
 

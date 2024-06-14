@@ -1,6 +1,6 @@
 # lower bound set to latest known working version
 # may (likely) works with older versions as well
-dwave-ocean-sdk>=6.9.0
+dwave-ocean-sdk>=7.0.0
 osmnx>=1.9.1
 matplotlib~=3.0
 mapclassify>=2.6.0

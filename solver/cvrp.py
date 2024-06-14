@@ -22,7 +22,9 @@ import networkx as nx
 import numpy as np
 from dimod import DiscreteQuadraticModel
 from dimod.variables import Variables
-from dwave.system import LeapHybridDQMSampler
+from dwave.optimization import Model, add
+from dwave.optimization.symbols import DisjointList
+from dwave.system import LeapHybridDQMSampler, LeapHybridNLSampler
 from python_tsp.heuristics import solve_tsp_local_search
 
 from solver.ckmeans import CKMeans
@@ -137,6 +139,28 @@ class CapacitatedVehicleRoutingProblem:
         for label in capacity:
             self._vehicles._append(label)
         self._vehicle_capacity.update(capacity)
+
+    def _get_nl(self, capacity) -> None:
+        """Get and set NL model and routes."""
+        self._optimization["nl"], self._optimization["routes"] = self.generate_nl_model(
+            capacity
+        )
+
+    def hybrid_nl(self, capacity: float, time_limit: Optional[float] = None) -> None:
+        """Find vehicle routes using Hybrid NL Solver.
+        Args:
+            capacity: The capacity of one vehicle.
+            time_limit: Time limit for the NL solver.
+        """
+        if not self._clustering_feasible():
+            raise ValueError("Clustering not feasible due to demand being higher than capacity.")
+
+        sampler = LeapHybridNLSampler()
+
+        # Get and set the NL model
+        self._get_nl(capacity=capacity)
+
+        sampler.sample(self._optimization["nl"], time_limit=time_limit, label="MVRP Demo")
 
     def cluster_dqm(self, capacity: float, time_limit: Optional[float] = None, **kwargs) -> None:
         """Cluster the client locations using the DQM.
@@ -290,3 +314,146 @@ class CapacitatedVehicleRoutingProblem:
 
             offset += capacity_penalty[k] * self._vehicle_capacity[k] ** 2
         return dqm, offset
+
+    def generate_nl_model(self, capacity) -> tuple[Model, list[DisjointList]]:
+        """Follows the NL solver formulation of the CVRP and removes the route back to the depot at the end.
+        Args:
+            capacity: The amount of supply that the vehicle can carry.
+        Returns:
+            Model: The NL Model.
+            list: List of solution routes.
+        """
+
+        num_vehicles = len(self._vehicles)
+
+        # Convert demand dictionary to array
+        demand = np.zeros((len(self._clients)))
+        for index, client in enumerate(self.clients):
+            demand[index] = self._demand[client]
+
+        num_clients = len(self._clients)
+
+        # Generate cost/distance matrices
+        clients_cost = np.zeros((len(self._clients), len(self._clients)))
+        depot_cost = np.zeros((len(self._clients)))
+        depot_cost_return = np.zeros((len(self._clients)))
+        for i, location_i in enumerate(self._clients):
+            depot_cost[i] = self._costs[self._depots[0], location_i]
+            depot_cost_return[i] = self._costs[location_i, self._depots[0]]
+            for j, location_j in enumerate(self._clients):
+                if i != j:
+                    clients_cost[i, j] = self._costs[location_i, location_j]
+
+        model = Model()
+        custD = model.constant(clients_cost)
+        depoD = model.constant(depot_cost)
+        depoD_return = model.constant(depot_cost_return)
+        demands = model.constant(demand)
+        c = model.constant(capacity)
+
+        counter = model.constant(np.ones(num_clients))
+        min_steps = model.constant(1)  # Minimum locations each vehicle must visit
+
+        assert custD.shape() == (num_clients, num_clients)
+        assert depoD.shape() == (num_clients,)
+        assert depoD_return.shape() == (num_clients,)
+
+        routes_decision, routes = model.disjoint_lists(
+            primary_set_size=num_clients, num_disjoint_lists=num_vehicles
+        )
+
+        route_costs = []
+        for r in range(num_vehicles):
+            route_costs.append(depoD[routes[r][:1]].sum())
+            route_costs.append(depoD_return[routes[r][-1:]].sum())
+            route_costs.append(custD[routes[r][:-1], routes[r][1:]].sum())
+            model.add_constraint(demands[routes[r]].sum() <= c)
+
+        model.minimize(add(route_costs))
+        model.lock()
+
+        return model, routes
+
+    def parse_solution_nl(self, capacity, tolerance=1e-6):
+        """Checks the solutions from the NL solver (attached to the model) and outputs the parsed ones
+        Args:
+            capacity: The amount of supply that the vehicle can carry.
+        """
+
+        model = self._optimization["nl"]
+        routes = self._optimization["routes"]
+
+        num_vehicles = len(self._vehicle_capacity)
+
+        # Convert demand dictionary to array
+        demand = np.zeros((len(self._clients) + 1))
+        for index, client in enumerate(self.clients):
+            demand[index + 1] = self._demand[client]
+
+        all_locations = [*self._depots, *self._clients]
+
+        def recompute_objective(solution):
+            """Compute the objective given a solution."""
+            total_cost = 0
+            assert len(solution) == num_vehicles
+
+            # Compute total cost for the solution.
+            for r in solution:
+                if len(r) == 0:
+                    continue
+
+                for index, location in enumerate([0, *r[:-1]]):
+                    total_cost += self._costs[all_locations[location], all_locations[r[index]]]
+
+                total_cost += self._costs[all_locations[r[-1]], all_locations[0]]  # Go back to depot
+
+            return total_cost
+
+        def check_feasibility(solution):
+            """Check whether the given solution is feasible"""
+            assert len(solution) == num_vehicles
+
+            for r in solution:
+                if len(r) == 0:  # If route has no locations the vehicle never left the depot.
+                    return False
+
+                if demand[r].sum() > capacity:  # If demand exceeds capacity
+                    return False
+
+            return True
+
+        num_states = model.states.size()
+        solutions = []
+        for i in range(num_states):
+            # extract the solution
+            solution = []
+            for r in routes:
+                solution.append([int(l) + 1 for l in r.state(i)])
+
+            solver_objective = model.objective.state(i)
+            assert abs(solver_objective - recompute_objective(solution)) < tolerance
+
+            solver_feasibility = True
+            for c in model.iter_constraints():
+                if c.state(i) < 0.5:
+                    solver_feasibility = False
+
+            # Check feasibility and if feasible, add to solutions list
+            assert solver_feasibility == check_feasibility(solution)
+            if not solver_feasibility:
+                print(f"Sample {i} is infeasible")
+            else:
+                solutions.append(solution)
+
+        # Check that at least one feasible solution was found.
+        if len(solutions) == 0:
+            raise ValueError("No feasible solution found.")
+
+        for vehicle_id, destinations in enumerate(solutions[0]):
+            # Add depot and convert to node IDs.
+            route = [all_locations[0]] + [
+                all_locations[destination] for destination in destinations
+            ] + [all_locations[0]]
+            self._paths[vehicle_id] = route
+            edges = [(n, route[i + 1]) for i, n in enumerate(route[:-1])]
+            self._solution[vehicle_id] = nx.DiGraph(edges)
