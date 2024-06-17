@@ -29,14 +29,15 @@ from app_configs import (
     THEME_COLOR_SECONDARY,
     THUMBNAIL,
 )
+from solver.solver import SamplerType, VehicleType
 
 map_width, map_height = 1000, 600
 
-VEHICLE_TYPES = {"TRUCKS": "Trucks", "DELIVERY_DRONES": "Delivery Drones"}
-SAMPLER_TYPES = {"NL": "Quantum Hybrid (NL)", "KMEANS": "Classical (K-Means)"}
+VEHICLE_TYPES = {VehicleType.TRUCKS: "Trucks", VehicleType.DELIVERY_DRONES: "Delivery Drones"}
+SAMPLER_TYPES = {SamplerType.NL: "Quantum Hybrid (NL)", SamplerType.KMEANS: "Classical (K-Means)"}
 
 if SHOW_DQM:
-    SAMPLER_TYPES["DQM"] = "Quantum Hybrid (DQM)"
+    SAMPLER_TYPES[SamplerType.DQM] = "Quantum Hybrid (DQM)"
 
 
 def description_card():
@@ -94,17 +95,9 @@ def generate_control_card() -> html.Div:
         html.Div: A Div containing the dropdowns for selecting the scenario,
         model, and solver.
     """
-    # avoid circular imports to assert that labels are correct
-    from app import SamplerType, VehicleType
-
     # calculate drop-down options
-    vehicle_options = []
-    for vehicle_type, label in VEHICLE_TYPES.items():
-        vehicle_options.append({"label": label, "value": getattr(VehicleType, vehicle_type).value})
-
-    sampler_options = []
-    for sampler_type, label in SAMPLER_TYPES.items():
-        sampler_options.append({"label": label, "value": getattr(SamplerType, sampler_type).value})
+    vehicle_options = [{"label": label, "value": sampler_type.value} for sampler_type, label in VEHICLE_TYPES.items()]
+    sampler_options = [{"label": label, "value": sampler_type.value} for sampler_type, label in SAMPLER_TYPES.items()]
 
     return html.Div(
         id="control-card",
