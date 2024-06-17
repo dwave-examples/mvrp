@@ -29,8 +29,8 @@ class VehicleType(Enum):
 
 
 class SamplerType(Enum):
-    DQM = 0
-    NL = 1
+    NL = 0
+    DQM = 1
     KMEANS = 2
 
 

@@ -32,8 +32,11 @@ from app_configs import (
 
 map_width, map_height = 1000, 600
 
-VEHICLE_TYPES = ["Trucks", "Delivery Drones"]
-SAMPLER_TYPES = ["Quantum Hybrid (DQM)", "Quantum Hybrid (NL)", "Classical (K-Means)"] if SHOW_DQM else ["Quantum Hybrid (NL)", "Classical (K-Means)"]
+VEHICLE_TYPES = {"TRUCKS": "Trucks", "DELIVERY_DRONES": "Delivery Drones"}
+SAMPLER_TYPES = {"NL": "Quantum Hybrid (NL)", "KMEANS": "Classical (K-Means)"}
+
+if SHOW_DQM:
+    SAMPLER_TYPES["DQM"] = "Quantum Hybrid (DQM)"
 
 
 def description_card():
@@ -91,8 +94,17 @@ def generate_control_card() -> html.Div:
         html.Div: A Div containing the dropdowns for selecting the scenario,
         model, and solver.
     """
-    vehicle_options = [{"label": vehicle, "value": i} for i, vehicle in enumerate(VEHICLE_TYPES)]
-    sampler_options = [{"label": sampler, "value": i if SHOW_DQM else i + 1} for i, sampler in enumerate(SAMPLER_TYPES)]
+    # avoid circular imports to assert that labels are correct
+    from app import SamplerType, VehicleType
+
+    # calculate drop-down options
+    vehicle_options = []
+    for vehicle_type, label in VEHICLE_TYPES.items():
+        vehicle_options.append({"label": label, "value": getattr(VehicleType, vehicle_type).value})
+
+    sampler_options = []
+    for sampler_type, label in SAMPLER_TYPES.items():
+        sampler_options.append({"label": label, "value": getattr(SamplerType, sampler_type).value})
 
     return html.Div(
         id="control-card",
@@ -100,7 +112,7 @@ def generate_control_card() -> html.Div:
             dropdown(
                 "Vehicle Type",
                 "vehicle-type-select",
-                vehicle_options,
+                sorted(vehicle_options, key=lambda op: op["value"]),
             ),
             slider(
                 "Vehicles to Deploy",
@@ -115,7 +127,7 @@ def generate_control_card() -> html.Div:
             dropdown(
                 "Solver",
                 "sampler-type-select",
-                sampler_options,
+                sorted(sampler_options, key=lambda op: op["value"]),
             ),
             html.Label("Solver Time Limit (seconds)"),
             dcc.Input(
@@ -232,12 +244,7 @@ def set_html(app):
                                                                         id="solution-cost-table-div",
                                                                         className="result-table-div",
                                                                         children=[
-                                                                            html.H3(
-                                                                                children=[
-                                                                                    "Quantum Hybrid Results"
-                                                                                ],
-                                                                                className="table-label",
-                                                                            ),
+                                                                            html.H3(id="hybrid-table-label", className="table-label"),
                                                                             html.Table(
                                                                                 title="Quantum Hybrid",
                                                                                 className="result-table",

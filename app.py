@@ -17,16 +17,15 @@ from __future__ import annotations
 from collections import defaultdict
 from operator import itemgetter
 from pathlib import Path
-from typing import TYPE_CHECKING, Union
+from typing import Union
 
 import dash
-import diskcache
 import folium
+import diskcache
 from dash import MATCH, DiskcacheManager, callback_context, ctx
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 
-from app_configs import DEBUG
 from dash_html import create_table, set_html
 from map import (
     generate_mapping_information,
@@ -35,13 +34,10 @@ from map import (
 )
 from solver.solver import RoutingProblemParameters, SamplerType, Solver, VehicleType
 
+from app_configs import APP_TITLE, THEME_COLOR, THEME_COLOR_SECONDARY, DEBUG
+
 cache = diskcache.Cache("./cache")
 background_callback_manager = DiskcacheManager(cache)
-
-from app_configs import APP_TITLE, THEME_COLOR, THEME_COLOR_SECONDARY
-
-if TYPE_CHECKING:
-    from dash import html
 
 app = dash.Dash(
     __name__,
@@ -259,6 +255,7 @@ def get_updated_wall_clock_times(
     # update map and results
     Output("solution-map", "srcDoc", allow_duplicate=True),
     Output("stored-results", "data"),
+    Output("hybrid-table-label", "children"),
     # store the solver used, whether or not to reset results tabs and the
     # parameter hash value used to detect parameter changes
     Output("sampler-type", "data"),
@@ -309,7 +306,7 @@ def run_optimization(
     cost_table: list,
     previous_parameter_hash: str,
     cost_comparison: dict,
-) -> tuple[str, list, str, bool, str, str, dict, int, str, str, str, int, int]:
+) -> tuple[str, list, str, str, bool, str, str, dict, int, str, str, str, int, int]:
     """Run the optimization and update map and results tables.
 
     This is the main optimization function which is called when the Run optimization button is
@@ -338,6 +335,7 @@ def run_optimization(
             solution-map: Updates the 'srcDoc' entry for the 'solution-map' Iframe in the map tab.
                 This is the map (initial and solution map).
             stored-results: Stores the Solution cost table in the results tab.
+            hybrid-table-label: Label for the hybrid results table (either NL or DQM).
             sampler-type: The sampler used (``"quantum"`` or ``"classical"``).
             reset-results: Whether or not to reset the results tables before applying the new one.
             parameter-hash: Hash string to detect changed parameters.
@@ -351,7 +349,8 @@ def run_optimization(
             vehicles-deployed: Updates the vehicles-deployed entry in the problem details table.
     """
     if run_click == 0 or ctx.triggered_id != "run-button":
-        return ""
+        raise PreventUpdate
+
     if isinstance(vehicle_type, int):
         vehicle_type = VehicleType(vehicle_type)
 
@@ -409,9 +408,16 @@ def run_optimization(
 
         wall_clock_time_kmeans, wall_clock_time_dqm = get_updated_wall_clock_times(wall_clock_time, sampler_type, reset_results)
 
+        hybrid_table_label = (
+            "Quantum Hybrid (NL) Results" if sampler_type is SamplerType.NL else
+            "Quantum Hybrid (DQM) Results" if sampler_type is SamplerType.DQM else
+            dash.no_update
+        )
+
         return (
             open("solution_map.html", "r").read(),
             cost_table,
+            hybrid_table_label,
             "classical" if sampler_type is SamplerType.KMEANS else "quantum",
             reset_results,
             str(parameter_hash),
