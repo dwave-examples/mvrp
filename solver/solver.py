@@ -142,11 +142,11 @@ class Solver:
         )
 
         if self.sampler_type is SamplerType.NL:
-            cvrp.solve_hybrid_nl(capacity=capacity, time_limit=self.time_limit)
+            cvrp.solve_hybrid_nl(time_limit=self.time_limit)
         else:
             # DQM and K-Means require a two-step solution: clustering + tsp
             if self.sampler_type is SamplerType.DQM:
-                cvrp.cluster_dqm(capacity=1.0, time_limit=self.time_limit)
+                cvrp.cluster_dqm(capacity_penalty_strength=1.0, time_limit=self.time_limit)
             else:
                 cvrp.cluster_kmeans(time_limit=self.time_limit)
 

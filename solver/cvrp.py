@@ -141,15 +141,14 @@ class CapacitatedVehicleRoutingProblem:
             self._vehicles._append(label)
         self._vehicle_capacity.update(capacity)
 
-    def _get_nl(self, capacity) -> None:
+    def _get_nl(self) -> None:
         """Get and set NL model and routes."""
-        self._optimization["nl"], self._optimization["routes"] = self.generate_nl_model(capacity)
+        self._optimization["nl"], self._optimization["routes"] = self.generate_nl_model()
 
-    def solve_hybrid_nl(self, capacity: float, time_limit: Optional[float] = None) -> None:
+    def solve_hybrid_nl(self, time_limit: Optional[float] = None) -> None:
         """Find vehicle routes using Hybrid NL Solver.
 
         Args:
-            capacity: The capacity of one vehicle.
             time_limit: Time limit for the NL solver.
         """
         if not self._clustering_feasible():
@@ -158,19 +157,19 @@ class CapacitatedVehicleRoutingProblem:
         sampler = LeapHybridNLSampler()
 
         # Get and set the NL model
-        self._get_nl(capacity=capacity)
+        self._get_nl()
 
         sampler.sample(self._optimization["nl"], time_limit=time_limit, label="MVRP Demo")
 
-        self.parse_solution_nl(capacity=capacity)
+        self.parse_solution_nl()
 
-    def cluster_dqm(self, capacity: float, time_limit: Optional[float] = None, **kwargs) -> None:
+    def cluster_dqm(self, capacity_penalty_strength: float, time_limit: Optional[float] = None, **kwargs) -> None:
         """Cluster the client locations using the DQM.
 
         Other keyword args are passed on to the LeapHybridDQMSampler.
 
         Args:
-            capacity: A dictionary of vehicle labels and capacities.
+            capacity_penalty_strength (float): Dictates the penalty for violating vehicle capacity.
             time_limit: Time limit for the DQM sampler.
         """
         if not self._clustering_feasible():
@@ -179,7 +178,7 @@ class CapacitatedVehicleRoutingProblem:
         sampler = LeapHybridDQMSampler()
 
         # get and set the DQM model
-        self._get_clustering_dqm(capacity_penalty=capacity)
+        self._get_clustering_dqm(capacity_penalty_strength=capacity_penalty_strength)
 
         if sampler.min_time_limit(self._optimization["dqm"]) > time_limit:
             warnings.warn("Defaulting to minimum time limit for Leap Hybrid DQM Sampler.")
@@ -206,9 +205,9 @@ class CapacitatedVehicleRoutingProblem:
         self._optimization["assignments"] = assignments
         self._optimization["capacity_violation"] = assignments
 
-    def _get_clustering_dqm(self, capacity_penalty) -> None:
+    def _get_clustering_dqm(self, capacity_penalty_strength) -> None:
         """Get and set DQM and offset."""
-        self._optimization["dqm"], offset = self.construct_clustering_dqm(capacity_penalty)
+        self._optimization["dqm"], offset = self.construct_clustering_dqm(capacity_penalty_strength)
         self._optimization["dqm_offset"] = offset
 
     def cluster_kmeans(self, time_limit=None) -> None:
@@ -279,11 +278,11 @@ class CapacitatedVehicleRoutingProblem:
         """
         return self._optimization.get("assignments", {})
 
-    def construct_clustering_dqm(self, capacity) -> tuple[DiscreteQuadraticModel, float]:
+    def construct_clustering_dqm(self, capacity_penalty_strength) -> tuple[DiscreteQuadraticModel, float]:
         """Construct the DQM used for clustering.
 
         Args:
-            capacity: The amount of supply that the vehicle can carry.
+            capacity_penalty_strength (float): Dictates the penalty for violating vehicle capacity.
 
         Returns:
             DiscreteQuadraticModel, float: The DQM and offset.
@@ -309,7 +308,7 @@ class CapacitatedVehicleRoutingProblem:
             for idk, k in enumerate(self._vehicle_capacity):
                 dqm.set_quadratic_case(u, idk, v, idk, self.costs[u, v] + self.costs[v, u])
 
-        capacity_penalty = {k: capacity for k in self._vehicle_capacity}
+        capacity_penalty = {k: capacity_penalty_strength for k in self._vehicle_capacity}
 
         offset = 0
         for idk, k in enumerate(self._vehicle_capacity):
@@ -323,15 +322,17 @@ class CapacitatedVehicleRoutingProblem:
             offset += capacity_penalty[k] * self._vehicle_capacity[k] ** 2
         return dqm, offset
 
-    def generate_nl_model(self, capacity) -> tuple[Model, list[DisjointList]]:
+    def generate_nl_model(self) -> tuple[Model, list[DisjointList]]:
         """Follows the NL solver formulation of the CVRP and removes the route back to the depot at the end.
-        Args:
-            capacity: The amount of supply that the vehicle can carry.
+
         Returns:
             Model: The NL Model.
             list: List of solution routes.
         """
 
+        # Take maxium vehicle capacity. Vehicle capacity should be updated to only allow
+        # one value for all vehicles or update NL solution to allow multiple capacities.
+        max_capacity = max(self._vehicle_capacity.values())
         num_vehicles = len(self._vehicles)
 
         # Convert demand dictionary to array
@@ -362,7 +363,7 @@ class CapacitatedVehicleRoutingProblem:
         depot_dist = model.constant(depot_distance_vector)
         depot_dist_return = model.constant(depot_distance_vector_return)
         demands = model.constant(demand)
-        c = model.constant(capacity)
+        c = model.constant(max_capacity)
 
         _, routes = model.disjoint_lists(
             primary_set_size=num_clients, num_disjoint_lists=num_vehicles
@@ -380,17 +381,19 @@ class CapacitatedVehicleRoutingProblem:
 
         return model, routes
 
-    def parse_solution_nl(self, capacity, tolerance=1e-6) -> None:
+    def parse_solution_nl(self, tolerance=1e-6) -> None:
         """Checks the solutions from the NL solver (attached to the model) and outputs the parsed ones.
 
         Args:
-            capacity: The amount of supply that the vehicle can carry.
             tolerance: Absolute tolerance for solution distances in the solver objective.
         """
 
         model = self._optimization["nl"]
         routes = self._optimization["routes"]
 
+        # Take maxium vehicle capacity. Vehicle capacity should be updated to only allow
+        # one value for all vehicles or update NL solution to allow multiple capacities.
+        max_capacity = max(self._vehicle_capacity.values())
         num_vehicles = len(self._vehicle_capacity)
 
         # Convert demand dictionary to array
@@ -427,7 +430,7 @@ class CapacitatedVehicleRoutingProblem:
                 if len(r) == 0:  # If route has no locations the vehicle never left the depot.
                     return False
 
-                if demand[r].sum() > capacity:  # If demand exceeds capacity
+                if demand[r].sum() > max_capacity:  # If demand exceeds capacity
                     return False
 
             return True
