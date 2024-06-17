@@ -26,7 +26,7 @@ from dash import MATCH, DiskcacheManager, callback_context, ctx
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 
-from dash_html import create_table, set_html
+from dash_html import SAMPLER_TYPES, create_table, set_html
 from map import (
     generate_mapping_information,
     plot_solution_routes_on_map,
@@ -409,9 +409,8 @@ def run_optimization(
         wall_clock_time_kmeans, wall_clock_time_dqm = get_updated_wall_clock_times(wall_clock_time, sampler_type, reset_results)
 
         hybrid_table_label = (
-            "Quantum Hybrid (NL) Results" if sampler_type is SamplerType.NL else
-            "Quantum Hybrid (DQM) Results" if sampler_type is SamplerType.DQM else
-            dash.no_update
+            dash.no_update if sampler_type is SamplerType.KMEANS else
+            SAMPLER_TYPES[sampler_type]
         )
 
         return (

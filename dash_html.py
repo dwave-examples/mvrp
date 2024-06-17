@@ -237,7 +237,13 @@ def set_html(app):
                                                                         id="solution-cost-table-div",
                                                                         className="result-table-div",
                                                                         children=[
-                                                                            html.H3(id="hybrid-table-label", className="table-label"),
+                                                                            html.H3(
+                                                                                className="table-label",
+                                                                                children=[
+                                                                                    html.Span(id="hybrid-table-label"),
+                                                                                    " Results",
+                                                                                ]
+                                                                            ),
                                                                             html.Table(
                                                                                 title="Quantum Hybrid",
                                                                                 className="result-table",
