@@ -15,8 +15,9 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from itertools import combinations, permutations
+from itertools import combinations
 from typing import Hashable, Optional
+import warnings
 
 import networkx as nx
 import numpy as np
@@ -142,12 +143,11 @@ class CapacitatedVehicleRoutingProblem:
 
     def _get_nl(self, capacity) -> None:
         """Get and set NL model and routes."""
-        self._optimization["nl"], self._optimization["routes"] = self.generate_nl_model(
-            capacity
-        )
+        self._optimization["nl"], self._optimization["routes"] = self.generate_nl_model(capacity)
 
-    def hybrid_nl(self, capacity: float, time_limit: Optional[float] = None) -> None:
+    def solve_hybrid_nl(self, capacity: float, time_limit: Optional[float] = None) -> None:
         """Find vehicle routes using Hybrid NL Solver.
+
         Args:
             capacity: The capacity of one vehicle.
             time_limit: Time limit for the NL solver.
@@ -161,6 +161,8 @@ class CapacitatedVehicleRoutingProblem:
         self._get_nl(capacity=capacity)
 
         sampler.sample(self._optimization["nl"], time_limit=time_limit, label="MVRP Demo")
+
+        self.parse_solution_nl(capacity=capacity)
 
     def cluster_dqm(self, capacity: float, time_limit: Optional[float] = None, **kwargs) -> None:
         """Cluster the client locations using the DQM.
@@ -178,6 +180,12 @@ class CapacitatedVehicleRoutingProblem:
 
         # get and set the DQM model
         self._get_clustering_dqm(capacity_penalty=capacity)
+
+        if sampler.min_time_limit(self._optimization["dqm"]) > time_limit:
+            warnings.warn("Defaulting to minimum time limit for Leap Hybrid DQM Sampler.")
+
+            # setting time_limit to None uses the minimum time limit
+            time_limit = None
 
         res = sampler.sample_dqm(self._optimization["dqm"], time_limit=time_limit, **kwargs)
         res.resolve()
@@ -335,38 +343,36 @@ class CapacitatedVehicleRoutingProblem:
 
         # Generate cost/distance matrices
         clients_cost = np.zeros((len(self._clients), len(self._clients)))
-        depot_cost = np.zeros((len(self._clients)))
-        depot_cost_return = np.zeros((len(self._clients)))
+
+        # require both outgoing and return cost for going to/from the depot
+        depot_distance_vector = np.zeros((len(self._clients)))
+        depot_distance_vector_return = np.zeros((len(self._clients)))
+
         for i, location_i in enumerate(self._clients):
-            depot_cost[i] = self._costs[self._depots[0], location_i]
-            depot_cost_return[i] = self._costs[location_i, self._depots[0]]
+            depot_distance_vector[i] = self._costs[self._depots[0], location_i]
+            depot_distance_vector_return[i] = self._costs[location_i, self._depots[0]]
             for j, location_j in enumerate(self._clients):
                 if i != j:
                     clients_cost[i, j] = self._costs[location_i, location_j]
 
+        # section below should be replaced by dwave-optimization CVRP
+        # generator when it supports routes with directional costs
         model = Model()
-        custD = model.constant(clients_cost)
-        depoD = model.constant(depot_cost)
-        depoD_return = model.constant(depot_cost_return)
+        customer_demand = model.constant(clients_cost)
+        depot_dist = model.constant(depot_distance_vector)
+        depot_dist_return = model.constant(depot_distance_vector_return)
         demands = model.constant(demand)
         c = model.constant(capacity)
 
-        counter = model.constant(np.ones(num_clients))
-        min_steps = model.constant(1)  # Minimum locations each vehicle must visit
-
-        assert custD.shape() == (num_clients, num_clients)
-        assert depoD.shape() == (num_clients,)
-        assert depoD_return.shape() == (num_clients,)
-
-        routes_decision, routes = model.disjoint_lists(
+        _, routes = model.disjoint_lists(
             primary_set_size=num_clients, num_disjoint_lists=num_vehicles
         )
 
         route_costs = []
         for r in range(num_vehicles):
-            route_costs.append(depoD[routes[r][:1]].sum())
-            route_costs.append(depoD_return[routes[r][-1:]].sum())
-            route_costs.append(custD[routes[r][:-1], routes[r][1:]].sum())
+            route_costs.append(depot_dist[routes[r][:1]].sum())
+            route_costs.append(depot_dist_return[routes[r][-1:]].sum())
+            route_costs.append(customer_demand[routes[r][:-1], routes[r][1:]].sum())
             model.add_constraint(demands[routes[r]].sum() <= c)
 
         model.minimize(add(route_costs))
@@ -374,10 +380,12 @@ class CapacitatedVehicleRoutingProblem:
 
         return model, routes
 
-    def parse_solution_nl(self, capacity, tolerance=1e-6):
-        """Checks the solutions from the NL solver (attached to the model) and outputs the parsed ones
+    def parse_solution_nl(self, capacity, tolerance=1e-6) -> None:
+        """Checks the solutions from the NL solver (attached to the model) and outputs the parsed ones.
+
         Args:
             capacity: The amount of supply that the vehicle can carry.
+            tolerance: Absolute tolerance for solution distances in the solver objective.
         """
 
         model = self._optimization["nl"]
@@ -391,6 +399,7 @@ class CapacitatedVehicleRoutingProblem:
             demand[index + 1] = self._demand[client]
 
         all_locations = [*self._depots, *self._clients]
+
 
         def recompute_objective(solution):
             """Compute the objective given a solution."""
@@ -409,6 +418,7 @@ class CapacitatedVehicleRoutingProblem:
 
             return total_cost
 
+
         def check_feasibility(solution):
             """Check whether the given solution is feasible"""
             assert len(solution) == num_vehicles
@@ -422,13 +432,12 @@ class CapacitatedVehicleRoutingProblem:
 
             return True
 
+
         num_states = model.states.size()
         solutions = []
         for i in range(num_states):
-            # extract the solution
-            solution = []
-            for r in routes:
-                solution.append([int(l) + 1 for l in r.state(i)])
+            # extract the solution from the route NL variables
+            solution = [[int(v) + 1 for v in route.state(i)] for route in routes]
 
             solver_objective = model.objective.state(i)
             assert abs(solver_objective - recompute_objective(solution)) < tolerance

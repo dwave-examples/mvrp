@@ -15,8 +15,6 @@
 """This file stores the HTML layout for the app (see ``mvrp.css`` for CSS styling)."""
 from __future__ import annotations
 
-import html
-
 from dash import dcc, html
 
 from app_configs import (

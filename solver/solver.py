@@ -14,7 +14,6 @@
 from __future__ import annotations
 
 import time
-import warnings
 from enum import Enum
 from typing import Any, Hashable, NamedTuple
 
@@ -142,25 +141,17 @@ class Solver:
             {k: capacity for k in range(self.num_vehicles)}
         )
 
-        if self.sampler_type is SamplerType.KMEANS:
-            cvrp.cluster_kmeans(time_limit=self.time_limit)
-        elif self.sampler_type is SamplerType.NL:
-            cvrp.hybrid_nl(capacity=capacity, time_limit=self.time_limit)
-        else:
-            try:
-                cvrp.cluster_dqm(
-                    capacity=1.0,
-                    time_limit=self.time_limit,
-                )
-            except ValueError:
-                warnings.warn("Defaulting to minimum time limit for Leap Hybrid DQM Sampler.")
-
-                cvrp.cluster_dqm(capacity=1.0, time_limit=None)
-
         if self.sampler_type is SamplerType.NL:
-            cvrp.parse_solution_nl(capacity=capacity)
+            cvrp.solve_hybrid_nl(capacity=capacity, time_limit=self.time_limit)
         else:
+            # DQM and K-Means require a two-step solution: clustering + tsp
+            if self.sampler_type is SamplerType.DQM:
+                cvrp.cluster_dqm(capacity=1.0, time_limit=self.time_limit)
+            else:
+                cvrp.cluster_kmeans(time_limit=self.time_limit)
+
             cvrp.solve_tsp_heuristic()
+
         wall_clock_time = time.perf_counter() - start_time
         self._solution = cvrp.solution
 

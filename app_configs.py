@@ -43,7 +43,7 @@ locations.
 
 LOCATIONS_LABEL = "Locations"  # Either "Locations" or business specific location type
 
-SHOW_DQM = True  # Will hide DQM drop down option if False
+SHOW_DQM = False  # Show/hide DQM drop down option
 
 #######################################
 # Sliders, buttons and option entries #
@@ -54,7 +54,7 @@ NUM_VEHICLES = {
     "min": 1,
     "max": 10,
     "step": 1,
-    "value": 6,
+    "value": 4,
 }
 
 # number of client locations slider (value means default)
@@ -62,7 +62,7 @@ NUM_CLIENT_LOCATIONS = {
     "min": 10,
     "max": 100,
     "step": 1,
-    "value": 70,
+    "value": 60,
 }
 
 # solver time limits in seconds (value means default)
