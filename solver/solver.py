@@ -14,7 +14,6 @@
 from __future__ import annotations
 
 import time
-import warnings
 from enum import Enum
 from typing import Any, Hashable, NamedTuple
 
@@ -30,8 +29,9 @@ class VehicleType(Enum):
 
 
 class SamplerType(Enum):
-    DQM = 0
-    KMEANS = 1
+    NL = 0
+    DQM = 1
+    KMEANS = 2
 
 
 class RoutingProblemParameters(NamedTuple):
@@ -133,26 +133,25 @@ class Solver:
             for client_id in self.client_subset
         }
 
+        capacity = -(-sum(demand.values()) // self.num_vehicles)
         cvrp = CapacitatedVehicleRoutingProblem(cost_function=self.cost_between_nodes)
         cvrp.add_depots(depot)
         cvrp.add_clients(clients, demand)
         cvrp.add_vehicles(
-            {k: -(-sum(demand.values()) // self.num_vehicles) for k in range(self.num_vehicles)}
+            {k: capacity for k in range(self.num_vehicles)}
         )
 
-        if self.sampler_type is SamplerType.KMEANS:
-            cvrp.cluster_kmeans(time_limit=self.time_limit)
+        if self.sampler_type is SamplerType.NL:
+            cvrp.solve_hybrid_nl(time_limit=self.time_limit)
         else:
-            try:
-                cvrp.cluster_dqm(
-                    capacity=1.0,
-                    time_limit=self.time_limit,
-                )
-            except ValueError:
-                warnings.warn("Defaulting to minimum time limit for Leap Hybrid DQM Sampler.")
+            # DQM and K-Means require a two-step solution: clustering + tsp
+            if self.sampler_type is SamplerType.DQM:
+                cvrp.cluster_dqm(capacity_penalty_strength=1.0, time_limit=self.time_limit)
+            else:
+                cvrp.cluster_kmeans(time_limit=self.time_limit)
 
-                cvrp.cluster_dqm(capacity=1.0, time_limit=None)
-        cvrp.solve_tsp_heuristic()
+            cvrp.solve_tsp_heuristic()
+
         wall_clock_time = time.perf_counter() - start_time
         self._solution = cvrp.solution
 

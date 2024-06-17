@@ -17,17 +17,16 @@ from __future__ import annotations
 from collections import defaultdict
 from operator import itemgetter
 from pathlib import Path
-from typing import TYPE_CHECKING, Union
+from typing import Union
 
 import dash
-import diskcache
 import folium
+import diskcache
 from dash import MATCH, DiskcacheManager, callback_context, ctx
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 
-from app_configs import DEBUG
-from dash_html import create_table, set_html
+from dash_html import SAMPLER_TYPES, create_table, set_html
 from map import (
     generate_mapping_information,
     plot_solution_routes_on_map,
@@ -35,13 +34,10 @@ from map import (
 )
 from solver.solver import RoutingProblemParameters, SamplerType, Solver, VehicleType
 
+from app_configs import APP_TITLE, THEME_COLOR, THEME_COLOR_SECONDARY, DEBUG
+
 cache = diskcache.Cache("./cache")
 background_callback_manager = DiskcacheManager(cache)
-
-from app_configs import APP_TITLE, THEME_COLOR, THEME_COLOR_SECONDARY
-
-if TYPE_CHECKING:
-    from dash import html
 
 app = dash.Dash(
     __name__,
@@ -185,8 +181,8 @@ def calculate_cost_comparison(
     Args:
         cost_comparison: Dictionary with solver keys and run cost values.
         final_cost: The total distance cost of the most recent run.
-        sampler_type: The sampler that was run. Either Quantum Hybrid (DQM) (``0`` or ``SamplerType.DQM``) or
-            Classical (K-Means) (``1`` or ``SamplerType.KMEANS``).
+        sampler_type: The sampler that was run. Either Quantum Hybrid (DQM) (``0`` or ``SamplerType.DQM``),
+            Quantum Hybrid (NL) (``1`` or ``SamplerType.NL``), or Classical (K-Means) (``2`` or ``SamplerType.KMEANS``).
         reset_results: Whether or not to reset wall clock times.
 
     Returns:
@@ -197,14 +193,25 @@ def calculate_cost_comparison(
     if reset_results:
         cost_comparison = {
             # Dict keys must be strings because Dash stores data as JSON
-            str(sampler_type.value): final_cost
+            str(
+                sampler_type.value
+                if sampler_type is SamplerType.KMEANS
+                else SamplerType.DQM.value
+            ): final_cost
         }
     else:
-        cost_comparison[str(sampler_type.value)] = final_cost
+        cost_comparison[
+            str(
+                sampler_type.value
+                if sampler_type is SamplerType.KMEANS
+                else SamplerType.DQM.value
+            )
+        ] = final_cost
         if len(cost_comparison) == 2:
             cost_dqm = cost_comparison[str(SamplerType.DQM.value)]
             cost_kmeans = cost_comparison[str(SamplerType.KMEANS.value)]
-            cost_comparison_ratio = cost_dqm/cost_kmeans
+            if cost_kmeans:
+                cost_comparison_ratio = cost_dqm / cost_kmeans
 
     performance_improvement_quantum = ""
     if cost_comparison_ratio < 1:
@@ -223,8 +230,8 @@ def get_updated_wall_clock_times(
 
     Args:
         wall_clock_time: Total run time.
-        sampler_type: The sampler that was run. Either Quantum Hybrid (DQM) (``0`` or ``SamplerType.DQM``) or
-            Classical (K-Means) (``1`` or ``SamplerType.KMEANS``).
+        sampler_type: The sampler that was run. Either Either Quantum Hybrid (DQM) (``0`` or ``SamplerType.DQM``),
+            Quantum Hybrid (NL) (``1`` or ``SamplerType.NL``), or Classical (K-Means) (``2`` or ``SamplerType.KMEANS``).
         reset_results: Whether or not to reset wall clock times.
 
     Returns:
@@ -248,6 +255,7 @@ def get_updated_wall_clock_times(
     # update map and results
     Output("solution-map", "srcDoc", allow_duplicate=True),
     Output("stored-results", "data"),
+    Output("hybrid-table-label", "children"),
     # store the solver used, whether or not to reset results tabs and the
     # parameter hash value used to detect parameter changes
     Output("sampler-type", "data"),
@@ -298,7 +306,7 @@ def run_optimization(
     cost_table: list,
     previous_parameter_hash: str,
     cost_comparison: dict,
-) -> tuple[str, list, str, bool, str, str, dict, int, str, str, str, int, int]:
+) -> tuple[str, list, str, str, bool, str, str, dict, int, str, str, str, int, int]:
     """Run the optimization and update map and results tables.
 
     This is the main optimization function which is called when the Run optimization button is
@@ -310,8 +318,9 @@ def run_optimization(
         run_click: The (total) number of times the run button has been clicked.
         vehicle_type: Either Trucks (``0`` or ``VehicleType.TRUCKS``) or
             Delivery Drones (``1`` or ``VehicleType.DELIVERY_DRONES``).
-        sampler_type: Either Quantum Hybrid (DQM) (``0`` or ``SamplerType.DQM``) or
-            Classical (K-Means) (``1`` or ``SamplerType.KMEANS``).
+        sampler_type: Either Quantum Hybrid (DQM) (``0`` or ``SamplerType.DQM``),
+            Quantum Hybrid (NL) (``1`` or ``SamplerType.NL``), or Classical (K-Means)
+            (``2`` or ``SamplerType.KMEANS``).
         num_vehicles: The number of vehicles.
         time_limit: The solver time limit.
         num_clients: The number of force locations.
@@ -321,15 +330,16 @@ def run_optimization(
 
     Returns:
         A tuple containing all outputs to be used when updating the HTML template (in
-        ``dash_html,py``). These are:
+        ``dash_html.py``). These are:
 
-            solution-map: Updates the 'srcDoc' entry for the 'solution-map' IFrame in the map tab.
+            solution-map: Updates the 'srcDoc' entry for the 'solution-map' Iframe in the map tab.
                 This is the map (initial and solution map).
             stored-results: Stores the Solution cost table in the results tab.
+            hybrid-table-label: Label for the hybrid results table (either NL or DQM).
             sampler-type: The sampler used (``"quantum"`` or ``"classical"``).
             reset-results: Whether or not to reset the results tables before applying the new one.
             parameter-hash: Hash string to detect changed parameters.
-            performance-improvement-quantum: Updates quatum performance improvement message.
+            performance-improvement-quantum: Updates quantum performance improvement message.
             cost-comparison: Keeps track of the difference between classical and hybrid run costs.
             problem-size: Updates the problem-size entry in the problem details table.
             search-space: Updates the search-space entry in the problem details table.
@@ -339,7 +349,8 @@ def run_optimization(
             vehicles-deployed: Updates the vehicles-deployed entry in the problem details table.
     """
     if run_click == 0 or ctx.triggered_id != "run-button":
-        return ""
+        raise PreventUpdate
+
     if isinstance(vehicle_type, int):
         vehicle_type = VehicleType(vehicle_type)
 
@@ -397,9 +408,15 @@ def run_optimization(
 
         wall_clock_time_kmeans, wall_clock_time_dqm = get_updated_wall_clock_times(wall_clock_time, sampler_type, reset_results)
 
+        hybrid_table_label = (
+            dash.no_update if sampler_type is SamplerType.KMEANS else
+            SAMPLER_TYPES[sampler_type]
+        )
+
         return (
             open("solution_map.html", "r").read(),
             cost_table,
+            hybrid_table_label,
             "classical" if sampler_type is SamplerType.KMEANS else "quantum",
             reset_results,
             str(parameter_hash),

@@ -15,8 +15,6 @@
 """This file stores the HTML layout for the app (see ``mvrp.css`` for CSS styling)."""
 from __future__ import annotations
 
-import html
-
 from dash import dcc, html
 
 from app_configs import (
@@ -26,15 +24,20 @@ from app_configs import (
     NUM_CLIENT_LOCATIONS,
     NUM_VEHICLES,
     SHOW_COST_COMPARISON,
+    SHOW_DQM,
     SOLVER_TIME,
     THEME_COLOR_SECONDARY,
     THUMBNAIL,
 )
+from solver.solver import SamplerType, VehicleType
 
 map_width, map_height = 1000, 600
 
-VEHICLE_TYPES = ["Trucks", "Delivery Drones"]
-SAMPLER_TYPES = ["Quantum Hybrid", "Classical (K-Means)"]
+VEHICLE_TYPES = {VehicleType.TRUCKS: "Trucks", VehicleType.DELIVERY_DRONES: "Delivery Drones"}
+SAMPLER_TYPES = {SamplerType.NL: "Quantum Hybrid (NL)", SamplerType.KMEANS: "Classical (K-Means)"}
+
+if SHOW_DQM:
+    SAMPLER_TYPES[SamplerType.DQM] = "Quantum Hybrid (DQM)"
 
 
 def description_card():
@@ -92,8 +95,9 @@ def generate_control_card() -> html.Div:
         html.Div: A Div containing the dropdowns for selecting the scenario,
         model, and solver.
     """
-    vehicle_options = [{"label": vehicle, "value": i} for i, vehicle in enumerate(VEHICLE_TYPES)]
-    sampler_options = [{"label": sampler, "value": i} for i, sampler in enumerate(SAMPLER_TYPES)]
+    # calculate drop-down options
+    vehicle_options = [{"label": label, "value": sampler_type.value} for sampler_type, label in VEHICLE_TYPES.items()]
+    sampler_options = [{"label": label, "value": sampler_type.value} for sampler_type, label in SAMPLER_TYPES.items()]
 
     return html.Div(
         id="control-card",
@@ -101,7 +105,7 @@ def generate_control_card() -> html.Div:
             dropdown(
                 "Vehicle Type",
                 "vehicle-type-select",
-                vehicle_options,
+                sorted(vehicle_options, key=lambda op: op["value"]),
             ),
             slider(
                 "Vehicles to Deploy",
@@ -116,7 +120,7 @@ def generate_control_card() -> html.Div:
             dropdown(
                 "Solver",
                 "sampler-type-select",
-                sampler_options,
+                sorted(sampler_options, key=lambda op: op["value"]),
             ),
             html.Label("Solver Time Limit (seconds)"),
             dcc.Input(
@@ -234,10 +238,11 @@ def set_html(app):
                                                                         className="result-table-div",
                                                                         children=[
                                                                             html.H3(
-                                                                                children=[
-                                                                                    "Quantum Hybrid Results"
-                                                                                ],
                                                                                 className="table-label",
+                                                                                children=[
+                                                                                    html.Span(id="hybrid-table-label"),
+                                                                                    " Results",
+                                                                                ]
                                                                             ),
                                                                             html.Table(
                                                                                 title="Quantum Hybrid",
