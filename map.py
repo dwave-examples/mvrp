@@ -95,12 +95,12 @@ def generate_mapping_information(num_clients: int) -> tuple[nx.MultiDiGraph, int
     return map_network, depot_id, client_subset, map_bounds
 
 
-def _get_node_info(G: nx.Graph, force_id: int, icon_name: str) -> tuple[folium.CustomIcon, list[int]]:
+def _get_node_info(G: nx.Graph, node_id: int, icon_name: str) -> tuple[folium.CustomIcon, list[int]]:
     """Get node demand values and icons for each client location."""
     icon_path = Path(__file__).parent / f"assets/location_icons/{icon_name}.png"
     location_icon = folium.CustomIcon(str(icon_path), icon_size=(30, 48))
     sources = (f"resource_{i}" for i in range(len(RESOURCES)))
-    return location_icon, [G.nodes[force_id][s] * 100 for s in sources]
+    return location_icon, [G.nodes[node_id][s] * 100 for s in sources]
 
 
 def show_locations_on_initial_map(
@@ -133,14 +133,14 @@ def show_locations_on_initial_map(
     ).add_to(folium_map)
 
     # add markers to all the client locations
-    for force_id in client_subset:
-        if force_id == depot_id:
+    for node_id in client_subset:
+        if node_id == depot_id:
             continue
 
-        location_icon, nodes = _get_node_info(G, force_id, "location_orange")
+        location_icon, nodes = _get_node_info(G, node_id, "location_orange")
 
         folium.Marker(
-            location=(G.nodes[force_id]["y"], G.nodes[force_id]["x"]),
+            location=(G.nodes[node_id]["y"], G.nodes[node_id]["x"]),
             tooltip=folium.map.Tooltip(
                 text=" <br> ".join(
                     [f"{resource}: {nodes[index]}" for index, resource in enumerate(RESOURCES)]
@@ -199,7 +199,7 @@ def plot_solution_routes_on_map(
 
         solution_cost_information[vehicle_id] = {
             "optimized_cost": 0,
-            "forces_serviced": len(route_network.nodes) - 1,
+            "serviced": len(route_network.nodes) - 1,
         }
         for i in range(len(RESOURCES)):
             solution_cost_information[vehicle_id][f"resource_{i}"] = 0

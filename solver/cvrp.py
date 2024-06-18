@@ -114,7 +114,7 @@ class CapacitatedVehicleRoutingProblem:
         """Add clients by coordinates and supply demand.
 
         Args:
-            coordinates: A dictionary of force label, coordinates.
+            coordinates: A dictionary of label, coordinates.
             demand: A dictionary of client labels and demands.
         """
         for label, co_1 in coordinates.items():
@@ -273,7 +273,7 @@ class CapacitatedVehicleRoutingProblem:
         """The assignment of locations to vehicles in the clustering step.
 
         Returns:
-             dict: A dictionary with force labels as keys, and a list of
+             dict: A dictionary with labels as keys, and a list of
              vehicle that the location is assigned to as values.
 
         """

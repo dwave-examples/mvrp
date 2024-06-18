@@ -94,7 +94,7 @@ def generate_initial_map(num_clients: int) -> folium.Map:
     """Generates the initial map.
 
     Args:
-        num_clients (int): Number of force locations.
+        num_clients (int): Number of locations.
 
     Returns:
         folium.Map: Initial map shown on the map tab.
@@ -119,7 +119,7 @@ def render_initial_map(num_clients: int, _) -> str:
     NOT regenerate the initial map unless 'num-clients-select' is changed.
 
     Args:
-        num_clients: Number of force locations.
+        num_clients: Number of locations.
 
     Returns:
         str: Initial map shown on the map tab as HTML.
@@ -321,7 +321,7 @@ def run_optimization(
             (``2`` or ``SamplerType.KMEANS``).
         num_vehicles: The number of vehicles.
         time_limit: The solver time limit.
-        num_clients: The number of force locations.
+        num_clients: The number of locations.
         cost_table: The html 'Solution cost' table. Used to update it dynamically.
         previous_parameter_hash: Previous hash string to detect changed parameters
         cost_comparison: Dictionary with solver keys and run cost values.
