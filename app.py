@@ -90,7 +90,7 @@ def toggle_left_column(collapse_trigger: int, to_collapse_class: str) -> str:
     return to_collapse_class + " collapsed" if to_collapse_class else "collapsed"
 
 
-def generate_inital_map(num_clients: int) -> folium.Map:
+def generate_initial_map(num_clients: int) -> folium.Map:
     """Generates the initial map.
 
     Args:
@@ -99,8 +99,8 @@ def generate_inital_map(num_clients: int) -> folium.Map:
     Returns:
         folium.Map: Initial map shown on the map tab.
     """
-    map_network, depot_id, force_locations, map_bounds = generate_mapping_information(num_clients)
-    initial_map = show_locations_on_initial_map(map_network, depot_id, force_locations, map_bounds)
+    map_network, depot_id, client_subset, map_bounds = generate_mapping_information(num_clients)
+    initial_map = show_locations_on_initial_map(map_network, depot_id, client_subset, map_bounds)
     return initial_map
 
 
@@ -128,7 +128,7 @@ def render_initial_map(num_clients: int, _) -> str:
 
     # only regenerate map if num_clients is changed (i.e., if run buttons is NOT clicked)
     if ctx.triggered_id != "run-button" or not map_path.exists():
-        initial_map = generate_inital_map(num_clients)
+        initial_map = generate_initial_map(num_clients)
         initial_map.save(map_path)
 
     return open(map_path, "r").read()
@@ -189,24 +189,19 @@ def calculate_cost_comparison(
         cost_comparison: Updated dictionary with solver keys and run cost values.
         performance_improvement_quantum: String stating the quantum hybrid performance improvement.
     """
+
+    # Dict keys must be strings because Dash stores data as JSON
+    key = str(
+        sampler_type.value
+        if sampler_type is SamplerType.KMEANS
+        else SamplerType.DQM.value
+    )
     cost_comparison_ratio = 1
+
     if reset_results:
-        cost_comparison = {
-            # Dict keys must be strings because Dash stores data as JSON
-            str(
-                sampler_type.value
-                if sampler_type is SamplerType.KMEANS
-                else SamplerType.DQM.value
-            ): final_cost
-        }
+        cost_comparison = {key: final_cost}
     else:
-        cost_comparison[
-            str(
-                sampler_type.value
-                if sampler_type is SamplerType.KMEANS
-                else SamplerType.DQM.value
-            )
-        ] = final_cost
+        cost_comparison[key] = final_cost
         if len(cost_comparison) == 2:
             cost_dqm = cost_comparison[str(SamplerType.DQM.value)]
             cost_kmeans = cost_comparison[str(SamplerType.KMEANS.value)]
@@ -358,17 +353,17 @@ def run_optimization(
         sampler_type = SamplerType(sampler_type)
 
     if ctx.triggered_id == "run-button":
-        map_network, depot_id, force_locations, map_bounds = generate_mapping_information(
+        map_network, depot_id, client_subset, map_bounds = generate_mapping_information(
             num_clients
         )
         initial_map = show_locations_on_initial_map(
-            map_network, depot_id, force_locations, map_bounds
+            map_network, depot_id, client_subset, map_bounds
         )
 
         routing_problem_parameters = RoutingProblemParameters(
             map_network=map_network,
             depot_id=depot_id,
-            client_subset=force_locations,
+            client_subset=client_subset,
             num_clients=num_clients,
             num_vehicles=num_vehicles,
             vehicle_type=vehicle_type,
@@ -391,27 +386,25 @@ def run_optimization(
 
         solution_cost = dict(sorted(solution_cost.items()))
         total_cost = defaultdict(int)
-        for _, cost_info_dict in solution_cost.items():
+        for cost_info_dict in solution_cost.values():
             for key, value in cost_info_dict.items():
                 total_cost[key] += value
 
-        cost_table = create_table(list(solution_cost.values()), list(total_cost.values()))
+        cost_table = create_table(solution_cost, list(total_cost.values()))
         solution_map.save("solution_map.html")
 
         parameter_hash = _get_parameter_hash(**callback_context.states)
-        if parameter_hash != previous_parameter_hash:
-            reset_results = True
-        else:
-            reset_results = False
+        reset_results = parameter_hash != previous_parameter_hash
 
-        cost_comparison, performance_improvement_quantum = calculate_cost_comparison(cost_comparison, total_cost["optimized_cost"], sampler_type, reset_results)
-
-        wall_clock_time_kmeans, wall_clock_time_dqm = get_updated_wall_clock_times(wall_clock_time, sampler_type, reset_results)
-
-        hybrid_table_label = (
-            dash.no_update if sampler_type is SamplerType.KMEANS else
-            SAMPLER_TYPES[sampler_type]
+        cost_comparison, performance_improvement_quantum = calculate_cost_comparison(
+            cost_comparison, total_cost["optimized_cost"], sampler_type, reset_results
         )
+
+        wall_clock_time_kmeans, wall_clock_time_dqm = get_updated_wall_clock_times(
+            wall_clock_time, sampler_type, reset_results
+        )
+
+        hybrid_table_label = dash.no_update if sampler_type is SamplerType.KMEANS else SAMPLER_TYPES[sampler_type]
 
         return (
             open("solution_map.html", "r").read(),

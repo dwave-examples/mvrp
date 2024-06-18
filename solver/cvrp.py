@@ -20,6 +20,7 @@ from typing import Hashable, Optional
 import warnings
 
 import networkx as nx
+from app_configs import DEPOT_LABEL
 import numpy as np
 from dimod import DiscreteQuadraticModel
 from dimod.variables import Variables
@@ -105,7 +106,7 @@ class CapacitatedVehicleRoutingProblem:
         self._coordinates.update(coordinates)
         for label in coordinates:
             if label in self._clients:
-                raise ValueError("Depot cannot be in the same location as a client.")
+                raise ValueError(f"{DEPOT_LABEL} cannot be in the same location as a client.")
 
             self._depots._append(label)
 
