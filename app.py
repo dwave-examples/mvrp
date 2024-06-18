@@ -26,7 +26,7 @@ from dash import MATCH, DiskcacheManager, callback_context, ctx
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 
-from dash_html import SAMPLER_TYPES, create_table, set_html
+from dash_html import SAMPLER_TYPES, create_table, no_solution, set_html
 from map import (
     generate_mapping_information,
     plot_solution_routes_on_map,
@@ -265,6 +265,7 @@ def get_updated_wall_clock_times(
     Output("wall-clock-time-quantum", "children"),
     Output("num-locations", "children"),
     Output("vehicles-deployed", "children"),
+    Output("results-tab", "className"),
     inputs=[
         Input("run-button", "n_clicks"),
         State("vehicle-type-select", "value"),
@@ -276,6 +277,7 @@ def get_updated_wall_clock_times(
         State("solution-cost-table", "children"),
         State("parameter-hash", "data"),
         State("cost-comparison", "data"),
+        State("results-tab", "className"),
     ],
     running=[
         # show cancel button and hide run button, and disable and animate results tab
@@ -301,7 +303,8 @@ def run_optimization(
     cost_table: list,
     previous_parameter_hash: str,
     cost_comparison: dict,
-) -> tuple[str, list, str, str, bool, str, str, dict, int, str, str, str, int, int]:
+    results_tab_classes: str,
+) -> tuple[str, list, str, str, bool, str, str, dict, int, str, str, str, int, int, str]:
     """Run the optimization and update map and results tables.
 
     This is the main optimization function which is called when the Run optimization button is
@@ -321,7 +324,8 @@ def run_optimization(
         num_clients: The number of force locations.
         cost_table: The html 'Solution cost' table. Used to update it dynamically.
         previous_parameter_hash: Previous hash string to detect changed parameters
-        cost_comparison: Dictionary with solver keys and run cost values
+        cost_comparison: Dictionary with solver keys and run cost values.
+        results_tab_classes: Classes of the results tab.
 
     Returns:
         A tuple containing all outputs to be used when updating the HTML template (in
@@ -342,6 +346,7 @@ def run_optimization(
             wall-clock-time-quantum: Updates the wall clock time in the Hybrid Quantum table header.
             num-locations: Updates the number of locations in the problem details table.
             vehicles-deployed: Updates the vehicles-deployed entry in the problem details table.
+            results-tab: Classes of the results tab.
     """
     if run_click == 0 or ctx.triggered_id != "run-button":
         raise PreventUpdate
@@ -384,13 +389,19 @@ def run_optimization(
         problem_size = num_vehicles * num_clients
         search_space = f"{num_vehicles**num_clients:.2e}"
 
-        solution_cost = dict(sorted(solution_cost.items()))
         total_cost = defaultdict(int)
-        for cost_info_dict in solution_cost.values():
-            for key, value in cost_info_dict.items():
-                total_cost[key] += value
+        if solution_cost:
+            solution_cost = dict(sorted(solution_cost.items()))
 
-        cost_table = create_table(solution_cost, list(total_cost.values()))
+            for cost_info_dict in solution_cost.values():
+                for key, value in cost_info_dict.items():
+                    total_cost[key] += value
+            results_tab_classes = results_tab_classes.replace(" tab--failed", "")
+            cost_table = create_table(solution_cost, list(total_cost.values()))
+        else:
+            cost_table = no_solution(num_vehicles)
+            results_tab_classes += " tab--failed"
+
         solution_map.save("solution_map.html")
 
         parameter_hash = _get_parameter_hash(**callback_context.states)
@@ -421,6 +432,7 @@ def run_optimization(
             wall_clock_time_dqm,
             num_clients,
             num_vehicles,
+            results_tab_classes,
         )
 
     raise PreventUpdate

@@ -86,7 +86,8 @@ body {
     margin-left: 2rem;
 }
 
-h1, h2, h3, h4, h5, h6, td, th, span, a, p, label {
+h1, h2, h3, h4, h5, h6, td, th, span, a, p, label, button,
+input[type="number"], .Select, .rc-slider-tooltip-inner {
     font-family: "Helvetica Neue", sans-serif;
 }
 
@@ -125,6 +126,14 @@ h4.table-label {
 
 h4.table-label span {
     font-size: 1.8rem;
+}
+
+h5.no-results {
+    color: var(--red-light);
+    text-transform: uppercase;
+    float: right;
+    margin-top: -3.3rem;
+    font-size: 1.6rem;
 }
 
 label {
@@ -217,8 +226,8 @@ label {
     margin-right: 2.6rem;
 }
 
-#solution-cost-table-div:not(:has(> table > thead)),
-#solution-cost-table-classical-div:not(:has(> table > thead)) {
+#solution-cost-table-div:not(:has(> div > .results)),
+#solution-cost-table-classical-div:not(:has(> div > .results)) {
     display: none;
 }
 
@@ -521,6 +530,10 @@ div.tab.tab--disabled {
     flex-direction: column;
     justify-content: space-between;
     height: 100%;
+}
+
+.tab-parent .tab-container div.tab.tab--failed {
+    border-top: 4px solid var(--red-light);
 }
 
 #solver-time-limit {

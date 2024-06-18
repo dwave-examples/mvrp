@@ -248,9 +248,8 @@ def set_html(app):
                                                                                     " Results",
                                                                                 ]
                                                                             ),
-                                                                            html.Table(
+                                                                            html.Div(
                                                                                 title="Quantum Hybrid",
-                                                                                className="result-table",
                                                                                 id="solution-cost-table",
                                                                                 children=[],  # add children dynamically using 'create_table' below
                                                                             ),
@@ -266,9 +265,8 @@ def set_html(app):
                                                                                 ],
                                                                                 className="table-label",
                                                                             ),
-                                                                            html.Table(
+                                                                            html.Div(
                                                                                 title="Classical (K-Means)",
-                                                                                className="result-table",
                                                                                 id="solution-cost-table-classical",
                                                                                 children=[],  # add children dynamically using 'create_table' below
                                                                             ),
@@ -412,12 +410,30 @@ def set_html(app):
     )
 
 
+def no_solution(num_vehicles: int) -> list[html.H5]:
+    """UI feedback when no solution is found."""
+    column_count = 2 + len(RESOURCES)
+    values_dicts = {
+        vehicle + 1: {index: "---" for index in range(column_count)} for vehicle in range(num_vehicles)
+    }
+    values_totals = ["---" for _ in range(column_count)]
+
+    return (
+        html.H5(className="results no-results", children=["no solution found"]),
+        create_table(values_dicts, values_totals)
+    )
+
+
 def create_row_cells(values: list) -> list[html.Td]:
     """List required to execute loop, unpack after to maintain required structure."""
-    return [html.Td(round(value, 3) if UNITS_IMPERIAL else round(value)) for value in values]
+    return [
+        html.Td(
+            value if isinstance(value, str) else round(value, 3 if UNITS_IMPERIAL else 0)
+        ) for value in values
+    ]
 
 
-def create_table(values_dicts: dict[int, dict], values_totals: list) -> list:
+def create_table(values_dicts: dict[int, dict], values_totals: list) -> html.Table:
     """Create a table dynamically.
 
     Args:
@@ -426,38 +442,41 @@ def create_table(values_dicts: dict[int, dict], values_totals: list) -> list:
     """
 
     headers = [
-        f"{VEHICLE_LABEL} id",
+        f"{VEHICLE_LABEL} ID",
         COST_LABEL,
         LOCATIONS_LABEL,
         *RESOURCES
     ]
 
-    table = [
-        html.Thead([html.Tr([html.Th(header) for header in headers])]),
-        html.Tbody(
-            [
-                html.Tr(
-                    [
-                        html.Td(vehicle),
-                        *create_row_cells(
-                            list(results.values())
-                        ),  # Unpack list to maintain required structure
-                    ]
-                )
-                for vehicle, results in values_dicts.items()
-            ]
-        ),
-        html.Tfoot(
-            [
-                html.Tr(
-                    [
-                        html.Td("Total"),
-                        *create_row_cells(values_totals),  # Unpack list to maintain required structure
-                    ],
-                    className="total-cost-row",
-                )
-            ]
-        ),
-    ]
+    table = html.Table(
+        className="results result-table",
+        children=[
+            html.Thead([html.Tr([html.Th(header) for header in headers])]),
+            html.Tbody(
+                [
+                    html.Tr(
+                        [
+                            html.Td(vehicle),
+                            *create_row_cells(
+                                list(results.values())
+                            ),  # Unpack list to maintain required structure
+                        ]
+                    )
+                    for vehicle, results in values_dicts.items()
+                ]
+            ),
+            html.Tfoot(
+                [
+                    html.Tr(
+                        [
+                            html.Td("Total"),
+                            *create_row_cells(values_totals),  # Unpack list to maintain required structure
+                        ],
+                        className="total-cost-row",
+                    )
+                ]
+            ),
+        ]
+    )
 
     return table
