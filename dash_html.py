@@ -100,8 +100,14 @@ def generate_control_card() -> html.Div:
         model, and solver.
     """
     # calculate drop-down options
-    vehicle_options = [{"label": label, "value": sampler_type.value} for sampler_type, label in VEHICLE_TYPES.items()]
-    sampler_options = [{"label": label, "value": sampler_type.value} for sampler_type, label in SAMPLER_TYPES.items()]
+    vehicle_options = [
+        {"label": label, "value": sampler_type.value}
+        for sampler_type, label in VEHICLE_TYPES.items()
+    ]
+    sampler_options = [
+        {"label": label, "value": sampler_type.value}
+        for sampler_type, label in SAMPLER_TYPES.items()
+    ]
 
     return html.Div(
         id="control-card",
@@ -244,9 +250,11 @@ def set_html(app):
                                                                             html.H3(
                                                                                 className="table-label",
                                                                                 children=[
-                                                                                    html.Span(id="hybrid-table-label"),
+                                                                                    html.Span(
+                                                                                        id="hybrid-table-label"
+                                                                                    ),
                                                                                     " Results",
-                                                                                ]
+                                                                                ],
                                                                             ),
                                                                             html.Div(
                                                                                 title="Quantum Hybrid",
@@ -276,7 +284,11 @@ def set_html(app):
                                                             ),
                                                             html.H4(
                                                                 id="performance-improvement-quantum",
-                                                                className="" if SHOW_COST_COMPARISON else "display-none"
+                                                                className=(
+                                                                    ""
+                                                                    if SHOW_COST_COMPARISON
+                                                                    else "display-none"
+                                                                ),
                                                             ),
                                                         ]
                                                     ),
@@ -414,22 +426,22 @@ def no_solution(num_vehicles: int) -> list[html.H5]:
     """UI feedback when no solution is found."""
     column_count = 2 + len(RESOURCES)
     values_dicts = {
-        vehicle + 1: {index: "---" for index in range(column_count)} for vehicle in range(num_vehicles)
+        vehicle + 1: {index: "---" for index in range(column_count)}
+        for vehicle in range(num_vehicles)
     }
     values_totals = ["---" for _ in range(column_count)]
 
     return (
         html.H5(className="results no-results", children=["no solution found"]),
-        create_table(values_dicts, values_totals)
+        create_table(values_dicts, values_totals),
     )
 
 
 def create_row_cells(values: list) -> list[html.Td]:
     """List required to execute loop, unpack after to maintain required structure."""
     return [
-        html.Td(
-            value if isinstance(value, str) else round(value, 3 if UNITS_IMPERIAL else 0)
-        ) for value in values
+        html.Td(value if isinstance(value, str) else round(value, 3 if UNITS_IMPERIAL else 0))
+        for value in values
     ]
 
 
@@ -441,12 +453,7 @@ def create_table(values_dicts: dict[int, dict], values_totals: list) -> html.Tab
         values_totals: List of total results data (sum of individual vehicle data).
     """
 
-    headers = [
-        f"{VEHICLE_LABEL} ID",
-        COST_LABEL,
-        LOCATIONS_LABEL,
-        *RESOURCES
-    ]
+    headers = [f"{VEHICLE_LABEL} ID", COST_LABEL, LOCATIONS_LABEL, *RESOURCES]
 
     table = html.Table(
         className="results result-table",
@@ -470,13 +477,15 @@ def create_table(values_dicts: dict[int, dict], values_totals: list) -> html.Tab
                     html.Tr(
                         [
                             html.Td("Total"),
-                            *create_row_cells(values_totals),  # Unpack list to maintain required structure
+                            *create_row_cells(
+                                values_totals
+                            ),  # Unpack list to maintain required structure
                         ],
                         className="total-cost-row",
                     )
                 ]
             ),
-        ]
+        ],
     )
 
     return table

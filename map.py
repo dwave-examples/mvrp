@@ -21,8 +21,8 @@ import folium
 import folium.plugins as plugins
 import networkx as nx
 import numpy as np
-from numpy.typing import NDArray
 import osmnx as ox
+from numpy.typing import NDArray
 from scipy.spatial import cKDTree
 
 from app_configs import ADDRESS, DEPOT_LABEL, DISTANCE, RESOURCES, VEHICLE_LABEL
@@ -95,7 +95,9 @@ def generate_mapping_information(num_clients: int) -> tuple[nx.MultiDiGraph, int
     return map_network, depot_id, client_subset, map_bounds
 
 
-def _get_node_info(G: nx.Graph, node_id: int, icon_name: str) -> tuple[folium.CustomIcon, list[int]]:
+def _get_node_info(
+    G: nx.Graph, node_id: int, icon_name: str
+) -> tuple[folium.CustomIcon, list[int]]:
     """Get node demand values and icons for each client location."""
     icon_path = Path(__file__).parent / f"assets/location_icons/{icon_name}.png"
     location_icon = folium.CustomIcon(str(icon_path), icon_size=(30, 48))
@@ -117,10 +119,11 @@ def show_locations_on_initial_map(
         folium.Map: Map with depot, client locations and tooltip popups.
     """
     # create folium map on which to plot depots
-    tiles = "cartodb positron" # foilum map theme
+    tiles = "cartodb positron"  # foilum map theme
 
     folium_map = ox.graph_to_gdfs(G, nodes=False, node_geometry=False).explore(
-        style_kwds={"opacity": 0}, tiles=tiles  # Change opacity to 1 to see graph edges/roads in blue
+        style_kwds={"opacity": 0},  # Change opacity to 1 to see graph edges/roads in blue
+        tiles=tiles,
     )
 
     folium_map.fit_bounds(map_bounds)
@@ -214,8 +217,12 @@ def plot_solution_routes_on_map(
                     locations[node],
                     tooltip=folium.map.Tooltip(
                         text=" <br> ".join(
-                                [f"{resource}: {G.nodes[node][f'resource_{i}']*100}" for i, resource in enumerate(RESOURCES)]
-                            ) + f" <br> {VEHICLE_LABEL} ID: {vehicle_id} <br> Stop: #{stop_number} of {len(route_network.nodes)-1}",
+                            [
+                                f"{resource}: {G.nodes[node][f'resource_{i}']*100}"
+                                for i, resource in enumerate(RESOURCES)
+                            ]
+                        )
+                        + f" <br> {VEHICLE_LABEL} ID: {vehicle_id} <br> Stop: #{stop_number} of {len(route_network.nodes)-1}",
                         style="font-size: 1.4rem;",
                     ),
                     icon=location_icon,

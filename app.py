@@ -20,12 +20,13 @@ from pathlib import Path
 from typing import Union
 
 import dash
-import folium
 import diskcache
+import folium
 from dash import MATCH, DiskcacheManager, callback_context, ctx
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 
+from app_configs import APP_TITLE, DEBUG, THEME_COLOR, THEME_COLOR_SECONDARY
 from dash_html import SAMPLER_TYPES, create_table, no_solution, set_html
 from map import (
     generate_mapping_information,
@@ -33,8 +34,6 @@ from map import (
     show_locations_on_initial_map,
 )
 from solver.solver import RoutingProblemParameters, SamplerType, Solver, VehicleType
-
-from app_configs import APP_TITLE, THEME_COLOR, THEME_COLOR_SECONDARY, DEBUG
 
 cache = diskcache.Cache("./cache")
 background_callback_manager = DiskcacheManager(cache)
@@ -174,7 +173,7 @@ def calculate_cost_comparison(
     cost_comparison: dict,
     final_cost: int,
     sampler_type: Union[SamplerType, int],
-    reset_results: bool
+    reset_results: bool,
 ) -> tuple[dict, str]:
     """Calculates cost improvement between DQM and KMEANS.
 
@@ -191,11 +190,7 @@ def calculate_cost_comparison(
     """
 
     # Dict keys must be strings because Dash stores data as JSON
-    key = str(
-        sampler_type.value
-        if sampler_type is SamplerType.KMEANS
-        else SamplerType.DQM.value
-    )
+    key = str(sampler_type.value if sampler_type is SamplerType.KMEANS else SamplerType.DQM.value)
     cost_comparison_ratio = 1
 
     if reset_results:
@@ -217,9 +212,7 @@ def calculate_cost_comparison(
 
 
 def get_updated_wall_clock_times(
-    wall_clock_time: float,
-    sampler_type: Union[SamplerType, int],
-    reset_results: bool
+    wall_clock_time: float, sampler_type: Union[SamplerType, int], reset_results: bool
 ) -> tuple[str, str]:
     """Determine which wall clock times to update in the UI.
 
@@ -358,9 +351,7 @@ def run_optimization(
         sampler_type = SamplerType(sampler_type)
 
     if ctx.triggered_id == "run-button":
-        map_network, depot_id, client_subset, map_bounds = generate_mapping_information(
-            num_clients
-        )
+        map_network, depot_id, client_subset, map_bounds = generate_mapping_information(num_clients)
         initial_map = show_locations_on_initial_map(
             map_network, depot_id, client_subset, map_bounds
         )
@@ -415,7 +406,9 @@ def run_optimization(
             wall_clock_time, sampler_type, reset_results
         )
 
-        hybrid_table_label = dash.no_update if sampler_type is SamplerType.KMEANS else SAMPLER_TYPES[sampler_type]
+        hybrid_table_label = (
+            dash.no_update if sampler_type is SamplerType.KMEANS else SAMPLER_TYPES[sampler_type]
+        )
 
         return (
             open("solution_map.html", "r").read(),

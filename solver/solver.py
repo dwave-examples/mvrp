@@ -18,9 +18,9 @@ from enum import Enum
 from typing import Any, Hashable, NamedTuple
 
 import networkx as nx
-from app_configs import UNITS_IMPERIAL
 import numpy as np
 
+from app_configs import UNITS_IMPERIAL
 from solver.cvrp import CapacitatedVehicleRoutingProblem
 
 

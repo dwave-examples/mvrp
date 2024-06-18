@@ -14,13 +14,12 @@
 
 from __future__ import annotations
 
+import warnings
 from collections import defaultdict
 from itertools import combinations
 from typing import Hashable, Optional
-import warnings
 
 import networkx as nx
-from app_configs import DEPOT_LABEL
 import numpy as np
 from dimod import DiscreteQuadraticModel
 from dimod.variables import Variables
@@ -29,6 +28,7 @@ from dwave.optimization.symbols import DisjointList
 from dwave.system import LeapHybridDQMSampler, LeapHybridNLSampler
 from python_tsp.heuristics import solve_tsp_local_search
 
+from app_configs import DEPOT_LABEL
 from solver.ckmeans import CKMeans
 
 
@@ -164,7 +164,9 @@ class CapacitatedVehicleRoutingProblem:
 
         self.parse_solution_nl()
 
-    def cluster_dqm(self, capacity_penalty_strength: float, time_limit: Optional[float] = None, **kwargs) -> None:
+    def cluster_dqm(
+        self, capacity_penalty_strength: float, time_limit: Optional[float] = None, **kwargs
+    ) -> None:
         """Cluster the client locations using the DQM.
 
         Other keyword args are passed on to the LeapHybridDQMSampler.
@@ -279,7 +281,9 @@ class CapacitatedVehicleRoutingProblem:
         """
         return self._optimization.get("assignments", {})
 
-    def construct_clustering_dqm(self, capacity_penalty_strength) -> tuple[DiscreteQuadraticModel, float]:
+    def construct_clustering_dqm(
+        self, capacity_penalty_strength
+    ) -> tuple[DiscreteQuadraticModel, float]:
         """Construct the DQM used for clustering.
 
         Args:
@@ -404,7 +408,6 @@ class CapacitatedVehicleRoutingProblem:
 
         all_locations = [*self._depots, *self._clients]
 
-
         def recompute_objective(solution):
             """Compute the objective given a solution."""
             total_cost = 0
@@ -418,10 +421,11 @@ class CapacitatedVehicleRoutingProblem:
                 for index, location in enumerate([0, *r[:-1]]):
                     total_cost += self._costs[all_locations[location], all_locations[r[index]]]
 
-                total_cost += self._costs[all_locations[r[-1]], all_locations[0]]  # Go back to depot
+                total_cost += self._costs[
+                    all_locations[r[-1]], all_locations[0]
+                ]  # Go back to depot
 
             return total_cost
-
 
         def check_feasibility(solution):
             """Check whether the given solution is feasible"""
@@ -435,7 +439,6 @@ class CapacitatedVehicleRoutingProblem:
                     return False
 
             return True
-
 
         num_states = model.states.size()
         solutions = []
@@ -464,9 +467,11 @@ class CapacitatedVehicleRoutingProblem:
 
         for vehicle_id, destinations in enumerate(solutions[0]):
             # Add depot and convert to node IDs.
-            route = [all_locations[0]] + [
-                all_locations[destination] for destination in destinations
-            ] + [all_locations[0]]
+            route = (
+                [all_locations[0]]
+                + [all_locations[destination] for destination in destinations]
+                + [all_locations[0]]
+            )
             self._paths[vehicle_id] = route
             edges = [(n, route[i + 1]) for i, n in enumerate(route[:-1])]
             self._solution[vehicle_id] = nx.DiGraph(edges)
