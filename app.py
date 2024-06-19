@@ -63,24 +63,6 @@ with open("assets/theme.css", "w") as f:
     f.write(css)
 
 
-class RunOptimizationReturn(NamedTuple):
-    solution_map: str
-    cost_table: tuple
-    hybrid_table_label: str
-    sampler_type: str
-    reset_results: bool
-    parameter_hash: str
-    performance_improvement_quantum: str
-    cost_comparison: dict
-    problem_size: int
-    search_space: str
-    wall_clock_time_classical: str
-    wall_clock_time_quantum: str
-    num_locations: int
-    vehicles_deployed: int
-    results_tab: str
-
-
 @app.callback(
     Output({"type": "to-collapse-class", "index": MATCH}, "className"),
     inputs=[
@@ -256,6 +238,23 @@ def get_updated_wall_clock_times(
             wall_clock_time_kmeans = dash.no_update
     return wall_clock_time_kmeans, wall_clock_time_quantum
 
+
+class RunOptimizationReturn(NamedTuple):
+    solution_map: str
+    cost_table: tuple
+    hybrid_table_label: str
+    sampler_type: str
+    reset_results: bool
+    parameter_hash: str
+    performance_improvement_quantum: str
+    cost_comparison: dict
+    problem_size: int
+    search_space: str
+    wall_clock_time_classical: str
+    wall_clock_time_quantum: str
+    num_locations: int
+    vehicles_deployed: int
+    results_tab: str
 
 @app.long_callback(
     # update map and results
