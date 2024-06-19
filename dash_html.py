@@ -422,7 +422,7 @@ def set_html(app):
     )
 
 
-def no_solution(num_vehicles: int) -> list[html.H5]:
+def no_solution(num_vehicles: int) -> tuple[html.H5, html.Table]:
     """UI feedback when no solution is found."""
     column_count = 2 + len(RESOURCES)
     values_dicts = {

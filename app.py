@@ -17,7 +17,7 @@ from __future__ import annotations
 from collections import defaultdict
 from operator import itemgetter
 from pathlib import Path
-from typing import Union
+from typing import NamedTuple, Union
 
 import dash
 import diskcache
@@ -61,6 +61,24 @@ css = f"""/* Generated theme settings css file, see app.py */
 """
 with open("assets/theme.css", "w") as f:
     f.write(css)
+
+
+class RunOptimizationReturn(NamedTuple):
+    solution_map: str
+    cost_table: tuple
+    hybrid_table_label: str
+    sampler_type: str
+    reset_results: bool
+    parameter_hash: str
+    performance_improvement_quantum: str
+    cost_comparison: dict
+    problem_size: int
+    search_space: str
+    wall_clock_time_classical: str
+    wall_clock_time_quantum: str
+    num_locations: int
+    vehicles_deployed: int
+    results_tab: str
 
 
 @app.callback(
@@ -198,10 +216,10 @@ def calculate_cost_comparison(
     else:
         cost_comparison[key] = final_cost
         if len(cost_comparison) == 2:
-            cost_dqm = cost_comparison[str(SamplerType.DQM.value)]
+            cost_quantum = cost_comparison[str(SamplerType.DQM.value)]
             cost_kmeans = cost_comparison[str(SamplerType.KMEANS.value)]
             if cost_kmeans:
-                cost_comparison_ratio = cost_dqm / cost_kmeans
+                cost_comparison_ratio = cost_quantum / cost_kmeans
 
     performance_improvement_quantum = ""
     if cost_comparison_ratio < 1:
@@ -224,19 +242,19 @@ def get_updated_wall_clock_times(
 
     Returns:
         wall_clock_time_kmeans: Updated kmeans wall clock time.
-        wall_clock_time_dqm: Updated dqm wall clock time.
+        wall_clock_time_quantum: Updated quantum wall clock time.
     """
     wall_clock_time_kmeans = ""
-    wall_clock_time_dqm = ""
+    wall_clock_time_quantum = ""
     if sampler_type is SamplerType.KMEANS:
         wall_clock_time_kmeans = f"{wall_clock_time:.3f}s"
         if not reset_results:
-            wall_clock_time_dqm = dash.no_update
+            wall_clock_time_quantum = dash.no_update
     else:
-        wall_clock_time_dqm = f"{wall_clock_time:.3f}s"
+        wall_clock_time_quantum = f"{wall_clock_time:.3f}s"
         if not reset_results:
             wall_clock_time_kmeans = dash.no_update
-    return wall_clock_time_kmeans, wall_clock_time_dqm
+    return wall_clock_time_kmeans, wall_clock_time_quantum
 
 
 @app.long_callback(
@@ -297,7 +315,7 @@ def run_optimization(
     previous_parameter_hash: str,
     cost_comparison: dict,
     results_tab_classes: str,
-) -> tuple[str, list, str, str, bool, str, str, dict, int, str, str, str, int, int, str]:
+) -> RunOptimizationReturn:
     """Run the optimization and update map and results tables.
 
     This is the main optimization function which is called when the Run optimization button is
@@ -402,7 +420,7 @@ def run_optimization(
             cost_comparison, total_cost["optimized_cost"], sampler_type, reset_results
         )
 
-        wall_clock_time_kmeans, wall_clock_time_dqm = get_updated_wall_clock_times(
+        wall_clock_time_kmeans, wall_clock_time_quantum = get_updated_wall_clock_times(
             wall_clock_time, sampler_type, reset_results
         )
 
@@ -410,24 +428,23 @@ def run_optimization(
             dash.no_update if sampler_type is SamplerType.KMEANS else SAMPLER_TYPES[sampler_type]
         )
 
-        return (
-            open("solution_map.html", "r").read(),
-            cost_table,
-            hybrid_table_label,
-            "classical" if sampler_type is SamplerType.KMEANS else "quantum",
-            reset_results,
-            str(parameter_hash),
-            performance_improvement_quantum,
-            cost_comparison,
-            problem_size,
-            search_space,
-            wall_clock_time_kmeans,
-            wall_clock_time_dqm,
-            num_clients,
-            num_vehicles,
-            results_tab_classes,
+        return RunOptimizationReturn(
+            solution_map = open("solution_map.html", "r").read(),
+            cost_table = cost_table,
+            hybrid_table_label = hybrid_table_label,
+            sampler_type = "classical" if sampler_type is SamplerType.KMEANS else "quantum",
+            reset_results = reset_results,
+            parameter_hash = str(parameter_hash),
+            performance_improvement_quantum = performance_improvement_quantum,
+            cost_comparison = cost_comparison,
+            problem_size = problem_size,
+            search_space = search_space,
+            wall_clock_time_classical = wall_clock_time_kmeans,
+            wall_clock_time_quantum = wall_clock_time_quantum,
+            num_locations = num_clients,
+            vehicles_deployed = num_vehicles,
+            results_tab = results_tab_classes,
         )
-
     raise PreventUpdate
 
 
