@@ -452,7 +452,7 @@ def create_table(values_dicts: dict[int, dict], values_totals: list) -> html.Tab
         values_totals: List of total results data (sum of individual vehicle data).
     """
 
-    headers = ["Vehicle ID", COST_LABEL, LOCATIONS_LABEL, *RESOURCES]
+    headers = ["Vehicle ID", COST_LABEL, LOCATIONS_LABEL] + [resource[0] for resource in RESOURCES]
 
     table = html.Table(
         className="results result-table",

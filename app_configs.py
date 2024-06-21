@@ -47,10 +47,14 @@ locations.
 DEPOT_LABEL = "Depot"  # Either "Depot" or specific start location
 LOCATIONS_LABEL = "Locations"  # Either "Locations" or business specific location type
 COST_LABEL = "Distance (m)"  # Either "Distance (m)" or specific distance cost description
-RESOURCES = [  # Supports any number of resources
-    "Water",
-    "Food",
-    "Other",
+
+# Supports any number of resources and any number of demand options. Each location will be
+# assigned a random demand from the list of demand options for each resource. Each list
+# must contain at least 1 value.
+RESOURCES = [
+    ("Water", [100, 200]),  # (resource name (string), demand options (list[integers]))
+    ("Food", [100, 200]),
+    ("Other", [100, 200]),
 ]
 
 SHOW_DQM = False  # Show/hide DQM drop down option
