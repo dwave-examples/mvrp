@@ -84,9 +84,8 @@ def generate_mapping_information(num_clients: int) -> tuple[nx.MultiDiGraph, int
     for node_id in client_subset:
         map_network.nodes[node_id]["demand"] = 0
 
-        for i, resource in enumerate(RESOURCES):
-            # assign random demand from resource demand options (resource[1])
-            map_network.nodes[node_id][f"resource_{i}"] = random.choice(resource[1])
+        for i in range(len(RESOURCES)):
+            map_network.nodes[node_id][f"resource_{i}"] = random.choice([1, 2])
             map_network.nodes[node_id]["demand"] += map_network.nodes[node_id][f"resource_{i}"]
 
     # Get min and max coordinates to determine map bounds
@@ -103,7 +102,7 @@ def _get_node_info(
     icon_path = Path(__file__).parent / f"assets/location_icons/{icon_name}.png"
     location_icon = folium.CustomIcon(str(icon_path), icon_size=(30, 48))
     sources = (f"resource_{i}" for i in range(len(RESOURCES)))
-    return location_icon, [G.nodes[node_id][s] for s in sources]
+    return location_icon, [G.nodes[node_id][s] * 100 for s in sources]
 
 
 def show_locations_on_initial_map(
@@ -147,7 +146,7 @@ def show_locations_on_initial_map(
             location=(G.nodes[node_id]["y"], G.nodes[node_id]["x"]),
             tooltip=folium.map.Tooltip(
                 text=" <br> ".join(
-                    [f"{resource[0]}: {nodes[index]}" for index, resource in enumerate(RESOURCES)]
+                    [f"{resource}: {nodes[index]}" for index, resource in enumerate(RESOURCES)]
                 ),
                 style="font-size: 1.4rem;",
             ),
@@ -219,7 +218,7 @@ def plot_solution_routes_on_map(
                     tooltip=folium.map.Tooltip(
                         text=" <br> ".join(
                             [
-                                f"{resource[0]}: {G.nodes[node][f'resource_{i}']}"
+                                f"{resource}: {nodes[i]}"
                                 for i, resource in enumerate(RESOURCES)
                             ]
                         )
