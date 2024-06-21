@@ -240,9 +240,7 @@ def get_updated_wall_clock_times(
 
 
 class RunOptimizationReturn(NamedTuple):
-    """The return values for run_optimization structured in a NamedTuple to avoid
-        long lists of variables and return types. A precaution, not a necessary
-        structure for Dash callbacks."""
+    """Return type for the ``run_optimization`` callback function."""
     solution_map: str
     cost_table: tuple
     hybrid_table_label: str
