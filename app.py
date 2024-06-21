@@ -27,7 +27,7 @@ from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 
 from app_configs import APP_TITLE, DEBUG, THEME_COLOR, THEME_COLOR_SECONDARY
-from dash_html import SAMPLER_TYPES, create_table, no_solution, set_html
+from dash_html import SAMPLER_TYPES, create_table, no_solution_table, set_html
 from map import (
     generate_mapping_information,
     plot_solution_routes_on_map,
@@ -240,6 +240,9 @@ def get_updated_wall_clock_times(
 
 
 class RunOptimizationReturn(NamedTuple):
+    """The return values for run_optimization structured in a NamedTuple to avoid
+        long lists of variables and return types. A precaution, not a necessary
+        structure for Dash callbacks."""
     solution_map: str
     cost_table: tuple
     hybrid_table_label: str
@@ -338,8 +341,8 @@ def run_optimization(
         results_tab_classes: Classes of the results tab.
 
     Returns:
-        A tuple containing all outputs to be used when updating the HTML template (in
-        ``dash_html.py``). These are:
+        A NamedTuple (RunOptimizationReturn) containing all outputs to be used when updating the HTML
+        template (in ``dash_html.py``). These are:
 
             solution-map: Updates the 'srcDoc' entry for the 'solution-map' Iframe in the map tab.
                 This is the map (initial and solution map).
@@ -407,7 +410,7 @@ def run_optimization(
             results_tab_classes = results_tab_classes.replace(" tab--failed", "")
             cost_table = create_table(solution_cost, list(total_cost.values()))
         else:
-            cost_table = no_solution(num_vehicles)
+            cost_table = no_solution_table(num_vehicles)
             results_tab_classes += " tab--failed"
 
         solution_map.save("solution_map.html")

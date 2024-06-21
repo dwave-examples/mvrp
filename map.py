@@ -25,7 +25,7 @@ import osmnx as ox
 from numpy.typing import NDArray
 from scipy.spatial import cKDTree
 
-from app_configs import ADDRESS, DEPOT_LABEL, DISTANCE, RESOURCES, VEHICLE_LABEL
+from app_configs import ADDRESS, DEPOT_LABEL, DISTANCE, RESOURCES
 from solver.solver import VehicleType
 
 ox.settings.use_cache = True
@@ -222,7 +222,7 @@ def plot_solution_routes_on_map(
                                 for i, resource in enumerate(RESOURCES)
                             ]
                         )
-                        + f" <br> {VEHICLE_LABEL} ID: {vehicle_id} <br> Stop: #{stop_number} of {len(route_network.nodes)-1}",
+                        + f" <br> Vehicle ID: {vehicle_id} <br> Stop: #{stop_number} of {len(route_network.nodes)-1}",
                         style="font-size: 1.4rem;",
                     ),
                     icon=location_icon,

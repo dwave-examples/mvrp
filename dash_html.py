@@ -31,7 +31,6 @@ from app_configs import (
     THEME_COLOR_SECONDARY,
     THUMBNAIL,
     UNITS_IMPERIAL,
-    VEHICLE_LABEL,
 )
 from solver.solver import SamplerType, VehicleType
 
@@ -113,12 +112,12 @@ def generate_control_card() -> html.Div:
         id="control-card",
         children=[
             dropdown(
-                f"{VEHICLE_LABEL} Type",
+                "Vehicle Type",
                 "vehicle-type-select",
                 sorted(vehicle_options, key=lambda op: op["value"]),
             ),
             slider(
-                f"{VEHICLE_LABEL}s to Deploy",
+                "Vehicles to Deploy",
                 "num-vehicles-select",
                 NUM_VEHICLES,
             ),
@@ -365,7 +364,7 @@ def set_html(app):
                                                                                             html.Tr(
                                                                                                 [
                                                                                                     html.Td(
-                                                                                                        f"{VEHICLE_LABEL}s Deployed"
+                                                                                                        "Vehicles Deployed"
                                                                                                     ),
                                                                                                     html.Td(
                                                                                                         id="vehicles-deployed"
@@ -422,7 +421,7 @@ def set_html(app):
     )
 
 
-def no_solution(num_vehicles: int) -> tuple[html.H5, html.Table]:
+def no_solution_table(num_vehicles: int) -> tuple[html.H5, html.Table]:
     """UI feedback when no solution is found."""
     column_count = 2 + len(RESOURCES)
     values_dicts = {
@@ -453,7 +452,7 @@ def create_table(values_dicts: dict[int, dict], values_totals: list) -> html.Tab
         values_totals: List of total results data (sum of individual vehicle data).
     """
 
-    headers = [f"{VEHICLE_LABEL} ID", COST_LABEL, LOCATIONS_LABEL, *RESOURCES]
+    headers = ["Vehicle ID", COST_LABEL, LOCATIONS_LABEL, *RESOURCES]
 
     table = html.Table(
         className="results result-table",

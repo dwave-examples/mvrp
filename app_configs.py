@@ -46,7 +46,6 @@ locations.
 
 DEPOT_LABEL = "Depot"  # Either "Depot" or specific start location
 LOCATIONS_LABEL = "Locations"  # Either "Locations" or business specific location type
-VEHICLE_LABEL = "Vehicle"  # Singular, default "Vehicle"
 COST_LABEL = "Distance (m)"  # Either "Distance (m)" or specific distance cost description
 RESOURCES = [  # Supports any number of resources
     "Water",
