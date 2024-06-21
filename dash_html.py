@@ -421,25 +421,10 @@ def set_html(app):
     )
 
 
-def no_solution_table(num_vehicles: int) -> tuple[html.H5, html.Table]:
-    """UI feedback when no solution is found."""
-    column_count = 2 + len(RESOURCES)
-    values_dicts = {
-        vehicle + 1: {index: "---" for index in range(column_count)}
-        for vehicle in range(num_vehicles)
-    }
-    values_totals = ["---" for _ in range(column_count)]
-
-    return (
-        html.H5(className="results no-results", children=["no solution found"]),
-        create_table(values_dicts, values_totals),
-    )
-
-
 def create_row_cells(values: list) -> list[html.Td]:
     """List required to execute loop, unpack after to maintain required structure."""
     return [
-        html.Td(value if isinstance(value, str) else round(value, 3 if UNITS_IMPERIAL else 0))
+        html.Td(round(value, 3 if UNITS_IMPERIAL else 0))
         for value in values
     ]
 
