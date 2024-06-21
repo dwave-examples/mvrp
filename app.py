@@ -401,7 +401,6 @@ def run_optimization(
                 total_cost[key] += value
 
         cost_table = create_table(solution_cost, list(total_cost.values()))
-
         solution_map.save("solution_map.html")
 
         parameter_hash = _get_parameter_hash(**callback_context.states)
@@ -435,6 +434,7 @@ def run_optimization(
             num_locations = num_clients,
             vehicles_deployed = num_vehicles,
         )
+
     raise PreventUpdate
 
 

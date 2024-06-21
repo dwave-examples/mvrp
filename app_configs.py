@@ -24,7 +24,9 @@ DEBUG = False
 SHOW_COST_COMPARISON = False
 
 # Units will be in miles if true, meters if false
+# If updated, make sure units match COST_LABEL below
 UNITS_IMPERIAL = False
+COST_LABEL = "Distance (m)"  # Either "Distance (m)" or specific distance cost description
 
 # THEME_COLOR is used for the button, text, and banner and should be dark
 # and pass accessibility checks with white: https://webaim.org/resources/contrastchecker/
@@ -46,7 +48,6 @@ locations.
 
 DEPOT_LABEL = "Depot"  # Either "Depot" or specific start location
 LOCATIONS_LABEL = "Locations"  # Either "Locations" or business specific location type
-COST_LABEL = "Distance (m)"  # Either "Distance (m)" or specific distance cost description
 RESOURCES = ["Water", "Food", "Other"]  # Supports any number of resources
 
 SHOW_DQM = False  # Show/hide DQM drop down option

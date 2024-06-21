@@ -101,8 +101,7 @@ def _get_node_info(
     """Get node demand values and icons for each client location."""
     icon_path = Path(__file__).parent / f"assets/location_icons/{icon_name}.png"
     location_icon = folium.CustomIcon(str(icon_path), icon_size=(30, 48))
-    sources = (f"resource_{i}" for i in range(len(RESOURCES)))
-    return location_icon, [G.nodes[node_id][s] * 100 for s in sources]
+    return location_icon, [G.nodes[node_id][f"resource_{i}"] * 100 for i in range(len(RESOURCES))]
 
 
 def show_locations_on_initial_map(

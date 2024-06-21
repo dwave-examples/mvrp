@@ -422,8 +422,8 @@ class CapacitatedVehicleRoutingProblem:
                     total_cost += self._costs[all_locations[location], all_locations[r[index]]]
 
                 total_cost += self._costs[
-                    all_locations[r[-1]], all_locations[0]
-                ]  # Go back to depot
+                    all_locations[r[-1]], all_locations[0]  # Go back to depot
+                ]
 
             return total_cost
 
