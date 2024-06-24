@@ -8,3 +8,4 @@ dist
 initial_map.html
 solution_map.html
 assets/theme.css
+*.DS_Store

@@ -18,16 +18,19 @@ from __future__ import annotations
 from dash import dcc, html
 
 from app_configs import (
+    COST_LABEL,
     DESCRIPTION,
     LOCATIONS_LABEL,
     MAIN_HEADER,
     NUM_CLIENT_LOCATIONS,
     NUM_VEHICLES,
+    RESOURCES,
     SHOW_COST_COMPARISON,
     SHOW_DQM,
     SOLVER_TIME,
     THEME_COLOR_SECONDARY,
     THUMBNAIL,
+    UNITS_IMPERIAL,
 )
 from solver.solver import SamplerType, VehicleType
 
@@ -96,8 +99,14 @@ def generate_control_card() -> html.Div:
         model, and solver.
     """
     # calculate drop-down options
-    vehicle_options = [{"label": label, "value": sampler_type.value} for sampler_type, label in VEHICLE_TYPES.items()]
-    sampler_options = [{"label": label, "value": sampler_type.value} for sampler_type, label in SAMPLER_TYPES.items()]
+    vehicle_options = [
+        {"label": label, "value": sampler_type.value}
+        for sampler_type, label in VEHICLE_TYPES.items()
+    ]
+    sampler_options = [
+        {"label": label, "value": sampler_type.value}
+        for sampler_type, label in SAMPLER_TYPES.items()
+    ]
 
     return html.Div(
         id="control-card",
@@ -240,13 +249,14 @@ def set_html(app):
                                                                             html.H3(
                                                                                 className="table-label",
                                                                                 children=[
-                                                                                    html.Span(id="hybrid-table-label"),
+                                                                                    html.Span(
+                                                                                        id="hybrid-table-label"
+                                                                                    ),
                                                                                     " Results",
-                                                                                ]
+                                                                                ],
                                                                             ),
-                                                                            html.Table(
+                                                                            html.Div(
                                                                                 title="Quantum Hybrid",
-                                                                                className="result-table",
                                                                                 id="solution-cost-table",
                                                                                 children=[],  # add children dynamically using 'create_table' below
                                                                             ),
@@ -262,9 +272,8 @@ def set_html(app):
                                                                                 ],
                                                                                 className="table-label",
                                                                             ),
-                                                                            html.Table(
+                                                                            html.Div(
                                                                                 title="Classical (K-Means)",
-                                                                                className="result-table",
                                                                                 id="solution-cost-table-classical",
                                                                                 children=[],  # add children dynamically using 'create_table' below
                                                                             ),
@@ -274,7 +283,11 @@ def set_html(app):
                                                             ),
                                                             html.H4(
                                                                 id="performance-improvement-quantum",
-                                                                className="" if SHOW_COST_COMPARISON else "display-none"
+                                                                className=(
+                                                                    ""
+                                                                    if SHOW_COST_COMPARISON
+                                                                    else "display-none"
+                                                                ),
                                                             ),
                                                         ]
                                                     ),
@@ -410,56 +423,53 @@ def set_html(app):
 
 def create_row_cells(values: list) -> list[html.Td]:
     """List required to execute loop, unpack after to maintain required structure."""
-    return [html.Td(round(value)) for value in values]
+    return [
+        html.Td(round(value, 3 if UNITS_IMPERIAL else 0))
+        for value in values
+    ]
 
 
-def create_table(values_dicts: dict[int, dict], values_tot: list) -> list:
+def create_table(values_dicts: dict[int, dict], values_totals: list) -> html.Table:
     """Create a table dynamically.
 
     Args:
-        values_dicts: List of dictionaries with vehicle number as results data as values.
-        values_tot: List of total results data (sum of individual vehicle data).
+        values_dicts: Dictionary with vehicle id keys and results data as values.
+        values_totals: List of total results data (sum of individual vehicle data).
     """
 
-    table = [
-        html.Thead(
-            [
-                html.Tr(
-                    [
-                        html.Th("Vehicle"),
-                        html.Th("Distance (m)"),
-                        html.Th(LOCATIONS_LABEL),
-                        html.Th("Water"),
-                        html.Th("Food"),
-                        html.Th("Other"),
-                    ]
-                )
-            ]
-        ),
-        html.Tbody(
-            [
-                html.Tr(
-                    [
-                        html.Td(index + 1),
-                        *create_row_cells(
-                            list(vehicle.values())
-                        ),  # Unpack list to maintain required structure
-                    ]
-                )
-                for index, vehicle in enumerate(values_dicts)
-            ]
-        ),
-        html.Tfoot(
-            [
-                html.Tr(
-                    [
-                        html.Td("Total"),
-                        *create_row_cells(values_tot),  # Unpack list to maintain required structure
-                    ],
-                    className="total-cost-row",
-                )
-            ]
-        ),
-    ]
+    headers = ["Vehicle ID", COST_LABEL, LOCATIONS_LABEL, *RESOURCES]
+
+    table = html.Table(
+        className="results result-table",
+        children=[
+            html.Thead([html.Tr([html.Th(header) for header in headers])]),
+            html.Tbody(
+                [
+                    html.Tr(
+                        [
+                            html.Td(vehicle),
+                            *create_row_cells(
+                                list(results.values())
+                            ),  # Unpack list to maintain required structure
+                        ]
+                    )
+                    for vehicle, results in values_dicts.items()
+                ]
+            ),
+            html.Tfoot(
+                [
+                    html.Tr(
+                        [
+                            html.Td("Total"),
+                            *create_row_cells(
+                                values_totals
+                            ),  # Unpack list to maintain required structure
+                        ],
+                        className="total-cost-row",
+                    )
+                ]
+            ),
+        ],
+    )
 
     return table

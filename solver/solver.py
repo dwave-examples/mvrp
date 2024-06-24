@@ -20,6 +20,7 @@ from typing import Any, Hashable, NamedTuple
 import networkx as nx
 import numpy as np
 
+from app_configs import UNITS_IMPERIAL
 from solver.cvrp import CapacitatedVehicleRoutingProblem
 
 
@@ -100,9 +101,11 @@ class Solver:
             end: End node label (used for trucks).
         """
         if self.vehicle_type is VehicleType.TRUCKS:
+            if UNITS_IMPERIAL:
+                return self.paths_and_lengths[start][0][end] / 1609.34  # convert to miles
             return self.paths_and_lengths[start][0][end]
 
-        radius_earth = 6371000  # meters
+        radius_earth = 3958.8 if UNITS_IMPERIAL else 6371000  # miles else meters
         lat1_rad, lat2_rad = np.deg2rad((p1[0], p2[0]))
         diff_lat_rad, diff_lon_rad = np.deg2rad((p2[0] - p1[0], p2[1] - p1[1]))
 
@@ -133,13 +136,12 @@ class Solver:
             for client_id in self.client_subset
         }
 
-        capacity = -(-sum(demand.values()) // self.num_vehicles)
         cvrp = CapacitatedVehicleRoutingProblem(cost_function=self.cost_between_nodes)
         cvrp.add_depots(depot)
         cvrp.add_clients(clients, demand)
         cvrp.add_vehicles(
-            {k: capacity for k in range(self.num_vehicles)}
-        )
+            {k: -(-sum(demand.values()) // self.num_vehicles) for k in range(self.num_vehicles)}
+        )  # calculate capacity for the vehicles such that a feasible solution exists
 
         if self.sampler_type is SamplerType.NL:
             cvrp.solve_hybrid_nl(time_limit=self.time_limit)
