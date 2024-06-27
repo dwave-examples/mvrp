@@ -38,6 +38,12 @@ from solver.solver import RoutingProblemParameters, SamplerType, Solver, Vehicle
 cache = diskcache.Cache("./cache")
 background_callback_manager = DiskcacheManager(cache)
 
+# Fix for Dash background callbacks crashing on macOS 10.13+ (https://bugs.python.org/issue33725)
+# See https://github.com/dwave-examples/flow-shop-scheduling/pull/4 for more details.
+import multiprocess
+if multiprocess.get_start_method(allow_none=True) is None:
+    multiprocess.set_start_method('spawn')
+
 app = dash.Dash(
     __name__,
     meta_tags=[{"name": "viewport", "content": "width=device-width, initial-scale=1"}],
@@ -256,7 +262,7 @@ class RunOptimizationReturn(NamedTuple):
     num_locations: int
     vehicles_deployed: int
 
-@app.long_callback(
+@app.callback(
     # update map and results
     Output("solution-map", "srcDoc", allow_duplicate=True),
     Output("stored-results", "data"),
@@ -275,6 +281,7 @@ class RunOptimizationReturn(NamedTuple):
     Output("wall-clock-time-quantum", "children"),
     Output("num-locations", "children"),
     Output("vehicles-deployed", "children"),
+    background=True,
     inputs=[
         Input("run-button", "n_clicks"),
         State("vehicle-type-select", "value"),
