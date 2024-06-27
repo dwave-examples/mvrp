@@ -406,11 +406,11 @@ class CapacitatedVehicleRoutingProblem:
 
 
         num_states = model.states.size()
-        solution = []
+        solution = None
         for i in range(num_states):
             # extract the solution
             decision = next(model.iter_decisions())
-            solution_candidate = [[int(v) + 1 for v in route.state(i)] for route in list(decision.iter_successors())]
+            solution_candidate = [[int(v) + 1 for v in route.state(i)] for route in decision.iter_successors()]
 
             solver_objective = model.objective.state(i)
             assert abs(solver_objective - recompute_objective(solution_candidate)) < tolerance
@@ -429,7 +429,7 @@ class CapacitatedVehicleRoutingProblem:
                 break
 
         # Check that a feasible solution was found.
-        if len(solution) == 0:
+        if not solution:
             raise ValueError("No feasible solution found.")
 
         for vehicle_id, destinations in enumerate(solution):
