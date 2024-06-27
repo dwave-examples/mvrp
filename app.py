@@ -38,13 +38,8 @@ from solver.solver import RoutingProblemParameters, SamplerType, Solver, Vehicle
 cache = diskcache.Cache("./cache")
 background_callback_manager = DiskcacheManager(cache)
 
-# Fix Dash long callbacks crashing on macOS 10.13+ (also potentially not working
-# on other POSIX systems), caused by https://bugs.python.org/issue33725
-# (aka "beware of multithreaded process forking").
-#
-# Note: default start method has already been changed to "spawn" on darwin in
-# the `multiprocessing` library, but its fork, `multiprocess` still hasn't caught up.
-# (see docs: https://docs.python.org/3/library/multiprocessing.html#contexts-and-start-methods)
+# Fix for Dash background callbacks crashing on macOS 10.13+ (https://bugs.python.org/issue33725)
+# See https://github.com/dwave-examples/flow-shop-scheduling/pull/4 for more details.
 import multiprocess
 if multiprocess.get_start_method(allow_none=True) is None:
     multiprocess.set_start_method('spawn')
