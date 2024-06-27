@@ -14,10 +14,10 @@
 
 from __future__ import annotations
 
+import warnings
 from collections import defaultdict
 from itertools import combinations
 from typing import Hashable, Optional
-import warnings
 
 import networkx as nx
 import numpy as np
@@ -28,6 +28,7 @@ from dwave.optimization.generators import capacitated_vehicle_routing
 from dwave.system import LeapHybridDQMSampler, LeapHybridNLSampler
 from python_tsp.heuristics import solve_tsp_local_search
 
+from app_configs import DEPOT_LABEL
 from solver.ckmeans import CKMeans
 
 
@@ -105,7 +106,7 @@ class CapacitatedVehicleRoutingProblem:
         self._coordinates.update(coordinates)
         for label in coordinates:
             if label in self._clients:
-                raise ValueError("Depot cannot be in the same location as a client.")
+                raise ValueError(f"{DEPOT_LABEL} cannot be in the same location as a client.")
 
             self._depots._append(label)
 
@@ -113,7 +114,7 @@ class CapacitatedVehicleRoutingProblem:
         """Add clients by coordinates and supply demand.
 
         Args:
-            coordinates: A dictionary of force label, coordinates.
+            coordinates: A dictionary of label, coordinates.
             demand: A dictionary of client labels and demands.
         """
         for label, co_1 in coordinates.items():
@@ -163,7 +164,9 @@ class CapacitatedVehicleRoutingProblem:
 
         self.parse_solution_nl()
 
-    def cluster_dqm(self, capacity_penalty_strength: float, time_limit: Optional[float] = None, **kwargs) -> None:
+    def cluster_dqm(
+        self, capacity_penalty_strength: float, time_limit: Optional[float] = None, **kwargs
+    ) -> None:
         """Cluster the client locations using the DQM.
 
         Other keyword args are passed on to the LeapHybridDQMSampler.
@@ -272,13 +275,15 @@ class CapacitatedVehicleRoutingProblem:
         """The assignment of locations to vehicles in the clustering step.
 
         Returns:
-             dict: A dictionary with force labels as keys, and a list of
+             dict: A dictionary with labels as keys, and a list of
              vehicle that the location is assigned to as values.
 
         """
         return self._optimization.get("assignments", {})
 
-    def construct_clustering_dqm(self, capacity_penalty_strength) -> tuple[DiscreteQuadraticModel, float]:
+    def construct_clustering_dqm(
+        self, capacity_penalty_strength
+    ) -> tuple[DiscreteQuadraticModel, float]:
         """Construct the DQM used for clustering.
 
         Args:
@@ -372,7 +377,6 @@ class CapacitatedVehicleRoutingProblem:
 
         all_locations = [*self._depots, *self._clients]
 
-
         def recompute_objective(solution):
             """Compute the objective given a solution."""
             total_cost = 0
@@ -386,10 +390,11 @@ class CapacitatedVehicleRoutingProblem:
                 for index, location in enumerate([0, *r[:-1]]):
                     total_cost += self._costs[all_locations[location], all_locations[r[index]]]
 
-                total_cost += self._costs[all_locations[r[-1]], all_locations[0]]  # Go back to depot
+                total_cost += self._costs[
+                    all_locations[r[-1]], all_locations[0]  # Go back to depot
+                ]
 
             return total_cost
-
 
         def check_feasibility(solution):
             """Check whether the given solution is feasible"""
@@ -438,9 +443,11 @@ class CapacitatedVehicleRoutingProblem:
 
         for vehicle_id, destinations in enumerate(solution):
             # Add depot and convert to node IDs.
-            route = [all_locations[0]] + [
-                all_locations[destination] for destination in destinations
-            ] + [all_locations[0]]
+            route = (
+                [all_locations[0]]
+                + [all_locations[destination] for destination in destinations]
+                + [all_locations[0]]
+            )
             self._paths[vehicle_id] = route
             edges = [(n, route[i + 1]) for i, n in enumerate(route[:-1])]
             self._solution[vehicle_id] = nx.DiGraph(edges)
