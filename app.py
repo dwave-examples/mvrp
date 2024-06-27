@@ -38,6 +38,17 @@ from solver.solver import RoutingProblemParameters, SamplerType, Solver, Vehicle
 cache = diskcache.Cache("./cache")
 background_callback_manager = DiskcacheManager(cache)
 
+# Fix Dash long callbacks crashing on macOS 10.13+ (also potentially not working
+# on other POSIX systems), caused by https://bugs.python.org/issue33725
+# (aka "beware of multithreaded process forking").
+#
+# Note: default start method has already been changed to "spawn" on darwin in
+# the `multiprocessing` library, but its fork, `multiprocess` still hasn't caught up.
+# (see docs: https://docs.python.org/3/library/multiprocessing.html#contexts-and-start-methods)
+import multiprocess
+if multiprocess.get_start_method(allow_none=True) is None:
+    multiprocess.set_start_method('spawn')
+
 app = dash.Dash(
     __name__,
     meta_tags=[{"name": "viewport", "content": "width=device-width, initial-scale=1"}],
@@ -256,7 +267,7 @@ class RunOptimizationReturn(NamedTuple):
     num_locations: int
     vehicles_deployed: int
 
-@app.long_callback(
+@app.callback(
     # update map and results
     Output("solution-map", "srcDoc", allow_duplicate=True),
     Output("stored-results", "data"),
@@ -275,6 +286,7 @@ class RunOptimizationReturn(NamedTuple):
     Output("wall-clock-time-quantum", "children"),
     Output("num-locations", "children"),
     Output("vehicles-deployed", "children"),
+    background=True,
     inputs=[
         Input("run-button", "n_clicks"),
         State("vehicle-type-select", "value"),
