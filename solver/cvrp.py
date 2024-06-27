@@ -405,28 +405,32 @@ class CapacitatedVehicleRoutingProblem:
             return True
 
 
-        num_states = model.states.size()
-        solution = None
-        for i in range(num_states):
-            # extract the solution
-            decision = next(model.iter_decisions())
-            solution_candidate = [[int(v) + 1 for v in route.state(i)] for route in decision.iter_successors()]
+        def get_solution():
+            """Extract solution and check feasibility"""
+            num_states = model.states.size()
+            for i in range(num_states):
+                # extract the solution
+                decision = next(model.iter_decisions())
+                solution_candidate = [[int(v) + 1 for v in route.state(i)] for route in decision.iter_successors()]
+                if not solution_candidate: continue
 
-            solver_objective = model.objective.state(i)
-            assert abs(solver_objective - recompute_objective(solution_candidate)) < tolerance
+                solver_objective = model.objective.state(i)
+                assert abs(solver_objective - recompute_objective(solution_candidate)) < tolerance
 
-            solver_feasibility = True
-            for c in model.iter_constraints():
-                if c.state(i) < 0.5:
-                    solver_feasibility = False
+                solver_feasibility = True
+                for c in model.iter_constraints():
+                    if c.state(i) < 0.5:
+                        solver_feasibility = False
 
-            # Check feasibility and if feasible, break
-            assert solver_feasibility == check_feasibility(solution_candidate)
-            if not solver_feasibility:
-                print(f"Sample {i} is infeasible")
-            else:
-                solution = solution_candidate
-                break
+                # Check feasibility and if feasible, return
+                assert solver_feasibility == check_feasibility(solution_candidate)
+                if not solver_feasibility:
+                    print(f"Sample {i} is infeasible")
+                else:
+                    return solution_candidate
+
+
+        solution = get_solution()
 
         # Check that a feasible solution was found.
         if not solution:
