@@ -341,9 +341,9 @@ class CapacitatedVehicleRoutingProblem:
         all_locations = [*self._depots, *self._clients]
 
         # Convert demand dictionary to array
-        demand = np.zeros((len(all_locations)))
+        demand = np.zeros(len(all_locations))
         for index, client in enumerate(self.clients):
-            demand[index+1] = self._demand[client]  # add 1 to skip depot
+            demand[index + 1] = self._demand[client]  # add 1 to skip depot
 
         # Generate cost/distance matrices
         distances = np.zeros((len(all_locations), len(all_locations)))
@@ -429,10 +429,11 @@ class CapacitatedVehicleRoutingProblem:
 
                 # Check feasibility and if feasible, return
                 assert solver_feasibility == check_feasibility(solution_candidate)
-                if not solver_feasibility:
-                    print(f"Sample {i} is infeasible")
-                else:
+                if solver_feasibility:
                     return solution_candidate
+                print(f"Sample {i} is infeasible")
+
+            raise ValueError("No feasible solution found.")
 
 
         solution = get_solution()
