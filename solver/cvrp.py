@@ -356,14 +356,31 @@ class CapacitatedVehicleRoutingProblem:
 
         return model
 
-    def parse_solution_nl(self, tolerance=1e-6) -> None:
-        """Checks the solutions from the NL solver (attached to the model) and outputs the parsed ones.
+    def _recompute_objective(self, solution):
+        """Compute the objective given a solution."""
 
-        Args:
-            tolerance: Absolute tolerance for solution distances in the solver objective.
-        """
+        all_locations = [*self._depots, *self._clients]
+        num_vehicles = len(self._vehicle_capacity)
+        total_cost = 0
 
-        model = self._optimization["nl"]
+        assert len(solution) == num_vehicles
+
+        # Compute total cost for the solution.
+        for r in solution:
+            if len(r) == 0:
+                continue
+
+            for index, location in enumerate([0, *r[:-1]]):
+                total_cost += self._costs[all_locations[location], all_locations[r[index]]]
+
+            total_cost += self._costs[
+                all_locations[r[-1]], all_locations[0]  # Go back to depot
+            ]
+
+        return total_cost
+
+    def _check_feasibility(self, solution):
+        """Check whether the given solution is feasible"""
 
         # Take maxium vehicle capacity. Vehicle capacity should be updated to only allow
         # one value for all vehicles or update NL solution to allow multiple capacities.
@@ -375,72 +392,52 @@ class CapacitatedVehicleRoutingProblem:
         for index, client in enumerate(self.clients):
             demand[index + 1] = self._demand[client]
 
+        assert len(solution) == num_vehicles
+
+        for r in solution:
+            # If route has no locations the vehicle never left the depot or
+            # if demand exceeds capacity.
+            if len(r) == 0 or demand[r].sum() > max_capacity:
+                return False
+
+        return True
+
+    def _get_solution(self, tolerance=1e-6):
+        """Extract solution and check feasibility"""
+        model = self._optimization["nl"]
+        num_states = model.states.size()
+        for i in range(num_states):
+            # extract the solution
+            decision = next(model.iter_decisions())
+            solution_candidate = [[int(v) + 1 for v in route.state(i)] for route in decision.iter_successors()]
+            if not solution_candidate: continue
+
+            solver_objective = model.objective.state(i)
+            assert abs(solver_objective - self._recompute_objective(solution=solution_candidate)) < tolerance
+
+            solver_feasibility = True
+            for c in model.iter_constraints():
+                if c.state(i) < 0.5:
+                    solver_feasibility = False
+
+            # Check feasibility and if feasible, return
+            assert solver_feasibility == self._check_feasibility(solution=solution_candidate)
+            if solver_feasibility:
+                return solution_candidate
+            print(f"Sample {i} is infeasible")
+
+        raise ValueError("No feasible solution found.")
+
+    def parse_solution_nl(self) -> None:
+        """Checks the solutions from the NL solver (attached to the model) and outputs the parsed ones.
+
+        Args:
+            tolerance: Absolute tolerance for solution distances in the solver objective.
+        """
+
         all_locations = [*self._depots, *self._clients]
 
-        def recompute_objective(solution):
-            """Compute the objective given a solution."""
-            total_cost = 0
-            assert len(solution) == num_vehicles
-
-            # Compute total cost for the solution.
-            for r in solution:
-                if len(r) == 0:
-                    continue
-
-                for index, location in enumerate([0, *r[:-1]]):
-                    total_cost += self._costs[all_locations[location], all_locations[r[index]]]
-
-                total_cost += self._costs[
-                    all_locations[r[-1]], all_locations[0]  # Go back to depot
-                ]
-
-            return total_cost
-
-        def check_feasibility(solution):
-            """Check whether the given solution is feasible"""
-            assert len(solution) == num_vehicles
-
-            for r in solution:
-                if len(r) == 0:  # If route has no locations the vehicle never left the depot.
-                    return False
-
-                if demand[r].sum() > max_capacity:  # If demand exceeds capacity
-                    return False
-
-            return True
-
-
-        def get_solution():
-            """Extract solution and check feasibility"""
-            num_states = model.states.size()
-            for i in range(num_states):
-                # extract the solution
-                decision = next(model.iter_decisions())
-                solution_candidate = [[int(v) + 1 for v in route.state(i)] for route in decision.iter_successors()]
-                if not solution_candidate: continue
-
-                solver_objective = model.objective.state(i)
-                assert abs(solver_objective - recompute_objective(solution_candidate)) < tolerance
-
-                solver_feasibility = True
-                for c in model.iter_constraints():
-                    if c.state(i) < 0.5:
-                        solver_feasibility = False
-
-                # Check feasibility and if feasible, return
-                assert solver_feasibility == check_feasibility(solution_candidate)
-                if solver_feasibility:
-                    return solution_candidate
-                print(f"Sample {i} is infeasible")
-
-            raise ValueError("No feasible solution found.")
-
-
-        solution = get_solution()
-
-        # Check that a feasible solution was found.
-        if not solution:
-            raise ValueError("No feasible solution found.")
+        solution = self._get_solution()
 
         for vehicle_id, destinations in enumerate(solution):
             # Add depot and convert to node IDs.
