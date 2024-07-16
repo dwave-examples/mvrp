@@ -23,8 +23,8 @@ import networkx as nx
 import numpy as np
 from dimod import DiscreteQuadraticModel
 from dimod.variables import Variables
-from dwave.optimization import Model
-from dwave.optimization.generators import capacitated_vehicle_routing
+from dwave.optimization import Model, add
+from dwave.optimization.symbols import DisjointList
 from dwave.system import LeapHybridDQMSampler, LeapHybridNLSampler
 from python_tsp.heuristics import solve_tsp_local_search
 
@@ -143,8 +143,8 @@ class CapacitatedVehicleRoutingProblem:
         self._vehicle_capacity.update(capacity)
 
     def _get_nl(self) -> None:
-        """Get and set NL model."""
-        self._optimization["nl"] = self.generate_nl_model()
+        """Get and set NL model and routes."""
+        self._optimization["nl"], self._optimization["routes"] = self.generate_nl_model()
 
     def solve_hybrid_nl(self, time_limit: Optional[float] = None) -> None:
         """Find vehicle routes using Hybrid NL Solver.
@@ -327,60 +327,74 @@ class CapacitatedVehicleRoutingProblem:
             offset += capacity_penalty[k] * self._vehicle_capacity[k] ** 2
         return dqm, offset
 
-    def generate_nl_model(self) -> Model:
-        """Follows the NL solver formulation of the CVRP.
+    def generate_nl_model(self) -> tuple[Model, list[DisjointList]]:
+        """Follows the NL solver formulation of the CVRP and removes the route back to the depot at the end.
 
         Returns:
             Model: The NL Model.
+            list: List of solution routes.
         """
 
         # Take maxium vehicle capacity. Vehicle capacity should be updated to only allow
         # one value for all vehicles or update NL solution to allow multiple capacities.
         max_capacity = max(self._vehicle_capacity.values())
         num_vehicles = len(self._vehicles)
-        all_locations = [*self._depots, *self._clients]
 
         # Convert demand dictionary to array
-        demand = np.zeros(len(all_locations))
+        demand = np.zeros((len(self._clients)))
         for index, client in enumerate(self.clients):
-            demand[index + 1] = self._demand[client]  # add 1 to skip depot
+            demand[index] = self._demand[client]
+
+        num_clients = len(self._clients)
 
         # Generate cost/distance matrices
-        distances = np.zeros((len(all_locations), len(all_locations)))
-        for i, location_i in enumerate(all_locations):
-            for j, location_j in enumerate(all_locations):
+        clients_cost = np.zeros((len(self._clients), len(self._clients)))
+
+        # require both outgoing and return cost for going to/from the depot
+        depot_distance_vector = np.zeros((len(self._clients)))
+        depot_distance_vector_return = np.zeros((len(self._clients)))
+
+        for i, location_i in enumerate(self._clients):
+            depot_distance_vector[i] = self._costs[self._depots[0], location_i]
+            depot_distance_vector_return[i] = self._costs[location_i, self._depots[0]]
+            for j, location_j in enumerate(self._clients):
                 if i != j:
-                    distances[i, j] = self._costs[location_i, location_j]
+                    clients_cost[i, j] = self._costs[location_i, location_j]
 
-        model = capacitated_vehicle_routing(demand, num_vehicles, max_capacity, distances)
+        # section below should be replaced by dwave-optimization CVRP
+        # generator when it supports routes with directional costs
+        model = Model()
+        customer_demand = model.constant(clients_cost)
+        depot_dist = model.constant(depot_distance_vector)
+        depot_dist_return = model.constant(depot_distance_vector_return)
+        demands = model.constant(demand)
+        c = model.constant(max_capacity)
 
-        return model
+        _, routes = model.disjoint_lists(
+            primary_set_size=num_clients, num_disjoint_lists=num_vehicles
+        )
 
-    def _recompute_objective(self, solution):
-        """Compute the objective given a solution."""
+        route_costs = []
+        for r in range(num_vehicles):
+            route_costs.append(depot_dist[routes[r][:1]].sum())
+            route_costs.append(depot_dist_return[routes[r][-1:]].sum())
+            route_costs.append(customer_demand[routes[r][:-1], routes[r][1:]].sum())
+            model.add_constraint(demands[routes[r]].sum() <= c)
 
-        all_locations = [*self._depots, *self._clients]
-        num_vehicles = len(self._vehicle_capacity)
-        total_cost = 0
+        model.minimize(add(route_costs))
+        model.lock()
 
-        assert len(solution) == num_vehicles
+        return model, routes
 
-        # Compute total cost for the solution.
-        for r in solution:
-            if len(r) == 0:
-                continue
+    def parse_solution_nl(self, tolerance=1e-6) -> None:
+        """Checks the solutions from the NL solver (attached to the model) and outputs the parsed ones.
 
-            for index, location in enumerate([0, *r[:-1]]):
-                total_cost += self._costs[all_locations[location], all_locations[r[index]]]
+        Args:
+            tolerance: Absolute tolerance for solution distances in the solver objective.
+        """
 
-            total_cost += self._costs[
-                all_locations[r[-1]], all_locations[0]  # Go back to depot
-            ]
-
-        return total_cost
-
-    def _check_feasibility(self, solution):
-        """Check whether the given solution is feasible"""
+        model = self._optimization["nl"]
+        routes = self._optimization["routes"]
 
         # Take maxium vehicle capacity. Vehicle capacity should be updated to only allow
         # one value for all vehicles or update NL solution to allow multiple capacities.
@@ -392,54 +406,66 @@ class CapacitatedVehicleRoutingProblem:
         for index, client in enumerate(self.clients):
             demand[index + 1] = self._demand[client]
 
-        assert len(solution) == num_vehicles
+        all_locations = [*self._depots, *self._clients]
 
-        for r in solution:
-            # If route has no locations the vehicle never left the depot or
-            # if demand exceeds capacity.
-            if len(r) == 0 or demand[r].sum() > max_capacity:
-                return False
+        def recompute_objective(solution):
+            """Compute the objective given a solution."""
+            total_cost = 0
+            assert len(solution) == num_vehicles
 
-        return True
+            # Compute total cost for the solution.
+            for r in solution:
+                if len(r) == 0:
+                    continue
 
-    def _get_solution(self, tolerance=1e-6):
-        """Extract solution and check feasibility"""
-        model = self._optimization["nl"]
+                for index, location in enumerate([0, *r[:-1]]):
+                    total_cost += self._costs[all_locations[location], all_locations[r[index]]]
+
+                total_cost += self._costs[
+                    all_locations[r[-1]], all_locations[0]  # Go back to depot
+                ]
+
+            return total_cost
+
+        def check_feasibility(solution):
+            """Check whether the given solution is feasible"""
+            assert len(solution) == num_vehicles
+
+            for r in solution:
+                if len(r) == 0:  # If route has no locations the vehicle never left the depot.
+                    return False
+
+                if demand[r].sum() > max_capacity:  # If demand exceeds capacity
+                    return False
+
+            return True
+
         num_states = model.states.size()
+        solutions = []
         for i in range(num_states):
-            # extract the solution
-            decision = next(model.iter_decisions())
-            solution_candidate = [[int(v) + 1 for v in route.state(i)] for route in decision.iter_successors()]
-            if not solution_candidate: continue
+            # extract the solution from the route NL variables
+            solution = [[int(v) + 1 for v in route.state(i)] for route in routes]
 
             solver_objective = model.objective.state(i)
-            assert abs(solver_objective - self._recompute_objective(solution=solution_candidate)) < tolerance
+            assert abs(solver_objective - recompute_objective(solution)) < tolerance
 
             solver_feasibility = True
             for c in model.iter_constraints():
                 if c.state(i) < 0.5:
                     solver_feasibility = False
 
-            # Check feasibility and if feasible, return
-            assert solver_feasibility == self._check_feasibility(solution=solution_candidate)
-            if solver_feasibility:
-                return solution_candidate
-            print(f"Sample {i} is infeasible")
+            # Check feasibility and if feasible, add to solutions list
+            assert solver_feasibility == check_feasibility(solution)
+            if not solver_feasibility:
+                print(f"Sample {i} is infeasible")
+            else:
+                solutions.append(solution)
 
-        raise ValueError("No feasible solution found.")
+        # Check that at least one feasible solution was found.
+        if len(solutions) == 0:
+            raise ValueError("No feasible solution found.")
 
-    def parse_solution_nl(self) -> None:
-        """Checks the solutions from the NL solver (attached to the model) and outputs the parsed ones.
-
-        Args:
-            tolerance: Absolute tolerance for solution distances in the solver objective.
-        """
-
-        all_locations = [*self._depots, *self._clients]
-
-        solution = self._get_solution()
-
-        for vehicle_id, destinations in enumerate(solution):
+        for vehicle_id, destinations in enumerate(solutions[0]):
             # Add depot and convert to node IDs.
             route = (
                 [all_locations[0]]
