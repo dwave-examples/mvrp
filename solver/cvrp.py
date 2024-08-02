@@ -26,7 +26,6 @@ from dimod.variables import Variables
 from dwave.optimization import Model, add
 from dwave.optimization.symbols import DisjointList
 from dwave.system import LeapHybridDQMSampler, LeapHybridNLSampler
-from python_tsp.heuristics import solve_tsp_local_search
 
 from app_configs import DEPOT_LABEL
 from solver.ckmeans import CKMeans
@@ -249,13 +248,15 @@ class CapacitatedVehicleRoutingProblem:
         for vehicle_id, cluster in clusters.items():
             idx = {id: i for i, id in enumerate(cluster)}
 
-            weight_matrix = np.zeros((len(cluster), len(cluster)))
+            G = nx.MultiDiGraph()
+            G.add_nodes_from(range(len(cluster)))
             for coord in combinations(cluster, 2):
                 coord_reverse = tuple(reversed(coord))
-                weight_matrix[idx[coord[0]], idx[coord[1]]] = self.costs[coord]
-                weight_matrix[idx[coord[1]], idx[coord[0]]] = self.costs[coord_reverse]
+                G.add_edge(idx[coord[0]], idx[coord[1]], weight=self.costs[coord])
+                G.add_edge(idx[coord[1]], idx[coord[0]], weight=self.costs[coord_reverse])
 
-            path, _ = solve_tsp_local_search(weight_matrix)
+            greedy_tsp = nx.approximation.traveling_salesman.greedy_tsp
+            path = nx.approximation.traveling_salesman_problem(G, cycle=False, method=greedy_tsp)
 
             path += [path[0]]
             cluster += [cluster[0]]
