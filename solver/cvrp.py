@@ -382,7 +382,7 @@ class CapacitatedVehicleRoutingProblem:
             route_costs.append(customer_demand[routes[r][:-1], routes[r][1:]].sum())
             model.add_constraint(demands[routes[r]].sum() <= c)
 
-        model.minimize(add(route_costs))
+        model.minimize(add(*route_costs))
         model.lock()
 
         return model, routes
