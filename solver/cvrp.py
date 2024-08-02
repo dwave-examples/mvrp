@@ -411,7 +411,8 @@ class CapacitatedVehicleRoutingProblem:
             # extract the solution
             decision = next(model.iter_decisions())
             solution_candidate = [[int(v) + 1 for v in route.state(i)] for route in decision.iter_successors()]
-            if not solution_candidate: continue
+            if not solution_candidate:
+                continue
 
             solver_objective = model.objective.state(i)
             assert abs(solver_objective - self._recompute_objective(solution=solution_candidate)) < tolerance
@@ -431,9 +432,6 @@ class CapacitatedVehicleRoutingProblem:
 
     def parse_solution_nl(self) -> None:
         """Checks the solutions from the NL solver (attached to the model) and outputs the parsed ones.
-
-        Args:
-            tolerance: Absolute tolerance for solution distances in the solver objective.
         """
 
         all_locations = [*self._depots, *self._clients]
