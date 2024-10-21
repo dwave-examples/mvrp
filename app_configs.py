@@ -34,7 +34,7 @@ COST_LABEL = "Distance (m)"  # Either "Distance (m)" or specific distance cost d
 THEME_COLOR = "#074C91"  # D-Wave dark blue default #074C91
 THEME_COLOR_SECONDARY = "#2A7DE1"  # D-Wave blue default #2A7DE1
 
-ADDRESS = "Cambridge Ln, Rockhampton QLD 4700, Australia"
+ADDRESS = "Stevens Institute of Technology, Hoboken, NJ, USA"
 DISTANCE = 1700  # bounding box distance (in meters) around address
 THUMBNAIL = "assets/dwave_logo.svg"
 
