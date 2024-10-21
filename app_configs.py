@@ -39,16 +39,14 @@ DISTANCE = 1700  # bounding box distance (in meters) around address
 THUMBNAIL = "assets/dwave_logo.svg"
 
 APP_TITLE = "MVRP Demo"
-MAIN_HEADER = "Multi Vehicle Routing Problem"
+MAIN_HEADER = "Find closest 5 points"
 DESCRIPTION = """\
-Run the Multi Vehicle Routing Problem (MVRP) problem for several different scenarios. Select
-between delivery drones (flight path) and trucks (roads), the number of vehicles and client
-locations.
+Run the Find closest 5 points problem for several different scenarios. Select
+a depot and a perimeter of 4 points in which the 5 points will be located.
 """
 
 DEPOT_LABEL = "Depot"  # Either "Depot" or specific start location
 LOCATIONS_LABEL = "Locations"  # Either "Locations" or business specific location type
-RESOURCES = ["Water", "Food", "Other"]  # Supports any number of resources
 
 SHOW_DQM = False  # Show/hide DQM drop down option
 
@@ -58,18 +56,12 @@ SHOW_DQM = False  # Show/hide DQM drop down option
 
 # number of vehicles slider (value means default)
 NUM_VEHICLES = {
-    "min": 1,
-    "max": 10,
-    "step": 1,
-    "value": 4,
+    "value": 1
 }
 
 # number of client locations slider (value means default)
 NUM_CLIENT_LOCATIONS = {
-    "min": 10,
-    "max": 100,
-    "step": 1,
-    "value": 60,
+    "value": 5
 }
 
 # solver time limits in seconds (value means default)
