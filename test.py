@@ -1,13 +1,14 @@
 import random
 from dwave.system import LeapHybridCQMSampler
 from dimod import ConstrainedQuadraticModel, Integer, Real
+import matplotlib.pyplot as plt
 
 # Parameters
 num_locations = 7
 depot = (0, 0)
 
 # Randomly generate initial N locations (x, y) in 2D space
-locations = [(random.randint(-10, 10), random.randint(-10, 10)) for _ in range(num_locations)]
+locations = [(random.randint(10, 20), random.randint(-10, 10)) for _ in range(num_locations)]
 print(f"Depot is located at: {depot}")
 print(f"These are the current locations: {locations}")
 
@@ -22,7 +23,7 @@ def solve_with_cqm():
     location_vars = {}
     for i in range(num_locations):
         location_vars[i] = {
-            'x': Real(f'x_{i}', lower_bound=-10, upper_bound=10),
+            'x': Real(f'x_{i}', lower_bound=10, upper_bound=20),
             'y': Real(f'y_{i}', lower_bound=-10, upper_bound=10)
         }
 
@@ -56,15 +57,48 @@ def solve_with_cqm():
     # Get the best solution
     best_solution = result.first.sample
 
-    print("\nBest solution with CQM:")
-    for i in range(num_locations):
-        x = best_solution[f'x_{i}']
-        y = best_solution[f'y_{i}']
-        abs_x = abs(depot[0] - x)
-        abs_y = abs(depot[1] - y)
-        print(f"Location {i}:")
-        print(f"  Coordinates: (x_{i} = {x}, y_{i} = {y})")
-        print(f"  Abs values: (|x_{i} - depot_x| = {abs_x}, |y_{i} - depot_y| = {abs_y})\n")
+    optimized_locations = [(best_solution[f'x_{i}'], best_solution[f'y_{i}']) for i in range(num_locations)]
+
+    print("\nBest solution with CQM within the rectangular box:")
+    for i, (x, y) in enumerate(optimized_locations):
+        print(f"Location {i}: Coordinates: (x_{i} = {x}, y_{i} = {y})")
+
+        # Plotting the results
+    plot_solution(locations, optimized_locations, depot)
+
+def plot_solution(initial_locations, optimized_locations, depot):
+    # Create a figure and axis
+    fig, ax = plt.subplots()
+
+    # Plot the initial locations
+    x_initial, y_initial = zip(*initial_locations)
+    ax.scatter(x_initial, y_initial, color='blue', label='Initial Locations', marker='o')
+
+    # Plot the optimized locations
+    x_optimized, y_optimized = zip(*optimized_locations)
+    ax.scatter(x_optimized, y_optimized, color='red', label='Optimized Locations', marker='x')
+
+    # Plot the depot
+    ax.scatter(*depot, color='green', label='Depot', marker='s')
+
+    # Plot the rectangular boundary box
+    box_x = [10, 20, 20, 10, 10]
+    box_y = [-10, -10, 10, 10, -10]
+    ax.plot(box_x, box_y, color='black', linestyle='--', label='Rectangular Boundary Box')
+
+    # Set axis limits
+    ax.set_xlim(-1, 25)
+    ax.set_ylim(-15, 15)
+
+    # Add labels and title
+    ax.set_xlabel('X Coordinate')
+    ax.set_ylabel('Y Coordinate')
+    ax.set_title('Optimization of Locations within a Rectangular Box')
+    ax.legend()
+
+    # Show the plot
+    plt.grid(True)
+    plt.show()
 
 # Run the CQM case
 solve_with_cqm()
