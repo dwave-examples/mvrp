@@ -34,19 +34,21 @@ COST_LABEL = "Distance (m)"  # Either "Distance (m)" or specific distance cost d
 THEME_COLOR = "#074C91"  # D-Wave dark blue default #074C91
 THEME_COLOR_SECONDARY = "#2A7DE1"  # D-Wave blue default #2A7DE1
 
-ADDRESS = "Stevens Institute of Technology, Hoboken, NJ, USA"
+ADDRESS = "Cambridge Ln, Rockhampton QLD 4700, Australia"
 DISTANCE = 1700  # bounding box distance (in meters) around address
 THUMBNAIL = "assets/dwave_logo.svg"
 
 APP_TITLE = "MVRP Demo"
-MAIN_HEADER = "Find closest 5 points"
+MAIN_HEADER = "Multi Vehicle Routing Problem"
 DESCRIPTION = """\
-Run the Find closest 5 points problem for several different scenarios. Select
-a depot and a perimeter of 4 points in which the 5 points will be located.
+Run the Multi Vehicle Routing Problem (MVRP) problem for several different scenarios. Select
+between delivery drones (flight path) and trucks (roads), the number of vehicles and client
+locations.
 """
 
 DEPOT_LABEL = "Depot"  # Either "Depot" or specific start location
 LOCATIONS_LABEL = "Locations"  # Either "Locations" or business specific location type
+RESOURCES = ["Water", "Food", "Other"]  # Supports any number of resources
 
 SHOW_DQM = False  # Show/hide DQM drop down option
 
@@ -56,12 +58,18 @@ SHOW_DQM = False  # Show/hide DQM drop down option
 
 # number of vehicles slider (value means default)
 NUM_VEHICLES = {
-    "value": 1
+    "min": 1,
+    "max": 10,
+    "step": 1,
+    "value": 4,
 }
 
 # number of client locations slider (value means default)
 NUM_CLIENT_LOCATIONS = {
-    "value": 5
+    "min": 10,
+    "max": 100,
+    "step": 1,
+    "value": 60,
 }
 
 # solver time limits in seconds (value means default)
