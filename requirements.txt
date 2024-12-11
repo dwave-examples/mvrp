@@ -1,7 +1,7 @@
 # lower bound set to latest known working version
 # may (likely) works with older versions as well
 dwave-ocean-sdk>=7.1.0
-osmnx>=1.9.1
+osmnx>=2.0.0
 matplotlib~=3.0
 mapclassify>=2.6.0
 folium==0.15.1

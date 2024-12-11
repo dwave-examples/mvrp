@@ -71,7 +71,7 @@ def generate_mapping_information(num_clients: int) -> tuple[nx.MultiDiGraph, int
     G = ox.graph_from_address(
         address=ADDRESS, dist=DISTANCE, network_type="drive", truncate_by_edge=True
     )
-    map_network = ox.utils_graph.get_largest_component(G, strongly=True)
+    map_network = ox.truncate.largest_component(G, strongly=True)
 
     node_index_map = dict(enumerate(map_network.nodes(data=True)))
 
