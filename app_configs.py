@@ -34,7 +34,7 @@ COST_LABEL = "Distance (m)"  # Either "Distance (m)" or specific distance cost d
 THEME_COLOR = "#074C91"  # D-Wave dark blue default #074C91
 THEME_COLOR_SECONDARY = "#2A7DE1"  # D-Wave blue default #2A7DE1
 
-ADDRESS = "Cambridge Ln, Rockhampton QLD 4700, Australia"
+ADDRESS = "500 E Cesar Chavez St, Austin, TX 78701, United States"
 DISTANCE = 1700  # bounding box distance (in meters) around address
 THUMBNAIL = "assets/dwave_logo.svg"
 
@@ -46,9 +46,9 @@ between delivery drones (flight path) and trucks (roads), the number of vehicles
 locations.
 """
 
-DEPOT_LABEL = "Depot"  # Either "Depot" or specific start location
-LOCATIONS_LABEL = "Locations"  # Either "Locations" or business specific location type
-RESOURCES = ["Water", "Food", "Other"]  # Supports any number of resources
+DEPOT_LABEL = "Austin Convention Center"  # Either "Depot" or specific start location
+LOCATIONS_LABEL = "Delivery Locations"  # Either "Locations" or business specific location type
+RESOURCES = ["Supremacy Papers", "D-Wave T-Shirts"]  # Supports any number of resources
 
 SHOW_DQM = False  # Show/hide DQM drop down option
 
