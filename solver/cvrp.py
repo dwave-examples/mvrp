@@ -159,7 +159,7 @@ class CapacitatedVehicleRoutingProblem:
         # Get and set the NL model
         self._get_nl()
 
-        sampler.sample(self._optimization["nl"], time_limit=time_limit, label="MVRP Demo")
+        sampler.sample(self._optimization["nl"], time_limit=time_limit, label="Example - MVRP")
 
         self.parse_solution_nl()
 
@@ -188,7 +188,12 @@ class CapacitatedVehicleRoutingProblem:
             # setting time_limit to None uses the minimum time limit
             time_limit = None
 
-        res = sampler.sample_dqm(self._optimization["dqm"], time_limit=time_limit, **kwargs)
+        res = sampler.sample_dqm(
+            self._optimization["dqm"],
+            time_limit=time_limit,
+            label="Example - MVRP",
+            **kwargs
+        )
         res.resolve()
 
         sample = res.first.sample
