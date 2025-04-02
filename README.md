@@ -19,7 +19,7 @@ pip install -r requirements.txt
 If you are cloning the repo to your local system, working in a [virtual environment](https://docs.python.org/3/library/venv.html) is recommended.
 
 ## Usage
-Your development environment should be configured to [access Leap’s Solvers](https://docs.ocean.dwavesys.com/en/stable/overview/sapi.html). You can see information about supported IDEs and authorizing access to your Leap account [here](https://docs.dwavesys.com/docs/latest/doc_leap_dev_env.html).
+Your development environment should be configured to [access Leap’s Solvers](https://docs.dwavequantum.com/en/latest/ocean/leap_authorization.html). You can see information about supported IDEs and authorizing access to your Leap account [here](https://docs.dwavequantum.com/en/latest/leap_sapi/dev_env.html).
 
 To run the demo:
 
