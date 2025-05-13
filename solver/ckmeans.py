@@ -173,6 +173,7 @@ class CKMeans:
         best_score = 0
         start = time.time()
 
+        best_assignments = np.array([])
         while time.time() - start < time_limit:
             assignments = self.predict_once(X, demand, capacities)
             score = self._get_score(X, assignments)
