@@ -182,7 +182,7 @@ class CapacitatedVehicleRoutingProblem:
         # get and set the DQM model
         self._get_clustering_dqm(capacity_penalty_strength=capacity_penalty_strength)
 
-        if sampler.min_time_limit(self._optimization["dqm"]) > time_limit:
+        if sampler.min_time_limit(self._optimization["dqm"]) > (time_limit or 5):
             warnings.warn("Defaulting to minimum time limit for Leap Hybrid DQM Sampler.")
 
             # setting time_limit to None uses the minimum time limit
