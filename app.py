@@ -304,6 +304,7 @@ class RunOptimizationReturn(NamedTuple):
         (Output("tabs", "value"), "map-tab", "map-tab"),
         # block certain callbacks from running until this is done
         (Output("run-in-progress", "data"), True, False),
+        (Output("loading", "display"), "show", "auto"),
     ],
     cancel=[Input("cancel-button", "n_clicks")],
     prevent_initial_call=True,
@@ -465,4 +466,4 @@ set_html(app)
 
 # Run the server
 if __name__ == "__main__":
-    app.run_server(debug=DEBUG)
+    app.run(debug=DEBUG)

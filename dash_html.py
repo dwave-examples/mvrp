@@ -224,6 +224,8 @@ def set_html(app):
                                                 id="loading",
                                                 type="circle",
                                                 color=THEME_COLOR_SECONDARY,
+                                                parent_className="map-wrapper",
+                                                overlay_style={"visibility": "visible"},
                                                 children=html.Iframe(id="solution-map"),
                                             ),
                                         ],
