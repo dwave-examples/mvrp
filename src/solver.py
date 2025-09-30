@@ -14,25 +14,14 @@
 from __future__ import annotations
 
 import time
-from enum import Enum
 from typing import Any, Hashable, NamedTuple
 
 import networkx as nx
 import numpy as np
 
-from app_configs import UNITS_IMPERIAL
-from solver.cvrp import CapacitatedVehicleRoutingProblem
-
-
-class VehicleType(Enum):
-    TRUCKS = 0
-    DELIVERY_DRONES = 1
-
-
-class SamplerType(Enum):
-    NL = 0
-    DQM = 1
-    KMEANS = 2
+from demo_configs import UNITS_IMPERIAL
+from src.cvrp import CapacitatedVehicleRoutingProblem
+from src.demo_enums import SolverType, VehicleType
 
 
 class RoutingProblemParameters(NamedTuple):
@@ -54,7 +43,7 @@ class RoutingProblemParameters(NamedTuple):
     num_clients: int
     num_vehicles: int
     vehicle_type: VehicleType
-    sampler_type: SamplerType
+    sampler_type: SolverType
     time_limit: float
 
 
@@ -143,11 +132,11 @@ class Solver:
             {k: -(-sum(demand.values()) // self.num_vehicles) for k in range(self.num_vehicles)}
         )  # calculate capacity for the vehicles such that a feasible solution exists
 
-        if self.sampler_type is SamplerType.NL:
+        if self.sampler_type is SolverType.NL:
             cvrp.solve_hybrid_nl(time_limit=self.time_limit)
         else:
             # DQM and K-Means require a two-step solution: clustering + tsp
-            if self.sampler_type is SamplerType.DQM:
+            if self.sampler_type is SolverType.DQM:
                 cvrp.cluster_dqm(capacity_penalty_strength=1.0, time_limit=self.time_limit)
             else:
                 cvrp.cluster_kmeans(time_limit=self.time_limit)

@@ -1,0 +1,146 @@
+/*
+Copyright 2024 D-Wave
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+/*******************************************************************
+This file contains all custom CSS for this demo.
+The following style rules can be altered or removed and any additional
+custom CSS can be added below.
+*******************************************************************/
+
+.tab-content-wrapper {
+    padding: 3rem 3rem 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+}
+
+h4.table-label {
+    margin: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: self-end;
+}
+
+h4.table-label span {
+    font-size: 1.8rem;
+}
+
+h5.no-results {
+    color: var(--red-light);
+    text-transform: uppercase;
+    float: right;
+    margin-top: -3.3rem;
+    font-size: 1.6rem;
+}
+
+.results-tables {
+    display: flex;
+}
+
+@media screen and (max-width: 1430px) {
+    .results-tables {
+        flex-direction: column;
+    }
+}
+
+#solution-stats-table {
+    font-size: 1.5rem;
+    border: 1px solid var(--grey-light);
+}
+
+#solution-stats-table th {
+    text-align: left;
+    border-right: 1px solid var(--grey-light);
+}
+
+#solution-stats-table td:nth-child(2n+1) {
+    text-align: left;
+}
+
+#solution-stats-table td:nth-child(2n) {
+    border-right: 1px solid var(--grey-light);
+}
+
+.result-table-div {
+    width: 100%;
+    max-width: 65rem;
+}
+
+.result-table-div table {
+    width: 100%;
+}
+
+.result-table {
+    font-size: 1.5rem;
+    border: 3px var(--theme);
+    border-style: solid solid none;
+    background-color: white;
+}
+
+#solution-cost-table-div {
+    margin-right: 2.6rem;
+}
+
+#solution-cost-table-div:not(:has(> div > .results)),
+#solution-cost-table-classical-div:not(:has(> div > .results)) {
+    display: none;
+}
+
+.result-table th {
+    color: white;
+    background-color: var(--theme);
+    font-weight: 400;
+}
+
+th, td {
+    text-align: right;
+}
+
+.total-cost-row td {
+    font-weight: 600;
+}
+
+.VirtualizedSelectFocusedOption {
+    background-color: var(--grey-lighter);
+}
+
+.is-focused:not(.is-open)>.Select-control {
+    border-color: var(--theme-secondary);
+    box-shadow: none;
+}
+
+#solution-map {
+    border: none;
+    width: 100%;
+
+    /* -7px to fix map generator creating a gap at the bottom of the screen */
+    height: calc(100% - 7px);
+}
+
+.map-wrapper[style="visibility: visible;"] {
+    filter: grayscale(1);
+    opacity: 0.3;
+    transition: filter 0.1s linear, opacity 0.1s linear;
+}
+
+.map-wrapper {
+    height: 100%;
+}
+
+#solver-time-limit {
+    margin-bottom: 2rem;
+}

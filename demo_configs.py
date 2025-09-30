@@ -14,11 +14,6 @@
 
 """This file stores input parameters for the app."""
 
-# Sets Dash debug which hides and shows Dash debug menu.
-# Set to True if developing and False if demoing.
-# App should be restarted to see change.
-DEBUG = False
-
 # Shows/hides Quantum Hybrid vs Classical cost comparison in the
 # results tab when both are run with the same settings.
 SHOW_COST_COMPARISON = False
@@ -36,7 +31,7 @@ THEME_COLOR_SECONDARY = "#2A7DE1"  # D-Wave blue default #2A7DE1
 
 ADDRESS = "1055 Canada Pl, Vancouver, BC V6C 0C3"
 DISTANCE = 1700  # bounding box distance (in meters) around address
-THUMBNAIL = "assets/dwave_logo.svg"
+THUMBNAIL = "static/dwave_logo.svg"
 
 APP_TITLE = "MVRP Demo"
 MAIN_HEADER = "Multi Vehicle Routing Problem"
@@ -48,7 +43,7 @@ locations.
 
 DEPOT_LABEL = "Depot"  # Either "Depot" or specific start location
 LOCATIONS_LABEL = "Locations"  # Either "Locations" or business specific location type
-RESOURCES = ["Water", "Food", "Other"]  # Supports any number of resources
+RESOURCES = ["Water Pallets", "Food Boxes", "Clothing Boxes"]  # Supports any number of resources
 
 SHOW_DQM = False  # Show/hide DQM drop down option
 

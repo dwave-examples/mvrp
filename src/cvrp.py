@@ -27,8 +27,8 @@ from dwave.optimization import Model
 from dwave.optimization.generators import capacitated_vehicle_routing
 from dwave.system import LeapHybridDQMSampler, LeapHybridNLSampler
 
-from app_configs import DEPOT_LABEL
-from solver.ckmeans import CKMeans
+from demo_configs import DEPOT_LABEL
+from src.ckmeans import CKMeans
 
 
 class CapacitatedVehicleRoutingProblem:

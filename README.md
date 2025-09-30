@@ -6,7 +6,7 @@ Run the Multi Vehicle Routing Problem (MVRP) problem for several different
 scenarios. Select between delivery drones (flight path) and trucks (roads), the
 number of vehicles and client locations.
 
-![D-Wave Logo](assets/app.png)
+![D-Wave Logo](static/demo.png)
 
 ## Installation
 
@@ -43,7 +43,7 @@ Access the user interface with your browser at http://127.0.0.1:8050/.
 The demo program opens an interface where you can configure problems and submit
 these problems to a solver.
 
-Configuration options can be found in the [app_configs.py](app_configs.py) file.
+Configuration options can be found in the [demo_configs.py](demo_configs.py) file.
 
 ## Problem Description
 
@@ -57,7 +57,7 @@ effective way, while also optimizing the distribution of sets of locations among
 the vehicles.
 
 In this demo a single central depot location is determined by choosing an
-address (can be set in [app_configs.py](app_configs.py)), after which a number
+address (can be set in [demo_configs.py](demo_configs.py)), after which a number
 of locations are placed randomly within a specified radius of the depot. The
 vehicles can either be trucks, following the road network, or drones, traversing
 the map as the crow flies. The problem can then be solved using either a
