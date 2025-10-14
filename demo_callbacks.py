@@ -97,6 +97,7 @@ def render_initial_map(num_clients: int, _) -> str:
         str: Initial map shown on the map tab as HTML.
     """
     map_path = Path("src/maps/initial_map.html")
+    map_path.parent.mkdir(parents=True, exist_ok=True)
 
     # only regenerate map if num_clients is changed (i.e., if run buttons is NOT clicked)
     if ctx.triggered_id != "run-button" or not map_path.exists():
