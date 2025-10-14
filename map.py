@@ -25,13 +25,13 @@ import osmnx as ox
 from numpy.typing import NDArray
 from scipy.spatial import cKDTree
 
-from app_configs import ADDRESS, DEPOT_LABEL, DISTANCE, RESOURCES
-from solver.solver import VehicleType
+from demo_configs import ADDRESS, DEPOT_LABEL, DISTANCE, RESOURCES
+from src.demo_enums import VehicleType
 
 ox.settings.use_cache = True
 ox.settings.overpass_rate_limit = False
 
-depot_icon_path = Path(__file__).parent / "assets/depot_location.png"
+depot_icon_path = Path(__file__).parent / "static/depot_location.png"
 
 depot_icon = folium.CustomIcon(str(depot_icon_path), icon_size=(30, 48))
 
@@ -99,7 +99,7 @@ def _get_node_info(
     G: nx.Graph, node_id: int, icon_name: str
 ) -> tuple[folium.CustomIcon, list[int]]:
     """Get node demand values and icons for each client location."""
-    icon_path = Path(__file__).parent / f"assets/location_icons/{icon_name}.png"
+    icon_path = Path(__file__).parent / f"static/location_icons/{icon_name}.png"
     location_icon = folium.CustomIcon(str(icon_path), icon_size=(30, 48))
     return location_icon, [G.nodes[node_id][f"resource_{i}"] * 100 for i in range(len(RESOURCES))]
 

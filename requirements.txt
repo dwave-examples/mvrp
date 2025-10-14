@@ -1,9 +1,7 @@
-# lower bound set to latest known working version
-# may (likely) works with older versions as well
-dwave-ocean-sdk>=7.1.0
-osmnx>=2.0.0
-matplotlib~=3.0
-mapclassify>=2.6.0
-folium==0.15.1
-scipy>=1.10.1,<2
-dash[diskcache]~=3.0
+dash[diskcache]~=3.2
+dwave-ocean-sdk~=9.0
+folium~=0.20
+mapclassify~=2.10
+matplotlib~=3.10
+osmnx~=2.0
+scipy~=1.16
