@@ -21,7 +21,7 @@ custom CSS can be added below.
 *******************************************************************/
 
 .tab-content-wrapper {
-    padding: 3rem 3rem 0;
+    padding: 2rem 2rem 0;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -36,7 +36,7 @@ h4.table-label {
 }
 
 h4.table-label span {
-    font-size: 1.8rem;
+    font-size: 1.125rem;
 }
 
 h5.no-results {
@@ -44,7 +44,7 @@ h5.no-results {
     text-transform: uppercase;
     float: right;
     margin-top: -3.3rem;
-    font-size: 1.6rem;
+    font-size: 1rem;
 }
 
 .results-tables {
@@ -58,7 +58,7 @@ h5.no-results {
 }
 
 #solution-stats-table {
-    font-size: 1.5rem;
+    font-size: 1rem;
     border: 1px solid var(--grey-light);
 }
 
@@ -77,7 +77,7 @@ h5.no-results {
 
 .result-table-div {
     width: 100%;
-    max-width: 65rem;
+    max-width: 40rem;
 }
 
 .result-table-div table {
@@ -85,14 +85,14 @@ h5.no-results {
 }
 
 .result-table {
-    font-size: 1.5rem;
-    border: 3px var(--theme);
+    font-size: 1rem;
+    border: 3px var(--blue-dark);
     border-style: solid solid none;
     background-color: white;
 }
 
 #solution-cost-table-div {
-    margin-right: 2.6rem;
+    margin-right: 1.625rem;
 }
 
 #solution-cost-table-div:not(:has(> div > .results)),
@@ -102,8 +102,7 @@ h5.no-results {
 
 .result-table th {
     color: white;
-    background-color: var(--theme);
-    font-weight: 400;
+    background-color: var(--blue-dark);
 }
 
 th, td {
@@ -119,7 +118,7 @@ th, td {
 }
 
 .is-focused:not(.is-open)>.Select-control {
-    border-color: var(--theme-secondary);
+    border-color: var(--blue-light);
     box-shadow: none;
 }
 
@@ -129,6 +128,10 @@ th, td {
 
     /* -7px to fix map generator creating a gap at the bottom of the screen */
     height: calc(100% - 7px);
+}
+
+#solution-map:focus-visible {
+    box-shadow: 0 0 0 2px var(--orange);
 }
 
 .map-wrapper[style="visibility: visible;"] {
@@ -142,5 +145,9 @@ th, td {
 }
 
 #solver-time-limit {
-    margin-bottom: 2rem;
+    margin-bottom: 1.25rem;
+}
+
+#solution-map .leaflet-control-attribution {
+    text-decoration: underline;
 }

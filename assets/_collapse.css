@@ -31,14 +31,14 @@ limitations under the License.
 }
 
 .left-column .left-column-layer-2 {
-    padding: 3rem 2rem 4rem;
+    padding: 0 1rem 2.5rem;
     width: var(--left-col-width);
     box-sizing: border-box;
     direction: ltr;
 }
 
 .details-collapse-wrapper {
-    margin-bottom: 2rem;
+    margin-bottom: 1.25rem;
     overflow: hidden;
 }
 
@@ -49,7 +49,7 @@ limitations under the License.
     border-right: 1px solid var(--grey-lighter);
     height: 100%;
     border-radius: 0;
-    padding: 0 0 0 0.5rem;
+    padding: 0 0 0 0.25rem;
     filter: none;
     display: block;
 }
@@ -59,26 +59,26 @@ limitations under the License.
 .details-collapse:focus {
     background: none;
     display: flex;
-    padding: 0 2rem 0 0;
+    padding: 0 1.25rem 0 0;
     text-transform: none;
 }
 
 .collapse-arrow {
-    border-right: 4px solid var(--grey-light);
-    border-bottom: 4px solid var(--grey-light);
+    border-right: 4px solid var(--grey-medium);
+    border-bottom: 4px solid var(--grey-medium);
     transform: rotate(135deg) skew(165deg, 165deg);
-    height: 2rem;
-    width: 2rem;
-    margin-right: -0.3rem;
+    height: 1.25rem;
+    width: 1.25rem;
+    margin-right: -3px;
     transition: border-color 0.25s ease-in-out;
 }
 
 .details-collapse .collapse-arrow {
     transform: rotate(225deg) skew(165deg, 165deg);
-    margin: 1.5rem 0 0 1.5rem;
-    border-color: var(--theme);
-    height: 1.2rem;
-    width: 1.2rem;
+    margin: 1rem 0 0 1rem;
+    border-color: var(--blue-dark);
+    height: 0.75rem;
+    width: 0.75rem;
 }
 
 .left-column-collapse:hover .collapse-arrow {
@@ -86,11 +86,11 @@ limitations under the License.
 }
 
 .collapsed .left-column-collapse {
-    padding: 0 0.5rem 0 0;
+    padding: 0 0.25rem 0 0;
 }
 
 .collapsed .left-column-collapse .collapse-arrow {
-    margin-left: -0.3rem;
+    margin-left: -3px;
     margin-right: 0;
     transform: rotate(315deg) skew(165deg, 165deg);
 }

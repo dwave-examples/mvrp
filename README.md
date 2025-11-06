@@ -6,7 +6,7 @@ Run the Multi Vehicle Routing Problem (MVRP) problem for several different
 scenarios. Select between delivery drones (flight path) and trucks (roads), the
 number of vehicles and client locations.
 
-![D-Wave Logo](static/demo.png)
+![D-Wave Logo](static/demo.png "Image of demo interface")
 
 ## Installation
 

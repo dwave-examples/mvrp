@@ -119,7 +119,7 @@ def render_initial_map(num_clients: int, _) -> str:
     prevent_initial_call=True,
 )
 def update_tables(
-    run_in_progress, stored_results, reset_results, sampler_type
+    run_in_progress, stored_results, reset_results, solver_type
 ) -> tuple[list, list]:
     """Update the results tables each time a run is made.
 
@@ -127,7 +127,7 @@ def update_tables(
         run_in_progress: Whether or not the ``run_optimization`` callback is running.
         stored_results: The results tab from the latest run.
         reset_results: Whether or not to reset the results tables before applying the new one.
-        sampler_type: The sampler type used in the latest run (``"quantum"`` or ``"classical"``)
+        solver_type: The sampler type used in the latest run (``"quantum"`` or ``"classical"``)
 
     Returns:
         tuple: A tuple containing the two results tables.
@@ -137,7 +137,7 @@ def update_tables(
     if run_in_progress is True:
         raise PreventUpdate
 
-    if sampler_type == "classical":
+    if solver_type == "classical":
         return empty_or_no_update, stored_results
 
     return stored_results, empty_or_no_update
@@ -146,7 +146,7 @@ def update_tables(
 def calculate_cost_comparison(
     cost_comparison: dict,
     final_cost: int,
-    sampler_type: Union[SolverType, int],
+    solver_type: Union[SolverType, int],
     reset_results: bool,
 ) -> tuple[dict, str]:
     """Calculates cost improvement between DQM and KMEANS.
@@ -154,7 +154,7 @@ def calculate_cost_comparison(
     Args:
         cost_comparison: Dictionary with solver keys and run cost values.
         final_cost: The total distance cost of the most recent run.
-        sampler_type: The sampler that was run. Either Quantum Hybrid (DQM)
+        solver_type: The sampler that was run. Either Quantum Hybrid (DQM)
             (``0`` or ``SolverType.DQM``), Quantum Hybrid (NL) (``1`` or ``SolverType.NL``), or
             Classical (K-Means) (``2`` or ``SolverType.KMEANS``).
         reset_results: Whether or not to reset wall clock times.
@@ -165,7 +165,7 @@ def calculate_cost_comparison(
     """
 
     # Dict keys must be strings because Dash stores data as JSON
-    key = str(sampler_type.value if sampler_type is SolverType.KMEANS else SolverType.DQM.value)
+    key = str(solver_type.value if solver_type is SolverType.KMEANS else SolverType.DQM.value)
     cost_comparison_ratio = 1
 
     if reset_results:
@@ -187,13 +187,13 @@ def calculate_cost_comparison(
 
 
 def get_updated_wall_clock_times(
-    wall_clock_time: float, sampler_type: Union[SolverType, int], reset_results: bool
+    wall_clock_time: float, solver_type: Union[SolverType, int], reset_results: bool
 ) -> tuple[str, str]:
     """Determine which wall clock times to update in the UI.
 
     Args:
         wall_clock_time: Total run time.
-        sampler_type: The sampler that was run. Either Either Quantum Hybrid (DQM)
+        solver_type: The sampler that was run. Either Either Quantum Hybrid (DQM)
             (``0`` or ``SolverType.DQM``), Quantum Hybrid (NL) (``1`` or ``SolverType.NL``), or
             Classical (K-Means) (``2`` or ``SolverType.KMEANS``).
         reset_results: Whether or not to reset wall clock times.
@@ -204,7 +204,7 @@ def get_updated_wall_clock_times(
     """
     wall_clock_time_kmeans = ""
     wall_clock_time_quantum = ""
-    if sampler_type is SolverType.KMEANS:
+    if solver_type is SolverType.KMEANS:
         wall_clock_time_kmeans = f"{wall_clock_time:.3f}s"
         if not reset_results:
             wall_clock_time_quantum = dash.no_update
@@ -220,7 +220,7 @@ class RunOptimizationReturn(NamedTuple):
     solution_map: str
     cost_table: tuple
     hybrid_table_label: str
-    sampler_type: str
+    solver_type: str
     reset_results: bool
     parameter_hash: str
     performance_improvement_quantum: str
@@ -251,11 +251,10 @@ class RunOptimizationReturn(NamedTuple):
     Output("wall-clock-time-quantum", "children"),
     Output("num-locations", "children"),
     Output("vehicles-deployed", "children"),
-    background=True,
     inputs=[
         Input("run-button", "n_clicks"),
         State("vehicle-type-select", "value"),
-        State("sampler-type-select", "value"),
+        State("solver-type-select", "value"),
         State("num-vehicles-select", "value"),
         State("solver-time-limit", "value"),
         State("num-clients-select", "value"),
@@ -281,8 +280,8 @@ class RunOptimizationReturn(NamedTuple):
 )
 def run_optimization(
     run_click: int,
-    vehicle_type: Union[VehicleType, int],
-    sampler_type: Union[SolverType, int],
+    vehicle_type: str,
+    solver_type: str,
     num_vehicles: int,
     time_limit: float,
     num_clients: int,
@@ -301,7 +300,7 @@ def run_optimization(
         run_click: The (total) number of times the run button has been clicked.
         vehicle_type: Either Trucks (``0`` or ``VehicleType.TRUCKS``) or
             Delivery Drones (``1`` or ``VehicleType.DELIVERY_DRONES``).
-        sampler_type: Either Quantum Hybrid (DQM) (``0`` or ``SolverType.DQM``),
+        solver_type: Either Quantum Hybrid (DQM) (``0`` or ``SolverType.DQM``),
             Quantum Hybrid (NL) (``1`` or ``SolverType.NL``), or Classical (K-Means)
             (``2`` or ``SolverType.KMEANS``).
         num_vehicles: The number of vehicles.
@@ -331,11 +330,8 @@ def run_optimization(
             num-locations: Updates the number of locations in the problem details table.
             vehicles-deployed: Updates the vehicles-deployed entry in the problem details table.
     """
-    if isinstance(vehicle_type, int):
-        vehicle_type = VehicleType(vehicle_type)
-
-    if isinstance(sampler_type, int):
-        sampler_type = SolverType(sampler_type)
+    vehicle_type = VehicleType(int(vehicle_type))
+    solver_type = SolverType(int(solver_type))
 
     map_network, depot_id, client_subset, map_bounds = generate_mapping_information(num_clients)
     initial_map = show_locations_on_initial_map(
@@ -349,7 +345,7 @@ def run_optimization(
         num_clients=num_clients,
         num_vehicles=num_vehicles,
         vehicle_type=vehicle_type,
-        sampler_type=sampler_type,
+        solver_type=solver_type,
         time_limit=time_limit,
     )
     routing_problem_solver = Solver(routing_problem_parameters)
@@ -379,22 +375,22 @@ def run_optimization(
     reset_results = parameter_hash != previous_parameter_hash
 
     cost_comparison, performance_improvement_quantum = calculate_cost_comparison(
-        cost_comparison, total_cost["optimized_cost"], sampler_type, reset_results
+        cost_comparison, total_cost["optimized_cost"], solver_type, reset_results
     )
 
     wall_clock_time_kmeans, wall_clock_time_quantum = get_updated_wall_clock_times(
-        wall_clock_time, sampler_type, reset_results
+        wall_clock_time, solver_type, reset_results
     )
 
     hybrid_table_label = (
-        dash.no_update if sampler_type is SolverType.KMEANS else sampler_type.label
+        dash.no_update if solver_type is SolverType.KMEANS else solver_type.label
     )
 
     return RunOptimizationReturn(
         solution_map = open("src/maps/solution_map.html", "r").read(),
         cost_table = cost_table,
         hybrid_table_label = hybrid_table_label,
-        sampler_type = "classical" if sampler_type is SolverType.KMEANS else "quantum",
+        solver_type = "classical" if solver_type is SolverType.KMEANS else "quantum",
         reset_results = reset_results,
         parameter_hash = str(parameter_hash),
         performance_improvement_quantum = performance_improvement_quantum,

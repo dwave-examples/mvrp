@@ -23,22 +23,15 @@ SHOW_COST_COMPARISON = False
 UNITS_IMPERIAL = False
 COST_LABEL = "Distance (m)"  # Either "Distance (m)" or specific distance cost description
 
-# THEME_COLOR is used for the button, text, and banner and should be dark
-# and pass accessibility checks with white: https://webaim.org/resources/contrastchecker/
-# THEME_COLOR_SECONDARY can be light or dark and is used for sliders, loading icon, and tabs
-THEME_COLOR = "#074C91"  # D-Wave dark blue default #074C91
-THEME_COLOR_SECONDARY = "#2A7DE1"  # D-Wave blue default #2A7DE1
-
 ADDRESS = "1055 Canada Pl, Vancouver, BC V6C 0C3"
 DISTANCE = 1700  # bounding box distance (in meters) around address
 THUMBNAIL = "static/dwave_logo.svg"
 
 APP_TITLE = "MVRP Demo"
-MAIN_HEADER = "Multi Vehicle Routing Problem"
+MAIN_HEADER = "Multi Vehicle Routing"
 DESCRIPTION = """\
-Run the Multi Vehicle Routing Problem (MVRP) problem for several different scenarios. Select
-between delivery drones (flight path) and trucks (roads), the number of vehicles and client
-locations.
+Multi Vehicle Routing consists of routing delivery vehicles to a set of locations, such
+that each location receives its required resources and no vehicle exceeds its carrying capacity.
 """
 
 DEPOT_LABEL = "Depot"  # Either "Depot" or specific start location

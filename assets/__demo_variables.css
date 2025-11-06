@@ -35,11 +35,12 @@ Dash reads all css files contained in `/assets/` so no imports are necessary.
     --grey-lighter: #EEEEEE;
     --grey-light: #DDDDDD;
     --grey: #AAAAAA;
-    --grey-medium: #777777;
+    --grey-medium: #737373;
     --grey-dark: #222222;
-    --font: "Helvetica Neue", sans-serif;
-    --banner-height: 5.5rem;
-    --left-col-width: 42rem;
-    --problem-details-height: 18rem;
+    --box-shadow: 0 0 1rem rgba(66, 82, 121, 0.2);
+    --font: "proxima-nova", "Helvetica Neue", sans-serif;
+    --banner-height: 3.5rem;
+    --left-col-width: 26.25rem;
+    --problem-details-height: 11.25rem;
     /*** Add new variables here ***/
 }

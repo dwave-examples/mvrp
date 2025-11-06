@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 from dash import dcc, html
+import dash_mantine_components as dmc
 
 from demo_configs import (
     COST_LABEL,
@@ -28,13 +29,13 @@ from demo_configs import (
     SHOW_COST_COMPARISON,
     SHOW_DQM,
     SOLVER_TIME,
-    THEME_COLOR_SECONDARY,
     THUMBNAIL,
     UNITS_IMPERIAL,
 )
 from src.demo_enums import SolverType, VehicleType
 
 map_width, map_height = 1000, 600
+THEME_COLOR = "#2d4376"
 
 
 def slider(label: str, id: str, config: dict) -> html.Div:
@@ -48,19 +49,18 @@ def slider(label: str, id: str, config: dict) -> html.Div:
     return html.Div(
         className="slider-wrapper",
         children=[
-            html.Label(label),
-            dcc.Slider(
+            html.Label(label, htmlFor=id),
+            dmc.Slider(
                 id=id,
                 className="slider",
                 **config,
-                marks={
-                    config["min"]: str(config["min"]),
-                    config["max"]: str(config["max"]),
-                },
-                tooltip={
-                    "placement": "bottom",
-                    "always_visible": True,
-                },
+                marks=[
+                    {"value": config["min"], "label": f"{config["min"]}"},
+                    {"value": config["max"], "label": f"{config["max"]}"},
+                ],
+                labelAlwaysOn=True,
+                thumbLabel=f"{label} slider",
+                color=THEME_COLOR,
             ),
         ],
     )
@@ -77,13 +77,12 @@ def dropdown(label: str, id: str, options: list) -> html.Div:
     return html.Div(
         className="dropdown-wrapper",
         children=[
-            html.Label(label),
-            dcc.Dropdown(
+            html.Label(label, htmlFor=id),
+            dmc.Select(
                 id=id,
-                options=options,
+                data=options,
                 value=options[0]["value"],
-                clearable=False,
-                searchable=False,
+                allowDeselect=False,
             ),
         ],
     )
@@ -97,13 +96,13 @@ def generate_settings_form() -> html.Div:
     """
     # calculate drop-down options
     vehicle_options = [
-        {"label": vehicle_type.label, "value": vehicle_type.value} for vehicle_type in VehicleType
+        {"label": vehicle_type.label, "value": f"{vehicle_type.value}"} for vehicle_type in VehicleType
     ]
 
     solver_options =[]
     for solver_type in SolverType:
         if solver_type is not SolverType.DQM or SHOW_DQM:
-            solver_options.append({"label": solver_type.label, "value": solver_type.value})
+            solver_options.append({"label": solver_type.label, "value": f"{solver_type.value}"})
 
     return html.Div(
         className="settings",
@@ -125,13 +124,12 @@ def generate_settings_form() -> html.Div:
             ),
             dropdown(
                 "Solver",
-                "sampler-type-select",
+                "solver-type-select",
                 sorted(solver_options, key=lambda op: op["value"]),
             ),
-            html.Label("Solver Time Limit (seconds)"),
-            dcc.Input(
+            html.Label("Solver Time Limit (seconds)", htmlFor="solver-time-limit"),
+            dmc.NumberInput(
                 id="solver-time-limit",
-                type="number",
                 **SOLVER_TIME,
             ),
         ],
@@ -328,6 +326,12 @@ def create_interface():
     return html.Div(
         id="app-container",
         children=[
+            html.A(  # Skip link for accessibility
+                "Skip to main content",
+                href="#main-content",
+                id="skip-to-main",
+                className="skip-link",
+            ),
             # below are any temporary storage items, e.g., for sharing data between callbacks
             dcc.Store(id="stored-results"),  # temporarily stored results table
             dcc.Store(id="sampler-type"),  # solver type used for latest run
@@ -340,9 +344,10 @@ def create_interface():
             dcc.Store(id="parameter-hash"),  # hash string to detect changed parameters
             dcc.Store(id="cost-comparison"),  # dictionary with solver keys and run values
             # Banner
-            html.Div(className="banner", children=[html.Img(src=THUMBNAIL)]),
-            html.Div(
+            html.Header(className="banner", children=[html.Img(src=THUMBNAIL, alt="D-Wave logo")]),
+            html.Main(
                 className="columns-main",
+                id="main-content",
                 children=[
                     # Left column
                     html.Div(
@@ -355,8 +360,13 @@ def create_interface():
                                     html.Div(
                                         className="left-column-layer-2",  # Padding and content wrapper
                                         children=[
-                                            html.H1(MAIN_HEADER),
-                                            html.P(DESCRIPTION),
+                                            html.Div(
+                                                [
+                                                    html.H1(MAIN_HEADER),
+                                                    html.P(DESCRIPTION),
+                                                ],
+                                                className="title-card"
+                                            ),
                                             generate_settings_form(),
                                             generate_run_buttons(),
                                         ],
@@ -368,6 +378,7 @@ def create_interface():
                                 html.Button(
                                     id={"type": "collapse-trigger", "index": 0},
                                     className="left-column-collapse",
+                                    title="Collapse sidebar",
                                     children=[html.Div(className="collapse-arrow")],
                                 ),
                             ),
@@ -391,10 +402,10 @@ def create_interface():
                                             dcc.Loading(
                                                 id="loading",
                                                 type="circle",
-                                                color=THEME_COLOR_SECONDARY,
+                                                color=THEME_COLOR,
                                                 parent_className="map-wrapper",
                                                 overlay_style={"visibility": "visible"},
-                                                children=html.Iframe(id="solution-map"),
+                                                children=html.Iframe(id="solution-map", title="Map of locations"),
                                             ),
                                         ],
                                     ),

@@ -33,7 +33,7 @@ class RoutingProblemParameters(NamedTuple):
         client_subset: client_subset: List of client IDs in the map's graph.
         num_clients: Number of locations to be visited.
         num_vehicles: Number of vehicles to deploy on routes.
-        sampler_type: Sampler type to use in solving CVRP.
+        solver_type: Sampler type to use in solving CVRP.
         time_limit: Time limit in seconds to run optimization for.
     """
 
@@ -43,7 +43,7 @@ class RoutingProblemParameters(NamedTuple):
     num_clients: int
     num_vehicles: int
     vehicle_type: VehicleType
-    sampler_type: SolverType
+    solver_type: SolverType
     time_limit: float
 
 
@@ -132,11 +132,11 @@ class Solver:
             {k: -(-sum(demand.values()) // self.num_vehicles) for k in range(self.num_vehicles)}
         )  # calculate capacity for the vehicles such that a feasible solution exists
 
-        if self.sampler_type is SolverType.NL:
+        if self.solver_type is SolverType.NL:
             cvrp.solve_hybrid_nl(time_limit=self.time_limit)
         else:
             # DQM and K-Means require a two-step solution: clustering + tsp
-            if self.sampler_type is SolverType.DQM:
+            if self.solver_type is SolverType.DQM:
                 cvrp.cluster_dqm(capacity_penalty_strength=1.0, time_limit=self.time_limit)
             else:
                 cvrp.cluster_kmeans(time_limit=self.time_limit)
