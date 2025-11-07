@@ -17,14 +17,19 @@ limitations under the License.
 /* Style rules for buttons */
 
 button {
-    font-size: 1.4rem;
-    line-height: 1.4rem;
-    padding: 1.8rem 3.6rem;
+    font-size: 1rem;
+    line-height: 1rem;
+    padding: 1rem 2rem;
     height: auto;
     color: white;
     transition: all 0.2s ease-in-out;
     border: none;
-    background-color: var(--theme);
+    background-color: var(--blue-dark);
+    font-weight: 600;
+    text-transform: uppercase;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    letter-spacing: .1rem;
 }
 
 button:hover {
@@ -49,4 +54,8 @@ button:disabled {
     cursor: not-allowed;
     filter: brightness(70%);
     opacity: 0.7;
+}
+
+button:focus-visible {
+    box-shadow: 0 0 0 4px var(--orange);
 }

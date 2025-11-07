@@ -23,7 +23,8 @@ limitations under the License.
 body {
     background-color: #f9f9f9;
     color: var(--grey-dark);
-    font-size: 1.4rem;
+    font-size: 1.125rem;
+    line-height: 1.5rem;
     margin: 0;
 }
 
@@ -33,65 +34,77 @@ span, a, p, label, button, input {
 }
 
 h1, h2, h3, h4, h5, h6 {
-    color: var(--theme);
+    color: var(--blue-dark);
     font-weight: 400;
 }
 
 h1 {
-    font-size: 3.2rem;
+    font-size: 2.5rem;
+    line-height: 3rem;
+    margin-bottom: 1rem;
 }
 
 h2 {
-    font-size: 2.6rem;
+    font-size: 1.625rem;
 }
 
 h3 {
-    font-size: 2.4rem;
+    font-size: 1.5rem;
 }
 
 h4 {
-    font-size: 2rem;
+    font-size: 1.25rem;
     margin-top: 0;
     font-weight: 500;
 }
 
 h5 {
-    font-size: 1.8rem;
+    font-size: 1.125rem;
+    margin: 1rem 0;
     font-weight: 600;
 }
 
 label {
-    margin: 2rem 0 0.2rem;
-    font-weight: 500;
+    margin: 1rem 0 0.5rem;
+    font-weight: 600;
+    display: block;
 }
 
 hr {
-    margin: 1rem 0;
+    margin: 0.625rem 0;
+    border-width: 0;
+    border-top: 1px solid var(--grey-light);
 }
 
 table {
-    margin-bottom: 2rem;
-    font-size: 1.5rem;
+    margin-bottom: 1.25rem;
+    font-size: 1rem;
     border: 1px solid var(--grey-light);
+    border-collapse: collapse;
+}
+
+th {
+    font-weight: 600;
 }
 
 th, td {
     color: var(--grey-dark);
-    padding: 0.5rem 1rem;
+    padding: 0.25rem 0.5rem;
     border-right: 1px solid var(--grey-light);
+    border-bottom: 1px solid var(--grey-light);
 }
 
 th:first-child, td:first-child {
-    padding-left: 1.2rem;
+    padding-left: 0.75rem;
 }
 
 th:last-child, td:last-child {
-    padding-right: 1.2rem;
+    padding-right: 0.75rem;
 }
 
 input[type="checkbox"],
 input[type="radio"] {
-    accent-color: var(--theme);
+    accent-color: var(--blue-dark);
     margin: 0 0.6rem 0 0;
 }
 
@@ -100,7 +113,7 @@ input[type="radio"] {
 }
   
 #app-container {
-    min-width: 100rem;
+    min-width: 62.5rem;
     height: 100vh;
     display: flex;
     flex-direction: column;
@@ -109,8 +122,8 @@ input[type="radio"] {
 .banner {
     height: var(--banner-height);
     box-sizing: border-box;
-    background-color: var(--theme);
-    padding: 1.4rem 2rem;
+    background-color: var(--blue-dark);
+    padding: 1rem 2rem;
 
     display: flex;
     align-items: center;
@@ -132,24 +145,24 @@ input[type="radio"] {
 }
 
 .right-column {
-    background-color: var(--grey-light);
-    padding: 2rem 0 0;
+    background-color: var(--grey-lighter);
+    padding: 1.25rem 0 0;
     width: 100%;
 }
 
 .settings {
-    margin: 2rem 0;
+    margin: 1rem 0 1.5rem;
 }
 
 .radio label,
 .checklist label {
-    margin-top: 0.2rem;
+    margin-top: 0.125rem;
     font-weight: 400;
 }
 
 .radio--inline label:first-child,
 .checklist--inline label:first-child {
-    margin-right: 1.4rem;
+    margin-right: 0.75rem;
 }
 
 /* The following rules are overwriting Dash styling */
@@ -158,7 +171,7 @@ input[type="radio"] {
 }
 
 .is-focused:not(.is-open) > .Select-control {
-    border-color: var(--theme-secondary);
+    border-color: var(--orange);
     box-shadow: none;
 }
 
@@ -167,6 +180,27 @@ input[type="radio"] {
 }
 
 div.dash-sk-circle {
-    height: 6rem;
-    width: 6rem;
+    height: 4rem;
+    width: 4rem;
+}
+
+/* Hide the skip link off-screen by default */
+.skip-link {
+    position: absolute;
+    left: -1.5rem;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+}
+
+/* Make the skip link visible when it receives keyboard focus */
+.skip-link:focus {
+    color: var(--orange);
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    display: inline-block;
+    padding: 1rem;
+    z-index: 1000;
 }

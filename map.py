@@ -22,6 +22,7 @@ import folium.plugins as plugins
 import networkx as nx
 import numpy as np
 import osmnx as ox
+from folium import Element
 from numpy.typing import NDArray
 from scipy.spatial import cKDTree
 
@@ -154,6 +155,27 @@ def show_locations_on_initial_map(
 
     # add fullscreen button to map
     plugins.Fullscreen().add_to(folium_map)
+
+    accessibility_css = """
+        <style>
+        .leaflet-container .leaflet-control-attribution {
+            background: white;
+        }
+
+        .leaflet-control-attribution a {
+            text-decoration: underline !important;
+            color: #0044cc !important;
+        }
+
+        .leaflet-control-scale-line {
+            color: #737373 !important;
+            text-shadow: none;
+            background: white;
+        }
+        </style>
+    """
+    folium_map.get_root().html.add_child(Element(accessibility_css))
+
     return folium_map
 
 

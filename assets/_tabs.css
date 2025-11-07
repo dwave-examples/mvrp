@@ -17,18 +17,19 @@ limitations under the License.
 /* Style rules for tabs like the input and results tabs */
 
 .tab-container {
-    border-bottom: 3px solid var(--theme-secondary);
+    border-bottom: 3px solid var(--blue-light);
     flex-direction: row;
 }
 
-.tab {
-    margin: 0 2rem;
-    border-top-left-radius: 0.6rem;
-    border-top-right-radius: 0.6rem;
+.tab-parent .tab {
+    margin: 0 1.25rem;
+    border-top-left-radius: 0.5rem;
+    border-top-right-radius: 0.5rem;
+    border: none;
 }
 
 div.tab.tab--selected {
-    border: 3px solid var(--theme-secondary) !important;
+    border: 3px solid var(--blue-light) !important;
     border-bottom: none !important;
     cursor: default;
     box-shadow: 0 6px 0 -3px white;
@@ -36,14 +37,15 @@ div.tab.tab--selected {
 
 div.tab.tab--disabled {
     cursor: not-allowed !important;
+    color: var(--grey-medium) !important;
 }
 
 .tab:first-child {
-    margin-right: 1rem;
+    margin-right: 0.625rem;
 }
 
 .tab:last-child {
-    margin-left: 1rem;
+    margin-left: 0.625rem;
 }
 
 .tab-parent {

@@ -7,5 +7,4 @@ dist
 *.egg-info
 initial_map.html
 solution_map.html
-assets/__generated_theme.css
 *.DS_Store
