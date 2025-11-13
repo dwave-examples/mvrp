@@ -141,12 +141,19 @@ def generate_run_buttons() -> html.Div:
     return html.Div(
         id="button-group",
         children=[
-            html.Button(id="run-button", children="Run Optimization", n_clicks=0, disabled=False),
             html.Button(
-                id="cancel-button",
-                children="Cancel Optimization",
+                "Run Optimization",
+                id="run-button",
+                className="button",
                 n_clicks=0,
-                className="display-none",
+                disabled=False
+            ),
+            html.Button(
+                "Cancel Optimization",
+                id="cancel-button",
+                className="button",
+                n_clicks=0,
+                style={"display": "none"},
             ),
         ],
     )
@@ -343,8 +350,6 @@ def create_interface():
             ),  # callback blocker to signal that the run is complete
             dcc.Store(id="parameter-hash"),  # hash string to detect changed parameters
             dcc.Store(id="cost-comparison"),  # dictionary with solver keys and run values
-            # Banner
-            html.Header(className="banner", children=[html.Img(src=THUMBNAIL, alt="D-Wave logo")]),
             html.Main(
                 className="columns-main",
                 id="main-content",
@@ -352,7 +357,7 @@ def create_interface():
                     # Left column
                     html.Div(
                         id={"type": "to-collapse-class", "index": 0},
-                        className="left-column",
+                        className="left-column collapsable",
                         children=[
                             html.Div(
                                 className="left-column-layer-1",  # Fixed width Div to collapse
@@ -365,22 +370,35 @@ def create_interface():
                                                     html.H1(MAIN_HEADER),
                                                     html.P(DESCRIPTION),
                                                 ],
-                                                className="title-card"
+                                                className="title-section",
                                             ),
-                                            generate_settings_form(),
-                                            generate_run_buttons(),
+                                            html.Div(
+                                                [
+                                                    html.Div(
+                                                        html.Div(
+                                                            [
+                                                                generate_settings_form(),
+                                                                generate_run_buttons(),
+                                                            ],
+                                                            className="settings-and-buttons",
+                                                        ),
+                                                        className="settings-and-buttons-wrapper",
+                                                    ),
+                                                    # Left column collapse button
+                                                    html.Div(
+                                                        html.Button(
+                                                            id={"type": "collapse-trigger", "index": 0},
+                                                            className="left-column-collapse",
+                                                            title="Collapse sidebar",
+                                                            children=[html.Div(className="collapse-arrow")],
+                                                        ),
+                                                    ),
+                                                ],
+                                                className="form-section"
+                                            ),
                                         ],
                                     )
                                 ],
-                            ),
-                            # Left column collapse button
-                            html.Div(
-                                html.Button(
-                                    id={"type": "collapse-trigger", "index": 0},
-                                    className="left-column-collapse",
-                                    title="Collapse sidebar",
-                                    children=[html.Div(className="collapse-arrow")],
-                                ),
                             ),
                         ],
                     ),
@@ -388,16 +406,27 @@ def create_interface():
                     html.Div(
                         className="right-column",
                         children=[
-                            dcc.Tabs(
+                            dmc.Tabs(
                                 id="tabs",
                                 value="map-tab",
-                                mobile_breakpoint=0,
+                                color="white",
                                 children=[
-                                    dcc.Tab(
-                                        label="Map",
-                                        id="map-tab",
-                                        value="map-tab",  # used for switching to programatically
-                                        className="tab",
+                                    html.Header(
+                                        className="banner",
+                                        children=[
+                                            html.Img(src=THUMBNAIL, alt="D-Wave logo"),
+                                            html.Nav([
+                                                dmc.TabsList(
+                                                    [
+                                                        dmc.TabsTab("Map", value="map-tab"),
+                                                        dmc.TabsTab("Results", value="results-tab", id="results-tab", disabled=True),
+                                                    ]
+                                                ),
+                                            ])
+                                        ]
+                                    ),
+                                    dmc.TabsPanel(
+                                        value="map-tab",
                                         children=[
                                             dcc.Loading(
                                                 id="loading",
@@ -409,11 +438,8 @@ def create_interface():
                                             ),
                                         ],
                                     ),
-                                    dcc.Tab(
-                                        label="Results",
-                                        id="results-tab",
-                                        className="tab",
-                                        disabled=True,
+                                    dmc.TabsPanel(
+                                        value="results-tab",
                                         children=[
                                             html.Div(
                                                 className="tab-content-wrapper",

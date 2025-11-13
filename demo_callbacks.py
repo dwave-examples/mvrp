@@ -265,8 +265,8 @@ class RunOptimizationReturn(NamedTuple):
     ],
     running=[
         # show cancel button and hide run button, and disable and animate results tab
-        (Output("cancel-button", "className"), "", "display-none"),
-        (Output("run-button", "className"), "display-none", ""),
+        (Output("cancel-button", "style"), {}, {"display": "none"}),
+        (Output("run-button", "style"), {"display": "none"}, {}),
         (Output("results-tab", "disabled"), True, False),
         (Output("results-tab", "label"), "Loading...", "Results"),
         # switch to map tab while running
