@@ -357,7 +357,7 @@ def create_interface():
                     # Left column
                     html.Div(
                         id={"type": "to-collapse-class", "index": 0},
-                        className="left-column collapsable",
+                        className="left-column",
                         children=[
                             html.Div(
                                 className="left-column-layer-1",  # Fixed width Div to collapse

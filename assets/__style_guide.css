@@ -134,7 +134,7 @@ input[type="radio"] {
 
 .banner {
     height: var(--banner-height);
-    background-color: rgb(18, 19, 31);
+    background-color: #12131f;
     padding: 0 2rem;
     border-bottom: 2px solid var(--teal);
 
@@ -164,7 +164,6 @@ input[type="radio"] {
 }
 
 .title-section {
-    color: white;
     padding: 2rem 1rem 1.5rem;
     background-color: var(--blue-darkest);
     background-image: url("background.svg");
