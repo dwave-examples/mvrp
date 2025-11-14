@@ -46,14 +46,22 @@ nav {
     height: 100%;
 }
 
+button.mantine-Tabs-tab:disabled {
+    filter: unset;
+    opacity: 1;
+    color: #7E7F86;
+    border: transparent;
+}
+
 .mantine-Tabs-tab span {
-    color: white;
-    opacity: 0.6;
-    transition: opacity 0.2s ease-in-out;
+    color: #A0A1A5;
+    opacity: 1;
+    transition: color 0.2s ease-in-out;
 }
 
 .mantine-Tabs-tab:where([data-active]) span {
     opacity: 1;
+    color: white;
 }
 
 .mantine-Tabs-tab:hover {
@@ -66,4 +74,5 @@ nav {
 
 .mantine-Tabs-tab:hover:where(:not(:disabled)) span {
     opacity: 1;
+    color: white;
 }

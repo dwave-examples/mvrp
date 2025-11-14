@@ -133,6 +133,7 @@ limitations under the License.
 .collapsed .title-section {
     height: 0;
     padding: 0;
+    overflow: hidden;
 }
 
 .collapsed .details-collapse .collapse-arrow {
@@ -147,4 +148,39 @@ limitations under the License.
 
 .collapsed .left-column-layer-1 {
     width: 1.5rem;
+}
+
+@media screen and (max-width: 1000px) {
+    .left-column {
+        height: auto;
+        width: 100%;
+    }
+
+    .left-column .left-column-layer-1,
+    .left-column .left-column-layer-2,
+    .left-column .left-column-collapse {
+        width: 100%;
+    }
+
+    .left-column-collapse .collapse-arrow {
+        transform: rotate(90deg);
+        margin: auto;
+    }
+
+    .collapsed .title-section {
+        height: 0;
+        overflow-y: hidden;
+    }
+
+    .collapsed .settings-and-buttons-wrapper {
+        height: 0;
+        flex: unset;
+        padding: 0;
+        overflow-y: hidden;
+    }
+
+    .collapsed .left-column-collapse .collapse-arrow {
+        margin-right: auto;
+        transform: rotate(-90deg);
+    }
 }

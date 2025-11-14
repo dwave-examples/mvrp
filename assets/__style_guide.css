@@ -126,7 +126,6 @@ input[type="radio"] {
 }
   
 #app-container {
-    min-width: 62.5rem;
     height: 100vh;
     display: flex;
     flex-direction: column;
@@ -161,6 +160,7 @@ input[type="radio"] {
 
 .right-column {
     width: 100%;
+    min-height: 40rem;
 }
 
 .title-section {
@@ -243,4 +243,14 @@ div.dash-sk-circle {
     display: inline-block;
     padding: 1rem;
     z-index: 1000;
+}
+
+@media screen and (max-width: 1000px) {
+    .columns-main {
+        flex-direction: column;
+    }
+
+    .form-section {
+        flex-direction: column;
+    }
 }

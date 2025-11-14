@@ -229,6 +229,7 @@ def problem_details(index: int) -> html.Div:
                     html.H5("Problem Details"),
                     html.Div(className="collapse-arrow"),
                 ],
+                **{"aria-expanded": "true"},
             ),
             html.Div(
                 className="details-to-collapse",
@@ -304,6 +305,7 @@ def create_interface():
                 href="#main-content",
                 id="skip-to-main",
                 className="skip-link",
+                tabIndex=1,
             ),
             # below are any temporary storage items, e.g., for sharing data between callbacks
             dcc.Store(id="stored-results"),  # temporarily stored results table
@@ -362,6 +364,7 @@ def create_interface():
                                                             children=[
                                                                 html.Div(className="collapse-arrow")
                                                             ],
+                                                            **{"aria-expanded": "true"},
                                                         ),
                                                     ),
                                                 ],
@@ -405,6 +408,7 @@ def create_interface():
                                     ),
                                     dmc.TabsPanel(
                                         value="map-tab",
+                                        tabIndex="12",
                                         children=[
                                             dcc.Loading(
                                                 id="loading",
@@ -420,6 +424,7 @@ def create_interface():
                                     ),
                                     dmc.TabsPanel(
                                         value="results-tab",
+                                        tabIndex="13",
                                         children=[
                                             html.Div(
                                                 className="tab-content-wrapper",
