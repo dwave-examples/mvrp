@@ -15,8 +15,8 @@
 """This file stores the HTML layout for the app."""
 from __future__ import annotations
 
-from dash import dcc, html
 import dash_mantine_components as dmc
+from dash import dcc, html
 
 from demo_configs import (
     COST_LABEL,
@@ -96,10 +96,11 @@ def generate_settings_form() -> html.Div:
     """
     # calculate drop-down options
     vehicle_options = [
-        {"label": vehicle_type.label, "value": f"{vehicle_type.value}"} for vehicle_type in VehicleType
+        {"label": vehicle_type.label, "value": f"{vehicle_type.value}"}
+        for vehicle_type in VehicleType
     ]
 
-    solver_options =[]
+    solver_options = []
     for solver_type in SolverType:
         if solver_type is not SolverType.DQM or SHOW_DQM:
             solver_options.append({"label": solver_type.label, "value": f"{solver_type.value}"})
@@ -142,11 +143,7 @@ def generate_run_buttons() -> html.Div:
         id="button-group",
         children=[
             html.Button(
-                "Run Optimization",
-                id="run-button",
-                className="button",
-                n_clicks=0,
-                disabled=False
+                "Run Optimization", id="run-button", className="button", n_clicks=0, disabled=False
             ),
             html.Button(
                 "Cancel Optimization",
@@ -161,10 +158,7 @@ def generate_run_buttons() -> html.Div:
 
 def create_row_cells(values: list) -> list[html.Td]:
     """List required to execute loop, unpack after to maintain required structure."""
-    return [
-        html.Td(round(value, 3 if UNITS_IMPERIAL else 0))
-        for value in values
-    ]
+    return [html.Td(round(value, 3 if UNITS_IMPERIAL else 0)) for value in values]
 
 
 def create_table(values_dicts: dict[int, dict], values_totals: list) -> html.Table:
@@ -249,15 +243,11 @@ def problem_details(index: int) -> html.Div:
                                         [
                                             html.Th(
                                                 colSpan=2,
-                                                children=[
-                                                    "Problem Specifics"
-                                                ],
+                                                children=["Problem Specifics"],
                                             ),
                                             html.Th(
                                                 colSpan=2,
-                                                children=[
-                                                    "Wall Clock Time"
-                                                ],
+                                                children=["Wall Clock Time"],
                                             ),
                                         ]
                                     )
@@ -268,54 +258,30 @@ def problem_details(index: int) -> html.Div:
                                 children=[
                                     html.Tr(
                                         [
-                                            html.Td(
-                                                LOCATIONS_LABEL
-                                            ),
-                                            html.Td(
-                                                id="num-locations"
-                                            ),
-                                            html.Td(
-                                                "Quantum Hybrid"
-                                            ),
-                                            html.Td(
-                                                id="wall-clock-time-quantum"
-                                            ),
+                                            html.Td(LOCATIONS_LABEL),
+                                            html.Td(id="num-locations"),
+                                            html.Td("Quantum Hybrid"),
+                                            html.Td(id="wall-clock-time-quantum"),
                                         ]
                                     ),
                                     html.Tr(
                                         [
-                                            html.Td(
-                                                "Vehicles Deployed"
-                                            ),
-                                            html.Td(
-                                                id="vehicles-deployed"
-                                            ),
-                                            html.Td(
-                                                "Classical"
-                                            ),
-                                            html.Td(
-                                                id="wall-clock-time-classical"
-                                            ),
+                                            html.Td("Vehicles Deployed"),
+                                            html.Td(id="vehicles-deployed"),
+                                            html.Td("Classical"),
+                                            html.Td(id="wall-clock-time-classical"),
                                         ]
                                     ),
                                     html.Tr(
                                         [
-                                            html.Td(
-                                                "Problem Size"
-                                            ),
-                                            html.Td(
-                                                id="problem-size"
-                                            ),
+                                            html.Td("Problem Size"),
+                                            html.Td(id="problem-size"),
                                         ]
                                     ),
                                     html.Tr(
                                         [
-                                            html.Td(
-                                                "Search Space"
-                                            ),
-                                            html.Td(
-                                                id="search-space"
-                                            ),
+                                            html.Td("Search Space"),
+                                            html.Td(id="search-space"),
                                         ]
                                     ),
                                 ],
@@ -387,14 +353,19 @@ def create_interface():
                                                     # Left column collapse button
                                                     html.Div(
                                                         html.Button(
-                                                            id={"type": "collapse-trigger", "index": 0},
+                                                            id={
+                                                                "type": "collapse-trigger",
+                                                                "index": 0,
+                                                            },
                                                             className="left-column-collapse",
                                                             title="Collapse sidebar",
-                                                            children=[html.Div(className="collapse-arrow")],
+                                                            children=[
+                                                                html.Div(className="collapse-arrow")
+                                                            ],
                                                         ),
                                                     ),
                                                 ],
-                                                className="form-section"
+                                                className="form-section",
                                             ),
                                         ],
                                     )
@@ -415,15 +386,22 @@ def create_interface():
                                         className="banner",
                                         children=[
                                             html.Img(src=THUMBNAIL, alt="D-Wave logo"),
-                                            html.Nav([
-                                                dmc.TabsList(
-                                                    [
-                                                        dmc.TabsTab("Map", value="map-tab"),
-                                                        dmc.TabsTab("Results", value="results-tab", id="results-tab", disabled=True),
-                                                    ]
-                                                ),
-                                            ])
-                                        ]
+                                            html.Nav(
+                                                [
+                                                    dmc.TabsList(
+                                                        [
+                                                            dmc.TabsTab("Map", value="map-tab"),
+                                                            dmc.TabsTab(
+                                                                "Results",
+                                                                value="results-tab",
+                                                                id="results-tab",
+                                                                disabled=True,
+                                                            ),
+                                                        ]
+                                                    ),
+                                                ]
+                                            ),
+                                        ],
                                     ),
                                     dmc.TabsPanel(
                                         value="map-tab",
@@ -434,7 +412,9 @@ def create_interface():
                                                 color=THEME_COLOR,
                                                 parent_className="map-wrapper",
                                                 overlay_style={"visibility": "visible"},
-                                                children=html.Iframe(id="solution-map", title="Map of locations"),
+                                                children=html.Iframe(
+                                                    id="solution-map", title="Map of locations"
+                                                ),
                                             ),
                                         ],
                                     ),

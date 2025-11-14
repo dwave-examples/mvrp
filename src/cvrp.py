@@ -189,10 +189,7 @@ class CapacitatedVehicleRoutingProblem:
             time_limit = None
 
         res = sampler.sample_dqm(
-            self._optimization["dqm"],
-            time_limit=time_limit,
-            label="Example - MVRP",
-            **kwargs
+            self._optimization["dqm"], time_limit=time_limit, label="Example - MVRP", **kwargs
         )
         res.resolve()
 
@@ -379,9 +376,7 @@ class CapacitatedVehicleRoutingProblem:
             for index, location in enumerate([0, *r[:-1]]):
                 total_cost += self._costs[all_locations[location], all_locations[r[index]]]
 
-            total_cost += self._costs[
-                all_locations[r[-1]], all_locations[0]  # Go back to depot
-            ]
+            total_cost += self._costs[all_locations[r[-1]], all_locations[0]]  # Go back to depot
 
         return total_cost
 
@@ -415,12 +410,17 @@ class CapacitatedVehicleRoutingProblem:
         for i in range(num_states):
             # extract the solution
             decision = next(model.iter_decisions())
-            solution_candidate = [[int(v) + 1 for v in route.state(i)] for route in decision.iter_successors()]
+            solution_candidate = [
+                [int(v) + 1 for v in route.state(i)] for route in decision.iter_successors()
+            ]
             if not solution_candidate:
                 continue
 
             solver_objective = model.objective.state(i)
-            assert abs(solver_objective - self._recompute_objective(solution=solution_candidate)) < tolerance
+            assert (
+                abs(solver_objective - self._recompute_objective(solution=solution_candidate))
+                < tolerance
+            )
 
             solver_feasibility = True
             for c in model.iter_constraints():
@@ -436,8 +436,7 @@ class CapacitatedVehicleRoutingProblem:
         raise ValueError("No feasible solution found.")
 
     def parse_solution_nl(self) -> None:
-        """Checks the solutions from the NL solver (attached to the model) and outputs the parsed ones.
-        """
+        """Checks the solutions from the NL solver (attached to the model) and outputs the parsed ones."""
 
         all_locations = [*self._depots, *self._clients]
 

@@ -118,9 +118,7 @@ def render_initial_map(num_clients: int, _) -> str:
     ],
     prevent_initial_call=True,
 )
-def update_tables(
-    run_in_progress, stored_results, reset_results, solver_type
-) -> tuple[list, list]:
+def update_tables(run_in_progress, stored_results, reset_results, solver_type) -> tuple[list, list]:
     """Update the results tables each time a run is made.
 
     Args:
@@ -217,6 +215,7 @@ def get_updated_wall_clock_times(
 
 class RunOptimizationReturn(NamedTuple):
     """Return type for the ``run_optimization`` callback function."""
+
     solution_map: str
     cost_table: tuple
     hybrid_table_label: str
@@ -231,6 +230,7 @@ class RunOptimizationReturn(NamedTuple):
     wall_clock_time_quantum: str
     num_locations: int
     vehicles_deployed: int
+
 
 @dash.callback(
     # update map and results
@@ -334,9 +334,7 @@ def run_optimization(
     solver_type = SolverType(int(solver_type))
 
     map_network, depot_id, client_subset, map_bounds = generate_mapping_information(num_clients)
-    initial_map = show_locations_on_initial_map(
-        map_network, depot_id, client_subset, map_bounds
-    )
+    initial_map = show_locations_on_initial_map(map_network, depot_id, client_subset, map_bounds)
 
     routing_problem_parameters = RoutingProblemParameters(
         map_network=map_network,
@@ -382,25 +380,23 @@ def run_optimization(
         wall_clock_time, solver_type, reset_results
     )
 
-    hybrid_table_label = (
-        dash.no_update if solver_type is SolverType.KMEANS else solver_type.label
-    )
+    hybrid_table_label = dash.no_update if solver_type is SolverType.KMEANS else solver_type.label
 
     return RunOptimizationReturn(
-        solution_map = open("src/maps/solution_map.html", "r").read(),
-        cost_table = cost_table,
-        hybrid_table_label = hybrid_table_label,
-        solver_type = "classical" if solver_type is SolverType.KMEANS else "quantum",
-        reset_results = reset_results,
-        parameter_hash = str(parameter_hash),
-        performance_improvement_quantum = performance_improvement_quantum,
-        cost_comparison = cost_comparison,
-        problem_size = problem_size,
-        search_space = search_space,
-        wall_clock_time_classical = wall_clock_time_kmeans,
-        wall_clock_time_quantum = wall_clock_time_quantum,
-        num_locations = num_clients,
-        vehicles_deployed = num_vehicles,
+        solution_map=open("src/maps/solution_map.html", "r").read(),
+        cost_table=cost_table,
+        hybrid_table_label=hybrid_table_label,
+        solver_type="classical" if solver_type is SolverType.KMEANS else "quantum",
+        reset_results=reset_results,
+        parameter_hash=str(parameter_hash),
+        performance_improvement_quantum=performance_improvement_quantum,
+        cost_comparison=cost_comparison,
+        problem_size=problem_size,
+        search_space=search_space,
+        wall_clock_time_classical=wall_clock_time_kmeans,
+        wall_clock_time_quantum=wall_clock_time_quantum,
+        num_locations=num_clients,
+        vehicles_deployed=num_vehicles,
     )
 
 
