@@ -160,7 +160,7 @@ class CKMeans:
             X: 2-d numpy.array (each row is a sample, each column is feature/coordinate.
             demand: The demand of each sample.
             capacities: Capacity of each cluster (must be same length as the number of clusters).
-            time_limit: Maximum time in seconds the stochastic K-Means lgorithm
+            time_limit: Maximum time in seconds the stochastic K-Means algorithm
                 can be repeated before returning solution.
 
         Returns:

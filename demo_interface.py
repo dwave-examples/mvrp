@@ -44,7 +44,7 @@ def slider(label: str, id: str, config: dict) -> html.Div:
     Args:
         label: The title that goes above the slider.
         id: A unique selector for this element.
-        config: A dictionary of slider configerations, see dcc.Slider Dash docs.
+        config: A dictionary of slider configurations, see dcc.Slider Dash docs.
     """
     return html.Div(
         className="slider-wrapper",
@@ -55,8 +55,8 @@ def slider(label: str, id: str, config: dict) -> html.Div:
                 className="slider",
                 **config,
                 marks=[
-                    {"value": config["min"], "label": f"{config["min"]}"},
-                    {"value": config["max"], "label": f"{config["max"]}"},
+                    {"value": config["min"], "label": f'{config["min"]}'},
+                    {"value": config["max"], "label": f'{config["max"]}'},
                 ],
                 labelAlwaysOn=True,
                 thumbLabel=f"{label} slider",
@@ -388,7 +388,6 @@ def create_interface():
                                     html.Header(
                                         className="banner",
                                         children=[
-                                            html.Img(src=THUMBNAIL, alt="D-Wave logo"),
                                             html.Nav(
                                                 [
                                                     dmc.TabsList(
@@ -404,6 +403,7 @@ def create_interface():
                                                     ),
                                                 ]
                                             ),
+                                            html.Img(src=THUMBNAIL, alt="D-Wave logo"),
                                         ],
                                     ),
                                     dmc.TabsPanel(

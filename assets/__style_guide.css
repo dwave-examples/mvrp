@@ -139,11 +139,11 @@ input[type="radio"] {
 
     display: flex;
     align-items: center;
+    justify-content: space-between;
 }
 
 .banner img {
     height: 1rem;
-    margin-right: 4rem;
 }
 
 .columns-main {

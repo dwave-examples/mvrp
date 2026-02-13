@@ -239,7 +239,7 @@ class CapacitatedVehicleRoutingProblem:
         self._optimization["capacity_violation"] = assignments
 
     def solve_tsp_heuristic(self) -> None:
-        """Solve the travelling salesman problem for each cluster."""
+        """Solve the traveling salesman problem for each cluster."""
         clusters = {vehicle_id: list(self.depots) for vehicle_id, _ in enumerate(self._vehicles)}
 
         # invert self.assignments dictionary to dict[vehicle_id, location_id]
@@ -337,7 +337,7 @@ class CapacitatedVehicleRoutingProblem:
             Model: The NL Model.
         """
 
-        # Take maxium vehicle capacity. Vehicle capacity should be updated to only allow
+        # Take maximum vehicle capacity. Vehicle capacity should be updated to only allow
         # one value for all vehicles or update NL solution to allow multiple capacities.
         max_capacity = max(self._vehicle_capacity.values())
         num_vehicles = len(self._vehicles)
@@ -383,7 +383,7 @@ class CapacitatedVehicleRoutingProblem:
     def _check_feasibility(self, solution):
         """Check whether the given solution is feasible"""
 
-        # Take maxium vehicle capacity. Vehicle capacity should be updated to only allow
+        # Take maximum vehicle capacity. Vehicle capacity should be updated to only allow
         # one value for all vehicles or update NL solution to allow multiple capacities.
         max_capacity = max(self._vehicle_capacity.values())
         num_vehicles = len(self._vehicle_capacity)
