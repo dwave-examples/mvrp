@@ -69,10 +69,12 @@ h5.no-results {
 
 #solution-stats-table td:nth-child(2n+1) {
     text-align: left;
+    font-weight: 600;
 }
 
 #solution-stats-table td:nth-child(2n) {
     border-right: 1px solid var(--grey-light);
+    text-align: right;
 }
 
 .result-table-div {
@@ -84,13 +86,6 @@ h5.no-results {
     width: 100%;
 }
 
-.result-table {
-    font-size: 1rem;
-    border: 3px var(--blue-dark);
-    border-style: solid solid none;
-    background-color: white;
-}
-
 #solution-cost-table-div {
     margin-right: 1.625rem;
 }
@@ -100,17 +95,8 @@ h5.no-results {
     display: none;
 }
 
-.result-table th {
-    color: white;
-    background-color: var(--blue-dark);
-}
-
-th, td {
+.result-table-div th, .result-table-div td {
     text-align: right;
-}
-
-.total-cost-row td {
-    font-weight: 600;
 }
 
 .VirtualizedSelectFocusedOption {
@@ -118,7 +104,7 @@ th, td {
 }
 
 .is-focused:not(.is-open)>.Select-control {
-    border-color: var(--blue-light);
+    border-color: var(--teal);
     box-shadow: none;
 }
 
@@ -131,7 +117,7 @@ th, td {
 }
 
 #solution-map:focus-visible {
-    box-shadow: 0 0 0 2px var(--orange);
+    box-shadow: 0 0 0 2px var(--teal);
 }
 
 .map-wrapper[style="visibility: visible;"] {

@@ -65,10 +65,10 @@ limitations under the License.
 
 /* Style rules for the dmc.NumberInput element */
 .mantine-NumberInput-input:focus-visible {
-    box-shadow: 0 0 0 2px var(--orange);
+    box-shadow: 0 0 0 2px var(--teal);
 }
 
 /* Style rules for the dmc.Select element */
 .mantine-Select-input:focus-visible {
-    box-shadow: 0 0 0 2px var(--orange);
+    box-shadow: 0 0 0 2px var(--teal);
 }

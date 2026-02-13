@@ -26,21 +26,24 @@ Dash reads all css files contained in `/assets/` so no imports are necessary.
     --blue-bright: #03B8FF;
     --blue-light: #2A7DE1;
     --blue-dark: #074C91;
-    --red-light: #C70039;
-    --red-dark: #900C3F;
+    --blue-darker: #2d4376;;
+    --blue-darkest: #202239;
+    --red-light: #f57677;
+    --red-dark: #aa3a3c;
     --orange: #FF7006;
-    --teal-light: #06ECDC;
+    --teal-light: #06ecdc;
+    --teal: #17bebb;
     --teal-dark: #17BEBB;
     --teal-darker: #008C82;
-    --grey-lighter: #EEEEEE;
-    --grey-light: #DDDDDD;
+    --grey-lighter: #f5f7fb;
+    --grey-light: #DBDBDB;
     --grey: #AAAAAA;
     --grey-medium: #737373;
     --grey-dark: #222222;
     --box-shadow: 0 0 1rem rgba(66, 82, 121, 0.2);
     --font: "proxima-nova", "Helvetica Neue", sans-serif;
-    --banner-height: 3.5rem;
+    --banner-height: 6.5rem;
     --left-col-width: 26.25rem;
     --problem-details-height: 11.25rem;
-    /*** Add new variables here ***/
+    --title-section-height: 13.5rem;
 }

@@ -238,10 +238,7 @@ def plot_solution_routes_on_map(
                     locations[node],
                     tooltip=folium.map.Tooltip(
                         text=" <br> ".join(
-                            [
-                                f"{resource}: {nodes[i]}"
-                                for i, resource in enumerate(RESOURCES)
-                            ]
+                            [f"{resource}: {nodes[i]}" for i, resource in enumerate(RESOURCES)]
                         )
                         + f" <br> Vehicle ID: {vehicle_id} <br> Stop: #{stop_number} of {len(route_network.nodes)-1}",
                         style="font-size: 1.4rem;",

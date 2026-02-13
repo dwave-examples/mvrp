@@ -21,8 +21,7 @@ limitations under the License.
 }
 
 body {
-    background-color: #f9f9f9;
-    color: var(--grey-dark);
+    color: var(--grey-darkest);
     font-size: 1.125rem;
     line-height: 1.5rem;
     margin: 0;
@@ -31,17 +30,19 @@ body {
 h1, h2, h3, h4, h5, h6, td, th,
 span, a, p, label, button, input {
     font-family: var(--font);
+    color: var(--blue-darkest);
 }
 
 h1, h2, h3, h4, h5, h6 {
-    color: var(--blue-dark);
-    font-weight: 400;
+    font-weight: 600;
+    margin-top: 0;
 }
 
 h1 {
     font-size: 2.5rem;
     line-height: 3rem;
     margin-bottom: 1rem;
+    font-weight: 400;
 }
 
 h2 {
@@ -62,6 +63,8 @@ h5 {
     font-size: 1.125rem;
     margin: 1rem 0;
     font-weight: 600;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
 }
 
 label {
@@ -79,19 +82,29 @@ hr {
 table {
     margin-bottom: 1.25rem;
     font-size: 1rem;
-    border: 1px solid var(--grey-light);
     border-collapse: collapse;
+    border: 1px solid var(--grey-light);
+}
+
+thead {
+    border-bottom: 1px solid var(--grey-light);
+    font-weight: 600;
+    background-color: var(--blue-darker);
+}
+
+tfoot {
+    border-top: 1px solid var(--grey-light);
+    font-weight: 600;
 }
 
 th {
     font-weight: 600;
+    color: white;
+    padding: 0.5rem;
 }
 
-th, td {
-    color: var(--grey-dark);
+td {
     padding: 0.25rem 0.5rem;
-    border-right: 1px solid var(--grey-light);
-    border-bottom: 1px solid var(--grey-light);
 }
 
 th:first-child, td:first-child {
@@ -104,8 +117,8 @@ th:last-child, td:last-child {
 
 input[type="checkbox"],
 input[type="radio"] {
-    accent-color: var(--blue-dark);
-    margin: 0 0.6rem 0 0;
+    accent-color: var(--blue-darker);
+    margin: 0 0.5rem 0 0;
 }
 
 .display-none {
@@ -113,7 +126,6 @@ input[type="radio"] {
 }
   
 #app-container {
-    min-width: 62.5rem;
     height: 100vh;
     display: flex;
     flex-direction: column;
@@ -121,9 +133,9 @@ input[type="radio"] {
 
 .banner {
     height: var(--banner-height);
-    box-sizing: border-box;
-    background-color: var(--blue-dark);
-    padding: 1rem 2rem;
+    background-color: #12131f;
+    padding: 0 2rem;
+    border-bottom: 2px solid var(--teal);
 
     display: flex;
     align-items: center;
@@ -131,7 +143,7 @@ input[type="radio"] {
 }
 
 .banner img {
-    height: 100%;
+    height: 1rem;
 }
 
 .columns-main {
@@ -141,17 +153,45 @@ input[type="radio"] {
 
 .left-column {
     display: flex;
-    height: calc(100vh - var(--banner-height));
+    height: 100%;
+    background-color: var(--grey-lighter);
+    box-shadow: var(--box-shadow);
 }
 
 .right-column {
-    background-color: var(--grey-lighter);
-    padding: 1.25rem 0 0;
     width: 100%;
+    min-height: 40rem;
+}
+
+.title-section {
+    padding: 2rem 1rem 1.5rem;
+    background-color: var(--blue-darkest);
+    background-image: url("background.svg");
+    background-position: 30% 0;
+    height: var(--title-section-height);
+}
+
+.title-section h1 {
+    color: white;
+}
+
+.title-section p {
+    margin-bottom: 0;
+    color: white;
 }
 
 .settings {
-    margin: 1rem 0 1.5rem;
+    margin: 1rem 0 2rem;
+}
+
+.form-section {
+    display: flex;
+    flex: 1;
+}
+
+.settings-and-buttons-wrapper {
+    padding: 0 1rem 2rem;
+    flex: 1;
 }
 
 .radio label,
@@ -171,7 +211,7 @@ input[type="radio"] {
 }
 
 .is-focused:not(.is-open) > .Select-control {
-    border-color: var(--orange);
+    border-color: var(--teal);
     box-shadow: none;
 }
 
@@ -195,7 +235,7 @@ div.dash-sk-circle {
 
 /* Make the skip link visible when it receives keyboard focus */
 .skip-link:focus {
-    color: var(--orange);
+    color: var(--teal);
     position: static;
     width: auto;
     height: auto;
@@ -203,4 +243,14 @@ div.dash-sk-circle {
     display: inline-block;
     padding: 1rem;
     z-index: 1000;
+}
+
+@media screen and (max-width: 1000px) {
+    .columns-main {
+        flex-direction: column;
+    }
+
+    .form-section {
+        flex-direction: column;
+    }
 }

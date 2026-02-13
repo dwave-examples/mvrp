@@ -15,8 +15,8 @@
 """This file stores the HTML layout for the app."""
 from __future__ import annotations
 
-from dash import dcc, html
 import dash_mantine_components as dmc
+from dash import dcc, html
 
 from demo_configs import (
     COST_LABEL,
@@ -44,7 +44,7 @@ def slider(label: str, id: str, config: dict) -> html.Div:
     Args:
         label: The title that goes above the slider.
         id: A unique selector for this element.
-        config: A dictionary of slider configerations, see dcc.Slider Dash docs.
+        config: A dictionary of slider configurations, see dcc.Slider Dash docs.
     """
     return html.Div(
         className="slider-wrapper",
@@ -55,8 +55,8 @@ def slider(label: str, id: str, config: dict) -> html.Div:
                 className="slider",
                 **config,
                 marks=[
-                    {"value": config["min"], "label": f"{config["min"]}"},
-                    {"value": config["max"], "label": f"{config["max"]}"},
+                    {"value": config["min"], "label": f'{config["min"]}'},
+                    {"value": config["max"], "label": f'{config["max"]}'},
                 ],
                 labelAlwaysOn=True,
                 thumbLabel=f"{label} slider",
@@ -96,10 +96,11 @@ def generate_settings_form() -> html.Div:
     """
     # calculate drop-down options
     vehicle_options = [
-        {"label": vehicle_type.label, "value": f"{vehicle_type.value}"} for vehicle_type in VehicleType
+        {"label": vehicle_type.label, "value": f"{vehicle_type.value}"}
+        for vehicle_type in VehicleType
     ]
 
-    solver_options =[]
+    solver_options = []
     for solver_type in SolverType:
         if solver_type is not SolverType.DQM or SHOW_DQM:
             solver_options.append({"label": solver_type.label, "value": f"{solver_type.value}"})
@@ -141,12 +142,15 @@ def generate_run_buttons() -> html.Div:
     return html.Div(
         id="button-group",
         children=[
-            html.Button(id="run-button", children="Run Optimization", n_clicks=0, disabled=False),
             html.Button(
+                "Run Optimization", id="run-button", className="button", n_clicks=0, disabled=False
+            ),
+            html.Button(
+                "Cancel Optimization",
                 id="cancel-button",
-                children="Cancel Optimization",
+                className="button",
                 n_clicks=0,
-                className="display-none",
+                style={"display": "none"},
             ),
         ],
     )
@@ -154,10 +158,7 @@ def generate_run_buttons() -> html.Div:
 
 def create_row_cells(values: list) -> list[html.Td]:
     """List required to execute loop, unpack after to maintain required structure."""
-    return [
-        html.Td(round(value, 3 if UNITS_IMPERIAL else 0))
-        for value in values
-    ]
+    return [html.Td(round(value, 3 if UNITS_IMPERIAL else 0)) for value in values]
 
 
 def create_table(values_dicts: dict[int, dict], values_totals: list) -> html.Table:
@@ -228,6 +229,7 @@ def problem_details(index: int) -> html.Div:
                     html.H5("Problem Details"),
                     html.Div(className="collapse-arrow"),
                 ],
+                **{"aria-expanded": "true"},
             ),
             html.Div(
                 className="details-to-collapse",
@@ -242,15 +244,11 @@ def problem_details(index: int) -> html.Div:
                                         [
                                             html.Th(
                                                 colSpan=2,
-                                                children=[
-                                                    "Problem Specifics"
-                                                ],
+                                                children=["Problem Specifics"],
                                             ),
                                             html.Th(
                                                 colSpan=2,
-                                                children=[
-                                                    "Wall Clock Time"
-                                                ],
+                                                children=["Wall Clock Time"],
                                             ),
                                         ]
                                     )
@@ -261,54 +259,30 @@ def problem_details(index: int) -> html.Div:
                                 children=[
                                     html.Tr(
                                         [
-                                            html.Td(
-                                                LOCATIONS_LABEL
-                                            ),
-                                            html.Td(
-                                                id="num-locations"
-                                            ),
-                                            html.Td(
-                                                "Quantum Hybrid"
-                                            ),
-                                            html.Td(
-                                                id="wall-clock-time-quantum"
-                                            ),
+                                            html.Td(LOCATIONS_LABEL),
+                                            html.Td(id="num-locations"),
+                                            html.Td("Quantum Hybrid"),
+                                            html.Td(id="wall-clock-time-quantum"),
                                         ]
                                     ),
                                     html.Tr(
                                         [
-                                            html.Td(
-                                                "Vehicles Deployed"
-                                            ),
-                                            html.Td(
-                                                id="vehicles-deployed"
-                                            ),
-                                            html.Td(
-                                                "Classical"
-                                            ),
-                                            html.Td(
-                                                id="wall-clock-time-classical"
-                                            ),
+                                            html.Td("Vehicles Deployed"),
+                                            html.Td(id="vehicles-deployed"),
+                                            html.Td("Classical"),
+                                            html.Td(id="wall-clock-time-classical"),
                                         ]
                                     ),
                                     html.Tr(
                                         [
-                                            html.Td(
-                                                "Problem Size"
-                                            ),
-                                            html.Td(
-                                                id="problem-size"
-                                            ),
+                                            html.Td("Problem Size"),
+                                            html.Td(id="problem-size"),
                                         ]
                                     ),
                                     html.Tr(
                                         [
-                                            html.Td(
-                                                "Search Space"
-                                            ),
-                                            html.Td(
-                                                id="search-space"
-                                            ),
+                                            html.Td("Search Space"),
+                                            html.Td(id="search-space"),
                                         ]
                                     ),
                                 ],
@@ -331,6 +305,7 @@ def create_interface():
                 href="#main-content",
                 id="skip-to-main",
                 className="skip-link",
+                tabIndex=1,
             ),
             # below are any temporary storage items, e.g., for sharing data between callbacks
             dcc.Store(id="stored-results"),  # temporarily stored results table
@@ -343,8 +318,6 @@ def create_interface():
             ),  # callback blocker to signal that the run is complete
             dcc.Store(id="parameter-hash"),  # hash string to detect changed parameters
             dcc.Store(id="cost-comparison"),  # dictionary with solver keys and run values
-            # Banner
-            html.Header(className="banner", children=[html.Img(src=THUMBNAIL, alt="D-Wave logo")]),
             html.Main(
                 className="columns-main",
                 id="main-content",
@@ -365,22 +338,41 @@ def create_interface():
                                                     html.H1(MAIN_HEADER),
                                                     html.P(DESCRIPTION),
                                                 ],
-                                                className="title-card"
+                                                className="title-section",
                                             ),
-                                            generate_settings_form(),
-                                            generate_run_buttons(),
+                                            html.Div(
+                                                [
+                                                    html.Div(
+                                                        html.Div(
+                                                            [
+                                                                generate_settings_form(),
+                                                                generate_run_buttons(),
+                                                            ],
+                                                            className="settings-and-buttons",
+                                                        ),
+                                                        className="settings-and-buttons-wrapper",
+                                                    ),
+                                                    # Left column collapse button
+                                                    html.Div(
+                                                        html.Button(
+                                                            id={
+                                                                "type": "collapse-trigger",
+                                                                "index": 0,
+                                                            },
+                                                            className="left-column-collapse",
+                                                            title="Collapse sidebar",
+                                                            children=[
+                                                                html.Div(className="collapse-arrow")
+                                                            ],
+                                                            **{"aria-expanded": "true"},
+                                                        ),
+                                                    ),
+                                                ],
+                                                className="form-section",
+                                            ),
                                         ],
                                     )
                                 ],
-                            ),
-                            # Left column collapse button
-                            html.Div(
-                                html.Button(
-                                    id={"type": "collapse-trigger", "index": 0},
-                                    className="left-column-collapse",
-                                    title="Collapse sidebar",
-                                    children=[html.Div(className="collapse-arrow")],
-                                ),
                             ),
                         ],
                     ),
@@ -388,16 +380,35 @@ def create_interface():
                     html.Div(
                         className="right-column",
                         children=[
-                            dcc.Tabs(
+                            dmc.Tabs(
                                 id="tabs",
                                 value="map-tab",
-                                mobile_breakpoint=0,
+                                color="white",
                                 children=[
-                                    dcc.Tab(
-                                        label="Map",
-                                        id="map-tab",
-                                        value="map-tab",  # used for switching to programatically
-                                        className="tab",
+                                    html.Header(
+                                        className="banner",
+                                        children=[
+                                            html.Nav(
+                                                [
+                                                    dmc.TabsList(
+                                                        [
+                                                            dmc.TabsTab("Map", value="map-tab"),
+                                                            dmc.TabsTab(
+                                                                "Results",
+                                                                value="results-tab",
+                                                                id="results-tab",
+                                                                disabled=True,
+                                                            ),
+                                                        ]
+                                                    ),
+                                                ]
+                                            ),
+                                            html.Img(src=THUMBNAIL, alt="D-Wave logo"),
+                                        ],
+                                    ),
+                                    dmc.TabsPanel(
+                                        value="map-tab",
+                                        tabIndex="12",
                                         children=[
                                             dcc.Loading(
                                                 id="loading",
@@ -405,15 +416,15 @@ def create_interface():
                                                 color=THEME_COLOR,
                                                 parent_className="map-wrapper",
                                                 overlay_style={"visibility": "visible"},
-                                                children=html.Iframe(id="solution-map", title="Map of locations"),
+                                                children=html.Iframe(
+                                                    id="solution-map", title="Map of locations"
+                                                ),
                                             ),
                                         ],
                                     ),
-                                    dcc.Tab(
-                                        label="Results",
-                                        id="results-tab",
-                                        className="tab",
-                                        disabled=True,
+                                    dmc.TabsPanel(
+                                        value="results-tab",
+                                        tabIndex="13",
                                         children=[
                                             html.Div(
                                                 className="tab-content-wrapper",

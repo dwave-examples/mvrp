@@ -37,29 +37,31 @@ from src.solver import RoutingProblemParameters, Solver
 
 @dash.callback(
     Output({"type": "to-collapse-class", "index": MATCH}, "className"),
+    Output({"type": "collapse-trigger", "index": MATCH}, "aria-expanded"),
     inputs=[
         Input({"type": "collapse-trigger", "index": MATCH}, "n_clicks"),
         State({"type": "to-collapse-class", "index": MATCH}, "className"),
     ],
     prevent_initial_call=True,
 )
-def toggle_left_column(collapse_trigger: int, to_collapse_class: str) -> str:
+def toggle_left_column(collapse_trigger: int, to_collapse_class: str) -> tuple[str, str]:
     """Toggles a 'collapsed' class that hides and shows some aspect of the UI.
 
     Args:
         collapse_trigger (int): The (total) number of times a collapse button has been clicked.
         to_collapse_class (str): Current class name of the thing to collapse, 'collapsed' if not
-            visible, empty string if visible
+            visible, empty string if visible.
 
     Returns:
         str: The new class name of the thing to collapse.
+        str: The aria-expanded value.
     """
 
     classes = to_collapse_class.split(" ") if to_collapse_class else []
     if "collapsed" in classes:
         classes.remove("collapsed")
-        return " ".join(classes)
-    return to_collapse_class + " collapsed" if to_collapse_class else "collapsed"
+        return " ".join(classes), "true"
+    return to_collapse_class + " collapsed" if to_collapse_class else "collapsed", "false"
 
 
 def generate_initial_map(num_clients: int) -> folium.Map:
@@ -118,9 +120,7 @@ def render_initial_map(num_clients: int, _) -> str:
     ],
     prevent_initial_call=True,
 )
-def update_tables(
-    run_in_progress, stored_results, reset_results, solver_type
-) -> tuple[list, list]:
+def update_tables(run_in_progress, stored_results, reset_results, solver_type) -> tuple[list, list]:
     """Update the results tables each time a run is made.
 
     Args:
@@ -217,6 +217,7 @@ def get_updated_wall_clock_times(
 
 class RunOptimizationReturn(NamedTuple):
     """Return type for the ``run_optimization`` callback function."""
+
     solution_map: str
     cost_table: tuple
     hybrid_table_label: str
@@ -231,6 +232,7 @@ class RunOptimizationReturn(NamedTuple):
     wall_clock_time_quantum: str
     num_locations: int
     vehicles_deployed: int
+
 
 @dash.callback(
     # update map and results
@@ -265,8 +267,8 @@ class RunOptimizationReturn(NamedTuple):
     ],
     running=[
         # show cancel button and hide run button, and disable and animate results tab
-        (Output("cancel-button", "className"), "", "display-none"),
-        (Output("run-button", "className"), "display-none", ""),
+        (Output("cancel-button", "style"), {}, {"display": "none"}),
+        (Output("run-button", "style"), {"display": "none"}, {}),
         (Output("results-tab", "disabled"), True, False),
         (Output("results-tab", "label"), "Loading...", "Results"),
         # switch to map tab while running
@@ -334,9 +336,7 @@ def run_optimization(
     solver_type = SolverType(int(solver_type))
 
     map_network, depot_id, client_subset, map_bounds = generate_mapping_information(num_clients)
-    initial_map = show_locations_on_initial_map(
-        map_network, depot_id, client_subset, map_bounds
-    )
+    initial_map = show_locations_on_initial_map(map_network, depot_id, client_subset, map_bounds)
 
     routing_problem_parameters = RoutingProblemParameters(
         map_network=map_network,
@@ -382,25 +382,23 @@ def run_optimization(
         wall_clock_time, solver_type, reset_results
     )
 
-    hybrid_table_label = (
-        dash.no_update if solver_type is SolverType.KMEANS else solver_type.label
-    )
+    hybrid_table_label = dash.no_update if solver_type is SolverType.KMEANS else solver_type.label
 
     return RunOptimizationReturn(
-        solution_map = open("src/maps/solution_map.html", "r").read(),
-        cost_table = cost_table,
-        hybrid_table_label = hybrid_table_label,
-        solver_type = "classical" if solver_type is SolverType.KMEANS else "quantum",
-        reset_results = reset_results,
-        parameter_hash = str(parameter_hash),
-        performance_improvement_quantum = performance_improvement_quantum,
-        cost_comparison = cost_comparison,
-        problem_size = problem_size,
-        search_space = search_space,
-        wall_clock_time_classical = wall_clock_time_kmeans,
-        wall_clock_time_quantum = wall_clock_time_quantum,
-        num_locations = num_clients,
-        vehicles_deployed = num_vehicles,
+        solution_map=open("src/maps/solution_map.html", "r").read(),
+        cost_table=cost_table,
+        hybrid_table_label=hybrid_table_label,
+        solver_type="classical" if solver_type is SolverType.KMEANS else "quantum",
+        reset_results=reset_results,
+        parameter_hash=str(parameter_hash),
+        performance_improvement_quantum=performance_improvement_quantum,
+        cost_comparison=cost_comparison,
+        problem_size=problem_size,
+        search_space=search_space,
+        wall_clock_time_classical=wall_clock_time_kmeans,
+        wall_clock_time_quantum=wall_clock_time_quantum,
+        num_locations=num_clients,
+        vehicles_deployed=num_vehicles,
     )
 
 
