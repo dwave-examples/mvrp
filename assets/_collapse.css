@@ -35,12 +35,12 @@ limitations under the License.
 }
 
 .collapse-arrow:before {
-    rotate: 70deg;
+    rotate: -70deg;
     top: 0;
 }
 
 .collapse-arrow:after {
-    rotate: -70deg;
+    rotate: 70deg;
     bottom: 0;
 }
 
@@ -106,9 +106,9 @@ limitations under the License.
 }
 
 .details-collapse .collapse-arrow {
-    transform: rotate(-90deg);
+    transform: rotate(90deg);
     width: 3rem;
-    margin-bottom: 1.5rem;
+    margin-top: 1.5rem;
     margin-left: 0.5rem;
     color: var(--blue-darkest);
 }
@@ -137,9 +137,9 @@ limitations under the License.
 }
 
 .collapsed .details-collapse .collapse-arrow {
-    margin-top: 1.5rem;
-    margin-bottom: 0;
-    transform: rotate(90deg);
+    margin-bottom: 1.5rem;
+    margin-top: 0;
+    transform: rotate(-90deg);
 }
 
 .collapsed .details-to-collapse {

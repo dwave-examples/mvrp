@@ -50,10 +50,11 @@ def toggle_left_column(collapse_trigger: int, to_collapse_class: str) -> tuple[s
     Args:
         collapse_trigger (int): The (total) number of times a collapse button has been clicked.
         to_collapse_class (str): Current class name of the thing to collapse, 'collapsed' if not
-            visible, empty string if visible
+            visible, empty string if visible.
 
     Returns:
         str: The new class name of the thing to collapse.
+        str: The aria-expanded value.
     """
 
     classes = to_collapse_class.split(" ") if to_collapse_class else []
