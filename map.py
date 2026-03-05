@@ -202,7 +202,7 @@ def plot_solution_routes_on_map(
     cost = routing_solver.cost_between_nodes
     paths = routing_solver.paths_and_lengths
 
-    # get colourblind palette from seaborn (10 colours) and expand if more vehicles
+    # get colorblind palette from seaborn (10 colors) and expand if more vehicles
     palette = [
         ("location_blue", "#56b4e9"),
         ("location_yellow", "#ece133"),

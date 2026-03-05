@@ -270,7 +270,7 @@ class RunOptimizationReturn(NamedTuple):
         (Output("cancel-button", "style"), {}, {"display": "none"}),
         (Output("run-button", "style"), {"display": "none"}, {}),
         (Output("results-tab", "disabled"), True, False),
-        (Output("results-tab", "label"), "Loading...", "Results"),
+        (Output("results-tab", "children"), "Loading...", "Results"),
         # switch to map tab while running
         (Output("tabs", "value"), "map-tab", "map-tab"),
         # block certain callbacks from running until this is done
