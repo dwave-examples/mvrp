@@ -50,7 +50,7 @@ button.mantine-Tabs-tab:disabled {
     filter: unset;
     opacity: 1;
     color: #7E7F86;
-    border: transparent;
+    border-color: transparent;
 }
 
 .mantine-Tabs-tab span {
