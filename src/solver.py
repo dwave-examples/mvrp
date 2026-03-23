@@ -132,8 +132,8 @@ class Solver:
             {k: -(-sum(demand.values()) // self.num_vehicles) for k in range(self.num_vehicles)}
         )  # calculate capacity for the vehicles such that a feasible solution exists
 
-        if self.solver_type is SolverType.NL:
-            cvrp.solve_hybrid_nl(time_limit=self.time_limit)
+        if self.solver_type is SolverType.STRIDE:
+            cvrp.solve_hybrid_stride(time_limit=self.time_limit)
         else:
             # DQM and K-Means require a two-step solution: clustering + tsp
             if self.solver_type is SolverType.DQM:

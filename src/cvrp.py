@@ -142,26 +142,26 @@ class CapacitatedVehicleRoutingProblem:
         self._vehicle_capacity.update(capacity)
 
     def _get_nl(self) -> None:
-        """Get and set NL model."""
+        """Get and set Stride nonlinear model."""
         self._optimization["nl"] = self.generate_nl_model()
 
-    def solve_hybrid_nl(self, time_limit: Optional[float] = None) -> None:
-        """Find vehicle routes using Hybrid NL Solver.
+    def solve_hybrid_stride(self, time_limit: Optional[float] = None) -> None:
+        """Find vehicle routes using Hybrid Stride Solver.
 
         Args:
-            time_limit: Time limit for the NL solver.
+            time_limit: Time limit for the Stride solver.
         """
         if not self._clustering_feasible():
             raise ValueError("Clustering not feasible due to demand being higher than capacity.")
 
         sampler = LeapHybridNLSampler()
 
-        # Get and set the NL model
+        # Get and set the Stride nonlinear model
         self._get_nl()
 
         sampler.sample(self._optimization["nl"], time_limit=time_limit, label="Example - MVRP")
 
-        self.parse_solution_nl()
+        self.parse_solution_stride()
 
     def cluster_dqm(
         self, capacity_penalty_strength: float, time_limit: Optional[float] = None, **kwargs
@@ -331,14 +331,14 @@ class CapacitatedVehicleRoutingProblem:
         return dqm, offset
 
     def generate_nl_model(self) -> Model:
-        """Follows the NL solver formulation of the CVRP.
+        """Follows the Stride solver formulation of the CVRP.
 
         Returns:
-            Model: The NL Model.
+            Model: The Stride nonlinear Model.
         """
 
         # Take maximum vehicle capacity. Vehicle capacity should be updated to only allow
-        # one value for all vehicles or update NL solution to allow multiple capacities.
+        # one value for all vehicles or update Stride solution to allow multiple capacities.
         max_capacity = max(self._vehicle_capacity.values())
         num_vehicles = len(self._vehicles)
         all_locations = [*self._depots, *self._clients]
@@ -384,7 +384,7 @@ class CapacitatedVehicleRoutingProblem:
         """Check whether the given solution is feasible"""
 
         # Take maximum vehicle capacity. Vehicle capacity should be updated to only allow
-        # one value for all vehicles or update NL solution to allow multiple capacities.
+        # one value for all vehicles or update Stride solution to allow multiple capacities.
         max_capacity = max(self._vehicle_capacity.values())
         num_vehicles = len(self._vehicle_capacity)
 
@@ -435,8 +435,8 @@ class CapacitatedVehicleRoutingProblem:
 
         raise ValueError("No feasible solution found.")
 
-    def parse_solution_nl(self) -> None:
-        """Checks the solutions from the NL solver (attached to the model) and outputs the parsed ones."""
+    def parse_solution_stride(self) -> None:
+        """Checks the solutions from the Stride solver (attached to the model) and outputs the parsed ones."""
 
         all_locations = [*self._depots, *self._clients]
 

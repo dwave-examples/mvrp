@@ -9,30 +9,26 @@ number of vehicles and client locations.
 ![D-Wave Logo](static/demo.png "Image of demo interface")
 
 ## Installation
+You can run this example without installation in cloud-based IDEs that support the
+[Development Containers Specification](https://containers.dev/supporting) (aka "devcontainers")
+such as GitHub Codespaces.
 
-You can run this example without installation in cloud-based IDEs that support
-the [Development Containers specification](https://containers.dev/supporting)
-(aka "devcontainers").
-
-For development environments that do not support `devcontainers`, install
-requirements:
+For development environments that do not support `devcontainers`, install requirements:
 
 ```bash
 pip install -r requirements.txt
 ```
 
 If you are cloning the repo to your local system, working in a
-[virtual environment](https://docs.python.org/3/library/venv.html) is
-recommended.
+[virtual environment](https://docs.python.org/3/library/venv.html) is recommended.
 
 ## Usage
+Your development environment should be configured to access the
+[Leap&trade; quantum cloud service](https://docs.dwavequantum.com/en/latest/ocean/sapi_access_basic.html).
+You can see information about supported IDEs and authorizing access to your Leap account
+[here](https://docs.dwavequantum.com/en/latest/ocean/leap_authorization.html).
 
-Your development environment should be configured to
-[access Leap’s Solvers](https://docs.dwavequantum.com/en/latest/ocean/leap_authorization.html).
-You can see information about supported IDEs and authorizing access to your Leap
-account [here](https://docs.dwavequantum.com/en/latest/leap_sapi/dev_env.html).
-
-To run the demo:
+Run the following terminal command to start the Dash application:
 
 ```bash
 python app.py
@@ -40,10 +36,15 @@ python app.py
 
 Access the user interface with your browser at http://127.0.0.1:8050/.
 
-The demo program opens an interface where you can configure problems and submit
-these problems to a solver.
+The demo program opens an interface where you can configure problems and submit these problems to
+a solver.
 
 Configuration options can be found in the [demo_configs.py](demo_configs.py) file.
+
+> [!NOTE]\
+> If you plan on editing any files while the application is running, please run the application
+with the `--debug` command-line argument for live reloads and easier debugging:
+`python app.py --debug`
 
 ## Problem Description
 
