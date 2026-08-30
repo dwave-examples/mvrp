@@ -1,5 +1,7 @@
 [![Open in GitHub Codespaces](https://img.shields.io/badge/Open%20in%20GitHub%20Codespaces-333?logo=github)](https://codespaces.new/dwave-examples/mvrp?quickstart=1)
 
+> **NOTE: This is a fork of the [D-Wave MVRP example](https://github.com/dwave-examples/mvrp) modified to use local quantum simulation instead of hardware access.**
+
 # Multi Vehicle Routing Problem
 
 Run the Multi Vehicle Routing Problem (MVRP) problem for several different
@@ -23,10 +25,8 @@ If you are cloning the repo to your local system, working in a
 [virtual environment](https://docs.python.org/3/library/venv.html) is recommended.
 
 ## Usage
-Your development environment should be configured to access the
-[Leap&trade; quantum cloud service](https://docs.dwavequantum.com/en/latest/ocean/sapi_access_basic.html).
-You can see information about supported IDEs and authorizing access to your Leap account
-[here](https://docs.dwavequantum.com/en/latest/ocean/leap_authorization.html).
+
+This fork uses **local quantum simulation** and does not require access to the Leap quantum cloud service.
 
 Run the following terminal command to start the Dash application:
 
@@ -37,7 +37,7 @@ python app.py
 Access the user interface with your browser at http://127.0.0.1:8050/.
 
 The demo program opens an interface where you can configure problems and submit these problems to
-a solver.
+a local simulator.
 
 Configuration options can be found in the [demo_configs.py](demo_configs.py) file.
 
