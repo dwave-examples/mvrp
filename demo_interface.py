@@ -27,7 +27,6 @@ from demo_configs import (
     NUM_VEHICLES,
     RESOURCES,
     SHOW_COST_COMPARISON,
-    SHOW_DQM,
     SOLVER_TIME,
     THUMBNAIL,
     UNITS_IMPERIAL,
@@ -100,10 +99,9 @@ def generate_settings_form() -> html.Div:
         for vehicle_type in VehicleType
     ]
 
-    solver_options = []
-    for solver_type in SolverType:
-        if solver_type is not SolverType.DQM or SHOW_DQM:
-            solver_options.append({"label": solver_type.label, "value": f"{solver_type.value}"})
+    solver_options = [
+        {"label": solver_type.label, "value": f"{solver_type.value}"} for solver_type in SolverType
+    ]
 
     return html.Div(
         className="settings",

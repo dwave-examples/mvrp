@@ -155,8 +155,7 @@ def calculate_cost_comparison(
         cost_comparison: Dictionary with solver keys and run cost values.
         final_cost: The total distance cost of the most recent run.
         solver_type: The sampler that was run. Either Quantum Hybrid (DQM)
-            (``0`` or ``SolverType.DQM``), Quantum Hybrid (Stride) (``1`` or ``SolverType.STRIDE``), or
-            Classical (K-Means) (``2`` or ``SolverType.KMEANS``).
+            (``0`` or ``SolverType.DQM``) or Classical (K-Means) (``1`` or ``SolverType.KMEANS``).
         reset_results: Whether or not to reset wall clock times.
 
     Returns:
@@ -193,9 +192,8 @@ def get_updated_wall_clock_times(
 
     Args:
         wall_clock_time: Total run time.
-        solver_type: The sampler that was run. Either Either Quantum Hybrid (DQM)
-            (``0`` or ``SolverType.DQM``), Quantum Hybrid (Stride) (``1`` or ``SolverType.STRIDE``), or
-            Classical (K-Means) (``2`` or ``SolverType.KMEANS``).
+        solver_type: The sampler that was run. Either Quantum Hybrid (DQM)
+            (``0`` or ``SolverType.DQM``) or Classical (K-Means) (``1`` or ``SolverType.KMEANS``).
         reset_results: Whether or not to reset wall clock times.
 
     Returns:
@@ -302,9 +300,8 @@ def run_optimization(
         run_click: The (total) number of times the run button has been clicked.
         vehicle_type: Either Trucks (``0`` or ``VehicleType.TRUCKS``) or
             Delivery Drones (``1`` or ``VehicleType.DELIVERY_DRONES``).
-        solver_type: Either Quantum Hybrid (DQM) (``0`` or ``SolverType.DQM``),
-            Quantum Hybrid (Stride) (``1`` or ``SolverType.STRIDE``), or Classical (K-Means)
-            (``2`` or ``SolverType.KMEANS``).
+        solver_type: Either Quantum Hybrid (DQM) (``0`` or ``SolverType.DQM``) or Classical (K-Means)
+            (``1`` or ``SolverType.KMEANS``).
         num_vehicles: The number of vehicles.
         time_limit: The solver time limit.
         num_clients: The number of locations.
@@ -319,7 +316,7 @@ def run_optimization(
             solution-map: Updates the 'srcDoc' entry for the 'solution-map' Iframe in the map tab.
                 This is the map (initial and solution map).
             stored-results: Stores the Solution cost table in the results tab.
-            hybrid-table-label: Label for the hybrid results table (either Stride or DQM).
+            hybrid-table-label: Label for the hybrid results table.
             sampler-type: The sampler used (``"quantum"`` or ``"classical"``).
             reset-results: Whether or not to reset the results tables before applying the new one.
             parameter-hash: Hash string to detect changed parameters.

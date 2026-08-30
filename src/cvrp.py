@@ -14,18 +14,13 @@
 
 from __future__ import annotations
 
-import warnings
 from collections import defaultdict
 from itertools import combinations
-from typing import Hashable, Optional
+from typing import Hashable
 
 import networkx as nx
-import numpy as np
-from dimod import DiscreteQuadraticModel
+from dimod import DiscreteQuadraticModel, ExactDQMSolver
 from dimod.variables import Variables
-from dwave.optimization import Model
-from dwave.optimization.generators import capacitated_vehicle_routing
-from dwave.system import LeapHybridDQMSampler, LeapHybridNLSampler
 
 from demo_configs import DEPOT_LABEL
 from src.ckmeans import CKMeans
@@ -141,57 +136,21 @@ class CapacitatedVehicleRoutingProblem:
             self._vehicles._append(label)
         self._vehicle_capacity.update(capacity)
 
-    def _get_nl(self) -> None:
-        """Get and set Stride nonlinear model."""
-        self._optimization["nl"] = self.generate_nl_model()
-
-    def solve_hybrid_stride(self, time_limit: Optional[float] = None) -> None:
-        """Find vehicle routes using Hybrid Stride Solver.
-
-        Args:
-            time_limit: Time limit for the Stride solver.
-        """
-        if not self._clustering_feasible():
-            raise ValueError("Clustering not feasible due to demand being higher than capacity.")
-
-        sampler = LeapHybridNLSampler()
-
-        # Get and set the Stride nonlinear model
-        self._get_nl()
-
-        sampler.sample(self._optimization["nl"], time_limit=time_limit, label="Example - MVRP")
-
-        self.parse_solution_stride()
-
-    def cluster_dqm(
-        self, capacity_penalty_strength: float, time_limit: Optional[float] = None, **kwargs
-    ) -> None:
-        """Cluster the client locations using the DQM.
-
-        Other keyword args are passed on to the LeapHybridDQMSampler.
+    def cluster_dqm(self, capacity_penalty_strength: float, **kwargs) -> None:
+        """Cluster the client locations using the DQM, solved locally with dimod's ExactDQMSolver.
 
         Args:
             capacity_penalty_strength (float): Dictates the penalty for violating vehicle capacity.
-            time_limit: Time limit for the DQM sampler.
         """
         if not self._clustering_feasible():
             raise ValueError("Clustering not feasible due to demand being higher than capacity.")
 
-        sampler = LeapHybridDQMSampler()
+        sampler = ExactDQMSolver()
 
         # get and set the DQM model
         self._get_clustering_dqm(capacity_penalty_strength=capacity_penalty_strength)
 
-        if sampler.min_time_limit(self._optimization["dqm"]) > time_limit:
-            warnings.warn("Defaulting to minimum time limit for Leap Hybrid DQM Sampler.")
-
-            # setting time_limit to None uses the minimum time limit
-            time_limit = None
-
-        res = sampler.sample_dqm(
-            self._optimization["dqm"], time_limit=time_limit, label="Example - MVRP", **kwargs
-        )
-        res.resolve()
+        res = sampler.sample_dqm(self._optimization["dqm"], **kwargs)
 
         sample = res.first.sample
         assignments = defaultdict(list)
@@ -294,161 +253,34 @@ class CapacitatedVehicleRoutingProblem:
 
         Returns:
             DiscreteQuadraticModel, float: The DQM and offset.
+
+        Notes:
+            Vehicle capacity is enforced as a soft quadratic penalty
+            (``capacity_penalty_strength * (sum of assigned demand - capacity) ** 2``) rather than
+            a slack-variable equality constraint. This keeps the model's case count at
+            ``num_clients`` (instead of also adding binary slack variables per vehicle), which is
+            required to keep the search space tractable for the local ``ExactDQMSolver``.
         """
         dqm = DiscreteQuadraticModel()
         num_vehicles = len(self._vehicle_capacity)
         for v in self.demand:
             dqm.add_variable(num_vehicles, v)
 
-        max_capacity = max(self._vehicle_capacity.values())
-        precision = 1 + int(np.ceil(np.log2(max_capacity)))
-
-        slacks = {
-            (k, i): "s_capacity_{}_{}".format(k, i)
-            for k in self._vehicle_capacity
-            for i in range(precision)
-        }
-
-        for s in slacks.values():
-            dqm.add_variable(2, s)
-
-        for u, v in combinations(self.demand, r=2):
-            for idk, k in enumerate(self._vehicle_capacity):
-                dqm.set_quadratic_case(u, idk, v, idk, self.costs[u, v] + self.costs[v, u])
-
-        capacity_penalty = {k: capacity_penalty_strength for k in self._vehicle_capacity}
+        vehicle_ids = list(self._vehicle_capacity)
 
         offset = 0
-        for idk, k in enumerate(self._vehicle_capacity):
-            slack_terms = [(slacks[k, i], 1, 2**i) for i in range(precision)]
-            dqm.add_linear_equality_constraint(
-                [(v, idk, self.demand[v]) for v in self.demand] + slack_terms,
-                constant=-self._vehicle_capacity[k],
-                lagrange_multiplier=capacity_penalty[k],
-            )
+        for idk, k in enumerate(vehicle_ids):
+            capacity = self._vehicle_capacity[k]
+            for v in self.demand:
+                demand_v = self.demand[v]
+                bias = capacity_penalty_strength * (demand_v**2 - 2 * capacity * demand_v)
+                dqm.set_linear_case(v, idk, bias)
+            offset += capacity_penalty_strength * capacity**2
 
-            offset += capacity_penalty[k] * self._vehicle_capacity[k] ** 2
+        for u, v in combinations(self.demand, r=2):
+            for idk in range(num_vehicles):
+                cost_term = self.costs[u, v] + self.costs[v, u]
+                penalty_term = 2 * capacity_penalty_strength * self.demand[u] * self.demand[v]
+                dqm.set_quadratic_case(u, idk, v, idk, cost_term + penalty_term)
+
         return dqm, offset
-
-    def generate_nl_model(self) -> Model:
-        """Follows the Stride solver formulation of the CVRP.
-
-        Returns:
-            Model: The Stride nonlinear Model.
-        """
-
-        # Take maximum vehicle capacity. Vehicle capacity should be updated to only allow
-        # one value for all vehicles or update Stride solution to allow multiple capacities.
-        max_capacity = max(self._vehicle_capacity.values())
-        num_vehicles = len(self._vehicles)
-        all_locations = [*self._depots, *self._clients]
-
-        # Convert demand dictionary to array
-        demand = np.zeros(len(all_locations))
-        for index, client in enumerate(self.clients):
-            demand[index + 1] = self._demand[client]  # add 1 to skip depot
-
-        # Generate cost/distance matrices
-        distances = np.zeros((len(all_locations), len(all_locations)))
-        for i, location_i in enumerate(all_locations):
-            for j, location_j in enumerate(all_locations):
-                if i != j:
-                    distances[i, j] = self._costs[location_i, location_j]
-
-        model = capacitated_vehicle_routing(demand, num_vehicles, max_capacity, distances)
-
-        return model
-
-    def _recompute_objective(self, solution):
-        """Compute the objective given a solution."""
-
-        all_locations = [*self._depots, *self._clients]
-        num_vehicles = len(self._vehicle_capacity)
-        total_cost = 0
-
-        assert len(solution) == num_vehicles
-
-        # Compute total cost for the solution.
-        for r in solution:
-            if len(r) == 0:
-                continue
-
-            for index, location in enumerate([0, *r[:-1]]):
-                total_cost += self._costs[all_locations[location], all_locations[r[index]]]
-
-            total_cost += self._costs[all_locations[r[-1]], all_locations[0]]  # Go back to depot
-
-        return total_cost
-
-    def _check_feasibility(self, solution):
-        """Check whether the given solution is feasible"""
-
-        # Take maximum vehicle capacity. Vehicle capacity should be updated to only allow
-        # one value for all vehicles or update Stride solution to allow multiple capacities.
-        max_capacity = max(self._vehicle_capacity.values())
-        num_vehicles = len(self._vehicle_capacity)
-
-        # Convert demand dictionary to array
-        demand = np.zeros((len(self._clients) + 1))
-        for index, client in enumerate(self.clients):
-            demand[index + 1] = self._demand[client]
-
-        assert len(solution) == num_vehicles
-
-        for r in solution:
-            # If route has no locations the vehicle never left the depot or
-            # if demand exceeds capacity.
-            if len(r) == 0 or demand[r].sum() > max_capacity:
-                return False
-
-        return True
-
-    def _get_solution(self, tolerance=1e-6):
-        """Extract solution and check feasibility"""
-        model = self._optimization["nl"]
-        num_states = model.states.size()
-        for i in range(num_states):
-            # extract the solution
-            decision = next(model.iter_decisions())
-            solution_candidate = [
-                [int(v) + 1 for v in route.state(i)] for route in decision.iter_successors()
-            ]
-            if not solution_candidate:
-                continue
-
-            solver_objective = model.objective.state(i)
-            assert (
-                abs(solver_objective - self._recompute_objective(solution=solution_candidate))
-                < tolerance
-            )
-
-            solver_feasibility = True
-            for c in model.iter_constraints():
-                if c.state(i) < 0.5:
-                    solver_feasibility = False
-
-            # Check feasibility and if feasible, return
-            assert solver_feasibility == self._check_feasibility(solution=solution_candidate)
-            if solver_feasibility:
-                return solution_candidate
-            print(f"Sample {i} is infeasible")
-
-        raise ValueError("No feasible solution found.")
-
-    def parse_solution_stride(self) -> None:
-        """Checks the solutions from the Stride solver (attached to the model) and outputs the parsed ones."""
-
-        all_locations = [*self._depots, *self._clients]
-
-        solution = self._get_solution()
-
-        for vehicle_id, destinations in enumerate(solution):
-            # Add depot and convert to node IDs.
-            route = (
-                [all_locations[0]]
-                + [all_locations[destination] for destination in destinations]
-                + [all_locations[0]]
-            )
-            self._paths[vehicle_id] = route
-            edges = [(n, route[i + 1]) for i, n in enumerate(route[:-1])]
-            self._solution[vehicle_id] = nx.DiGraph(edges)

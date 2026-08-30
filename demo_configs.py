@@ -38,26 +38,29 @@ DEPOT_LABEL = "Depot"  # Either "Depot" or specific start location
 LOCATIONS_LABEL = "Locations"  # Either "Locations" or business specific location type
 RESOURCES = ["Water Pallets", "Food Boxes", "Clothing Boxes"]  # Supports any number of resources
 
-SHOW_DQM = False  # Show/hide DQM drop down option
-
 #######################################
 # Sliders, buttons and option entries #
 #######################################
 
 # number of vehicles slider (value means default)
+# Kept small because the DQM solver runs locally via dimod's ExactDQMSolver, whose
+# runtime grows as num_vehicles ** num_clients. Max here paired with max clients below
+# tops out at ~9.8M states (~6s solve time) which stays safely under the point where the
+# solver runs out of memory (observed around ~15M+ states).
 NUM_VEHICLES = {
     "min": 1,
-    "max": 10,
+    "max": 5,
     "step": 1,
-    "value": 4,
+    "value": 2,
 }
 
 # number of client locations slider (value means default)
+# See NUM_VEHICLES above for why this is kept small.
 NUM_CLIENT_LOCATIONS = {
-    "min": 10,
-    "max": 100,
+    "min": 3,
+    "max": 10,
     "step": 1,
-    "value": 60,
+    "value": 6,
 }
 
 # solver time limits in seconds (value means default)
