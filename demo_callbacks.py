@@ -14,23 +14,24 @@
 
 from __future__ import annotations
 
+import json
 from collections import defaultdict
 from operator import itemgetter
 from typing import NamedTuple, Union
 
 import dash
-from dash import MATCH, callback_context
+from dash import MATCH, callback_context, ctx
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 
 from demo_interface import create_table, generate_locations_layer, generate_solution_layers
-from map import (
+from src.demo_enums import SolverType, VehicleType
+from src.map import (
     generate_mapping_information,
     get_client_locations,
     get_position,
     get_solution_routes,
 )
-from src.demo_enums import SolverType, VehicleType
 from src.solver import RoutingProblemParameters, Solver
 
 
@@ -75,7 +76,8 @@ def render_initial_map(num_clients: int) -> tuple[list, list, dict]:
     """Draws the depot and client locations on the map.
 
     Runs on page load and whenever the number of locations changes, which clears any
-    previous solution.
+    previous solution. The viewport is only fitted on page load so that changing the number
+    of locations keeps the user's current zoom and position.
 
     Args:
         num_clients: Number of locations.
@@ -85,7 +87,7 @@ def render_initial_map(num_clients: int) -> tuple[list, list, dict]:
 
         - list: Depot and client location markers.
         - list: Solution route lines (always empty, clearing any previous solution).
-        - dict: Map viewport fitted to the bounds of the street network.
+        - dict: Map viewport fitted to the bounds of the street network on page load only.
     """
     map_network, depot_id, client_subset, map_bounds = generate_mapping_information(num_clients)
     locations = generate_locations_layer(
@@ -93,7 +95,11 @@ def render_initial_map(num_clients: int) -> tuple[list, list, dict]:
         get_client_locations(map_network, depot_id, client_subset),
     )
 
-    return locations, [], {"bounds": map_bounds, "transition": "fitBounds"}
+    viewport = dash.no_update
+    if ctx.triggered_id is None:  # Only on page load
+        viewport = {"bounds": map_bounds, "transition": "fitBounds"}
+
+    return locations, [], viewport
 
 
 @dash.callback(
@@ -249,6 +255,7 @@ class RunOptimizationReturn(NamedTuple):
     Output("wall-clock-time-quantum", "children"),
     Output("num-locations", "children"),
     Output("vehicles-deployed", "children"),
+    background=True,
     inputs=[
         Input("run-button", "n_clicks"),
         State("vehicle-type-select", "value"),
@@ -397,16 +404,18 @@ def run_optimization(
 
 
 def _get_parameter_hash(**states) -> str:
-    """Calculate a hash string for parameters which reset the results tables."""
-    # list of parameter values that will reset the results tables
-    # when changed in the app; must be hashable
+    """Calculate a key string for the parameters which reset the results tables.
+
+    The key is the JSON serialization of the parameter values rather than a ``hash()``: it is
+    only ever compared for equality, and the built-in ``hash()`` of a string differs between
+    processes, which would reset the tables on every run now that ``run_optimization`` runs
+    in a background process.
+    """
+    # list of parameter values that will reset the results tables when changed in the app
     items = [
         "vehicle-type-select.value",
         "num-vehicles-select.value",
         "num-clients-select.value",
         "solver-time-limit.value",
     ]
-    try:
-        return str(hash(itemgetter(*items)(states)))
-    except TypeError as e:
-        raise TypeError("unhashable problem parameter value") from e
+    return json.dumps(itemgetter(*items)(states))

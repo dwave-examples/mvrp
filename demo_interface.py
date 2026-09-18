@@ -35,8 +35,8 @@ from demo_configs import (
     THUMBNAIL,
     UNITS_IMPERIAL,
 )
-from map import Location, VehicleRoute
 from src.demo_enums import SolverType, VehicleType
+from src.map import Location, VehicleRoute
 
 THEME_COLOR = "#2d4376"
 
