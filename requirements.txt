@@ -1,8 +1,6 @@
 dash[diskcache]~=3.2
+dash-leaflet~=1.1
 dash-mantine-components~=2.3
 dwave-ocean-sdk~=9.0
-folium~=0.20
-mapclassify~=2.10
-matplotlib~=3.10
 osmnx~=2.0
 scipy~=1.16

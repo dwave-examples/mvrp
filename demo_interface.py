@@ -13,13 +13,16 @@
 # limitations under the License.
 
 """This file stores the HTML layout for the app."""
+
 from __future__ import annotations
 
+import dash_leaflet as dl
 import dash_mantine_components as dmc
 from dash import dcc, html
 
 from demo_configs import (
     COST_LABEL,
+    DEPOT_LABEL,
     DESCRIPTION,
     LOCATIONS_LABEL,
     MAIN_HEADER,
@@ -32,10 +35,26 @@ from demo_configs import (
     THUMBNAIL,
     UNITS_IMPERIAL,
 )
+from map import Location, VehicleRoute
 from src.demo_enums import SolverType, VehicleType
 
-map_width, map_height = 1000, 600
 THEME_COLOR = "#2d4376"
+
+DEPOT_ICON = "static/depot_location.png"
+LOCATION_ICON_DIR = "static/location_icons"
+INITIAL_LOCATION_ICON = "location_orange"
+MARKER_ICON_SIZE = [30, 48]  # icon files are 200 x 320 px
+MARKER_ICON_ANCHOR = [15, 40]  # pin tip, relative to the top-left corner of the icon
+MARKER_TOOLTIP_ANCHOR = [0, -36]
+
+# OpenStreetMap standard tiles from the volunteer-run OSM tile servers, which require
+# attribution and are subject to https://operations.osmfoundation.org/policies/tiles/
+OSM_TILE_URL = "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+MAP_ATTRIBUTION = (
+    '<a href="https://leafletjs.com" title="A JavaScript library for interactive maps">Leaflet</a>'
+    ' | &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+)
+ROUTE_STYLE = {"weight": 4, "opacity": 1}
 
 
 def slider(label: str, id: str, config: dict) -> html.Div:
@@ -207,6 +226,150 @@ def create_table(values_dicts: dict[int, dict], values_totals: list) -> html.Tab
     return table
 
 
+def _marker_icon(icon_url: str) -> dict:
+    """Leaflet icon options for a map marker pinned at the icon's tip.
+
+    Args:
+        icon_url: URL of the marker icon image.
+
+    Returns:
+        Leaflet icon options for the marker.
+    """
+
+    return {
+        "iconUrl": icon_url,
+        "iconSize": MARKER_ICON_SIZE,
+        "iconAnchor": MARKER_ICON_ANCHOR,
+        "tooltipAnchor": MARKER_TOOLTIP_ANCHOR,
+    }
+
+
+def generate_marker(
+    position: tuple[float, float], icon_url: str, tooltip_lines: list[str], alt: str
+) -> dl.Marker:
+    """Generate a map marker with a multi-line hover tooltip.
+
+    Args:
+        position: ``(latitude, longitude)`` of the marker.
+        icon_url: URL of the marker icon image.
+        tooltip_lines: Lines of text shown when hovering over the marker.
+        alt: Alternative text for the marker icon.
+
+    Returns:
+        The generated map marker with tooltip.
+    """
+    tooltip_children = []
+    for line in tooltip_lines:
+        tooltip_children.extend([line, html.Br()])
+
+    return dl.Marker(
+        position=position,
+        icon=_marker_icon(icon_url),
+        alt=alt,
+        children=dl.Tooltip(tooltip_children[:-1], direction="top"),
+    )
+
+
+def _demand_lines(location: Location) -> list[str]:
+    """Tooltip lines listing the demand for each resource at a location.
+
+    Args:
+        location: The location object containing demand information.
+
+    Returns:
+        Tooltip lines for the location's resource demands.
+    """
+    return [f"{resource}: {demand}" for resource, demand in zip(RESOURCES, location.demand)]
+
+
+def generate_locations_layer(
+    depot_position: tuple[float, float], locations: list[Location]
+) -> list[dl.Marker]:
+    """Generate the depot marker and a marker for every client location.
+
+    Args:
+        depot_position: ``(latitude, longitude)`` of the depot.
+        locations: The client locations to mark.
+
+    Returns:
+        Markers for the ``locations-layer`` layer group.
+    """
+    markers = [generate_marker(depot_position, DEPOT_ICON, [DEPOT_LABEL], DEPOT_LABEL)]
+    icon_url = f"{LOCATION_ICON_DIR}/{INITIAL_LOCATION_ICON}.png"
+    markers.extend(
+        generate_marker(location.position, icon_url, _demand_lines(location), LOCATIONS_LABEL)
+        for location in locations
+    )
+    return markers
+
+
+def generate_solution_layers(
+    depot_position: tuple[float, float], routes: list[VehicleRoute]
+) -> tuple[list[dl.Marker], list[dl.GeoJSON]]:
+    """Generate the markers and route lines for a solved routing problem.
+
+    Args:
+        depot_position: ``(latitude, longitude)`` of the depot.
+        routes: The route driven by each vehicle.
+
+    Returns:
+        A tuple containing:
+
+        - list[dl.Marker]: Depot and stop markers, colored by vehicle, for ``locations-layer``.
+        - list[dl.GeoJSON]: One route line per vehicle for ``routes-layer``.
+    """
+    markers = [generate_marker(depot_position, DEPOT_ICON, [DEPOT_LABEL], DEPOT_LABEL)]
+    route_lines = []
+
+    for route in routes:
+        icon_url = f"{LOCATION_ICON_DIR}/{route.icon_name}.png"
+        for stop in route.stops:
+            tooltip_lines = _demand_lines(stop.location) + [
+                f"Vehicle ID: {route.vehicle_id}",
+                f"Stop: #{stop.stop_number} of {len(route.stops)}",
+            ]
+            markers.append(
+                generate_marker(
+                    stop.location.position,
+                    icon_url,
+                    tooltip_lines,
+                    f"{LOCATIONS_LABEL}, vehicle {route.vehicle_id}",
+                )
+            )
+
+        route_lines.append(dl.GeoJSON(data=route.path, style={**ROUTE_STYLE, "color": route.color}))
+
+    return markers, route_lines
+
+
+def generate_map() -> html.Div:
+    """Generate the map with empty layer groups that callbacks fill in.
+
+    The background is OpenStreetMap tiles (desaturated in ``demo.css``). The viewport is set
+    by callback once the street network is loaded.
+    """
+    return html.Div(
+        className="map-region",
+        role="region",
+        children=dl.MapContainer(
+            id="solution-map",
+            center=[0, 0],
+            zoom=1,
+            keyboard=True,
+            attributionControl=False,  # replaced by the control below, which credits the data
+            children=[
+                dl.TileLayer(url=OSM_TILE_URL, maxZoom=19),
+                dl.LayerGroup(id="routes-layer"),
+                dl.LayerGroup(id="locations-layer"),
+                dl.FullScreenControl(),
+                dl.ScaleControl(position="bottomleft"),
+                dl.AttributionControl(position="bottomright", prefix=MAP_ATTRIBUTION),
+            ],
+        ),
+        **{"aria-label": "Map of locations"},
+    )
+
+
 def problem_details(index: int) -> html.Div:
     """Generate the problem details section.
 
@@ -305,7 +468,6 @@ def create_interface():
                 href="#main-content",
                 id="skip-to-main",
                 className="skip-link",
-                tabIndex=1,
             ),
             # below are any temporary storage items, e.g., for sharing data between callbacks
             dcc.Store(id="stored-results"),  # temporarily stored results table
@@ -392,7 +554,11 @@ def create_interface():
                                                 [
                                                     dmc.TabsList(
                                                         [
-                                                            dmc.TabsTab("Map", value="map-tab"),
+                                                            dmc.TabsTab(
+                                                                "Map",
+                                                                value="map-tab",
+                                                                id="map-tab",
+                                                            ),
                                                             dmc.TabsTab(
                                                                 "Results",
                                                                 value="results-tab",
@@ -408,7 +574,7 @@ def create_interface():
                                     ),
                                     dmc.TabsPanel(
                                         value="map-tab",
-                                        tabIndex="12",
+                                        **{"aria-labelledby": "map-tab"},
                                         children=[
                                             dcc.Loading(
                                                 id="loading",
@@ -416,15 +582,13 @@ def create_interface():
                                                 color=THEME_COLOR,
                                                 parent_className="map-wrapper",
                                                 overlay_style={"visibility": "visible"},
-                                                children=html.Iframe(
-                                                    id="solution-map", title="Map of locations"
-                                                ),
+                                                children=generate_map(),
                                             ),
                                         ],
                                     ),
                                     dmc.TabsPanel(
                                         value="results-tab",
-                                        tabIndex="13",
+                                        **{"aria-labelledby": "results-tab"},
                                         children=[
                                             html.Div(
                                                 className="tab-content-wrapper",

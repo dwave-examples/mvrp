@@ -57,6 +57,7 @@ class Solver:
     def __init__(self, parameters: RoutingProblemParameters) -> None:
         self._parameters = parameters
         self._solution = None
+        self._visiting_order = None
 
         if self.vehicle_type is VehicleType.TRUCKS:
             self._paths_and_lengths = dict(
@@ -79,6 +80,11 @@ class Solver:
     def solution(self) -> dict[Hashable, nx.DiGraph]:
         """Solution for the problem."""
         return self._solution
+
+    @property
+    def visiting_order(self) -> dict[Hashable, list[int]]:
+        """Ordered node IDs visited by each vehicle, starting and ending at the depot."""
+        return self._visiting_order
 
     def cost_between_nodes(self, p1, p2, start, end) -> float:
         """Calculate the cost (e.g., length) between two locations.
@@ -145,5 +151,6 @@ class Solver:
 
         wall_clock_time = time.perf_counter() - start_time
         self._solution = cvrp.solution
+        self._visiting_order = cvrp.paths
 
         return wall_clock_time

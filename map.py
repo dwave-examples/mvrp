@@ -12,29 +12,88 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Street network generation and map data for the dash-leaflet map.
+
+This module returns plain data (positions, demands and route GeoJSON). The dash-leaflet
+components that display it are built in ``demo_interface.py``.
+"""
+
 from __future__ import annotations
 
 import random
-from pathlib import Path
+from collections.abc import Iterable, Sequence
+from typing import NamedTuple
 
-import folium
-import folium.plugins as plugins
 import networkx as nx
 import numpy as np
 import osmnx as ox
-from folium import Element
 from numpy.typing import NDArray
 from scipy.spatial import cKDTree
 
-from demo_configs import ADDRESS, DEPOT_LABEL, DISTANCE, RESOURCES
+from demo_configs import ADDRESS, DISTANCE, RESOURCES
 from src.demo_enums import VehicleType
 
 ox.settings.use_cache = True
 ox.settings.overpass_rate_limit = False
 
-depot_icon_path = Path(__file__).parent / "static/depot_location.png"
+# Colorblind palette from seaborn (10 colors) paired with the marker icon of the same color.
+# Routes are assigned colors from the end of this list.
+PALETTE = [
+    ("location_blue", "#56b4e9"),
+    ("location_yellow", "#ece133"),
+    ("location_grey", "#949494"),
+    ("location_pink", "#fbafe4"),
+    ("location_beige", "#ca9161"),
+    ("location_purple", "#cc78bc"),
+    ("location_orange", "#d55e00"),
+    ("location_green", "#029e73"),
+    ("location_gold", "#de8f05"),
+    ("location_navy", "#0173b2"),
+]
 
-depot_icon = folium.CustomIcon(str(depot_icon_path), icon_size=(30, 48))
+
+class Location(NamedTuple):
+    """A client location on the map.
+
+    Args:
+        node_id: Node ID of the location in the street network.
+        position: ``(latitude, longitude)`` of the location.
+        demand: Demand at the location for each resource in ``RESOURCES``.
+    """
+
+    node_id: int
+    position: tuple[float, float]
+    demand: list[int]
+
+
+class Stop(NamedTuple):
+    """A client location visited by a vehicle.
+
+    Args:
+        location: The client location.
+        stop_number: The position of this stop along the vehicle's route (the depot is stop 0).
+    """
+
+    location: Location
+    stop_number: int
+
+
+class VehicleRoute(NamedTuple):
+    """The route driven (or flown) by a single vehicle.
+
+    Args:
+        vehicle_id: One-based vehicle number.
+        color: Hex color used to draw the route and matching the marker icon.
+        icon_name: File stem of the marker icon in ``static/location_icons``.
+        stops: Client locations visited, in route order (excludes the depot).
+        path: GeoJSON ``FeatureCollection`` of ``LineString`` features tracing the route.
+    """
+
+    vehicle_id: int
+    color: str
+    icon_name: str
+    stops: list[Stop]
+    path: dict
 
 
 def _get_coordinates(node_index_map: dict) -> NDArray:
@@ -67,7 +126,8 @@ def generate_mapping_information(num_clients: int) -> tuple[nx.MultiDiGraph, int
         client_subset: List of client IDs in the map's graph.
         map_bounds: List of lower and upper bound locations for map
     """
-    random.seed(num_clients)
+    # a private generator keeps the sample reproducible even when callbacks run concurrently
+    rng = random.Random(num_clients)
 
     G = ox.graph_from_address(
         address=ADDRESS, dist=DISTANCE, network_type="drive", truncate_by_edge=True
@@ -80,13 +140,13 @@ def generate_mapping_information(num_clients: int) -> tuple[nx.MultiDiGraph, int
 
     graph_copy = map_network.copy()
     graph_copy.remove_node(depot_id)
-    client_subset = random.sample(list(graph_copy.nodes), num_clients)
+    client_subset = rng.sample(list(graph_copy.nodes), num_clients)
 
     for node_id in client_subset:
         map_network.nodes[node_id]["demand"] = 0
 
         for i in range(len(RESOURCES)):
-            map_network.nodes[node_id][f"resource_{i}"] = random.choice([1, 2])
+            map_network.nodes[node_id][f"resource_{i}"] = rng.choice([1, 2])
             map_network.nodes[node_id]["demand"] += map_network.nodes[node_id][f"resource_{i}"]
 
     # Get min and max coordinates to determine map bounds
@@ -96,172 +156,141 @@ def generate_mapping_information(num_clients: int) -> tuple[nx.MultiDiGraph, int
     return map_network, depot_id, client_subset, map_bounds
 
 
-def _get_node_info(
-    G: nx.Graph, node_id: int, icon_name: str
-) -> tuple[folium.CustomIcon, list[int]]:
-    """Get node demand values and icons for each client location."""
-    icon_path = Path(__file__).parent / f"static/location_icons/{icon_name}.png"
-    location_icon = folium.CustomIcon(str(icon_path), icon_size=(30, 48))
-    return location_icon, [G.nodes[node_id][f"resource_{i}"] * 100 for i in range(len(RESOURCES))]
-
-
-def show_locations_on_initial_map(
-    G: nx.MultiDiGraph, depot_id: int, client_subset: list, map_bounds: list[list]
-) -> folium.Map:
-    """Prepare map to be rendered initially on app screen.
+def get_position(G: nx.Graph, node_id: int) -> tuple[float, float]:
+    """Return the ``(latitude, longitude)`` of a node in the street network.
 
     Args:
-        G: ``nx.MultiDiGraph`` to build map from.
+        G: The street network graph.
+        node_id: The ID of the node whose position is to be retrieved.
+
+    Returns:
+        A tuple containing the latitude and longitude of the node.
+    """
+    return G.nodes[node_id]["y"], G.nodes[node_id]["x"]
+
+
+def get_location(G: nx.Graph, node_id: int) -> Location:
+    """Return the position and resource demand of a client location.
+
+    Args:
+        G: The street network graph.
+        node_id: The ID of the client node.
+
+    Returns:
+        A Location object containing the node ID, position, and resource demand.
+    """
+    demand = [G.nodes[node_id][f"resource_{i}"] * 100 for i in range(len(RESOURCES))]
+    return Location(node_id, get_position(G, node_id), demand)
+
+
+def get_client_locations(G: nx.Graph, depot_id: int, client_subset: list) -> list[Location]:
+    """Return the positions and demands of all client locations (excluding the depot).
+
+    Args:
+        G: The street network graph.
         depot_id: Node ID of the depot location.
         client_subset: List of client IDs in the map's graph.
 
     Returns:
-        folium.Map: Map with depot, client locations and tooltip popups.
+        A list of Location objects for all client nodes, excluding the depot.
     """
-    # create folium map on which to plot depots
-    tiles = "cartodb positron"  # foilum map theme
-
-    folium_map = ox.graph_to_gdfs(G, nodes=False, node_geometry=False).explore(
-        style_kwds={"opacity": 0},  # Change opacity to 1 to see graph edges/roads in blue
-        tiles=tiles,
-    )
-
-    folium_map.fit_bounds(map_bounds)
-
-    # add marker to the depot location
-    folium.Marker(
-        location=(G.nodes[depot_id]["y"], G.nodes[depot_id]["x"]),
-        tooltip=folium.map.Tooltip(text=DEPOT_LABEL, style="font-size: 1.4rem;"),
-        icon=depot_icon,
-    ).add_to(folium_map)
-
-    # add markers to all the client locations
-    for node_id in client_subset:
-        if node_id == depot_id:
-            continue
-
-        location_icon, nodes = _get_node_info(G, node_id, "location_orange")
-
-        folium.Marker(
-            location=(G.nodes[node_id]["y"], G.nodes[node_id]["x"]),
-            tooltip=folium.map.Tooltip(
-                text=" <br> ".join(
-                    [f"{resource}: {nodes[index]}" for index, resource in enumerate(RESOURCES)]
-                ),
-                style="font-size: 1.4rem;",
-            ),
-            icon=location_icon,
-        ).add_to(folium_map)
-
-    # add fullscreen button to map
-    plugins.Fullscreen().add_to(folium_map)
-
-    accessibility_css = """
-        <style>
-        .leaflet-container .leaflet-control-attribution {
-            background: white;
-        }
-
-        .leaflet-control-attribution a {
-            text-decoration: underline !important;
-            color: #0044cc !important;
-        }
-
-        .leaflet-control-scale-line {
-            color: #737373 !important;
-            text-shadow: none;
-            background: white;
-        }
-        </style>
-    """
-    folium_map.get_root().html.add_child(Element(accessibility_css))
-
-    return folium_map
+    return [get_location(G, node_id) for node_id in client_subset if node_id != depot_id]
 
 
-def plot_solution_routes_on_map(
-    folium_map: folium.Map,
-    routing_parameters,
-    routing_solver,
-) -> folium.folium.Map:
-    """Generate interactive folium map for drone routes given solution dictionary.
+def _lines_to_geojson(lines: Iterable[Sequence[Sequence[float]]]) -> dict:
+    """Build a GeoJSON ``FeatureCollection`` of ``LineString`` features.
 
     Args:
-        folium_map: Initial folium map to plot solution on.
+        lines: Sequences of ``(longitude, latitude)`` coordinates, one per line.
+
+    Returns:
+        A GeoJSON ``FeatureCollection`` dictionary representing the lines.
+    """
+    features = [
+        {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [[round(lon, 6), round(lat, 6)] for lon, lat in line],
+            },
+        }
+        for line in lines
+    ]
+    return {"type": "FeatureCollection", "features": features}
+
+
+def _clients_in_visiting_order(visiting_order: list[int], depot_id: int) -> list[int]:
+    """Return the client nodes of a vehicle's route in the order they are first visited.
+
+    Args:
+        visiting_order: The solver's path for the vehicle, starting and ending at the depot.
+            A heuristic tour may pass through a client more than once.
+        depot_id: Node ID of the depot, which is excluded from the stops.
+
+    Returns:
+        The client nodes in the order they are first visited, excluding the depot.
+    """
+    return list(dict.fromkeys(node for node in visiting_order if node != depot_id))
+
+
+def get_solution_routes(routing_parameters, routing_solver) -> tuple[list[VehicleRoute], dict]:
+    """Build the per-vehicle routes and cost summary from a solved routing problem.
+
+    Args:
         routing_parameters: Routing problem parameters.
         routing_solver: Solver class containing the solution (if run).
 
     Returns:
-        `folium.folium.Map` object,  dictionary with solution cost information.
+        A tuple containing:
 
+        - list[VehicleRoute]: The route, stops, and drawing information for each vehicle.
+        - dict: Solution cost information keyed by vehicle ID.
     """
-    solution_cost_information = {}
     G = routing_parameters.map_network
-
     solution = routing_solver.solution
     cost = routing_solver.cost_between_nodes
     paths = routing_solver.paths_and_lengths
 
-    # get colorblind palette from seaborn (10 colors) and expand if more vehicles
-    palette = [
-        ("location_blue", "#56b4e9"),
-        ("location_yellow", "#ece133"),
-        ("location_grey", "#949494"),
-        ("location_pink", "#fbafe4"),
-        ("location_beige", "#ca9161"),
-        ("location_purple", "#cc78bc"),
-        ("location_orange", "#d55e00"),
-        ("location_green", "#029e73"),
-        ("location_gold", "#de8f05"),
-        ("location_navy", "#0173b2"),
-    ] * (len(solution) // 10 + 1)
+    # expand the palette if there are more vehicles than colors
+    palette = PALETTE * (len(solution) // len(PALETTE) + 1)
 
-    locations = {}
+    routes = []
+    solution_cost_information = {}
     for index, route_network in solution.items():
         vehicle_id = index + 1
         icon_name, route_color = palette.pop()
 
-        solution_cost_information[vehicle_id] = {
-            "optimized_cost": 0,
-            "serviced": len(route_network.nodes) - 1,
-        }
+        cost_information = {"optimized_cost": 0, "serviced": len(route_network.nodes) - 1}
         for i in range(len(RESOURCES)):
-            solution_cost_information[vehicle_id][f"resource_{i}"] = 0
+            cost_information[f"resource_{i}"] = 0
 
-        for stop_number, node in enumerate(route_network.nodes):
-            locations.update({node: (G.nodes[node]["y"], G.nodes[node]["x"])})
+        stops = []
+        route_order = _clients_in_visiting_order(
+            routing_solver.visiting_order[index], routing_parameters.depot_id
+        )
+        for stop_number, node in enumerate(route_order, start=1):
+            location = get_location(G, node)
+            stops.append(Stop(location, stop_number))
+            for i, demand in enumerate(location.demand):
+                cost_information[f"resource_{i}"] += demand
 
-            if node != routing_parameters.depot_id:
-                location_icon, nodes = _get_node_info(G, node, icon_name)
-
-                folium.Marker(
-                    locations[node],
-                    tooltip=folium.map.Tooltip(
-                        text=" <br> ".join(
-                            [f"{resource}: {nodes[i]}" for i, resource in enumerate(RESOURCES)]
-                        )
-                        + f" <br> Vehicle ID: {vehicle_id} <br> Stop: #{stop_number} of {len(route_network.nodes)-1}",
-                        style="font-size: 1.4rem;",
-                    ),
-                    icon=location_icon,
-                ).add_to(folium_map)
-
-                for i in range(len(RESOURCES)):
-                    solution_cost_information[vehicle_id][f"resource_{i}"] += nodes[i]
-
+        lines = []
         for start, end in route_network.edges:
-            solution_cost_information[vehicle_id]["optimized_cost"] += cost(
-                locations[start], locations[end], start, end
-            )
+            start_position, end_position = get_position(G, start), get_position(G, end)
+            cost_information["optimized_cost"] += cost(start_position, end_position, start, end)
 
             if routing_parameters.vehicle_type is VehicleType.TRUCKS:
-                route = paths[start][1][end]
-                folium_map = ox.graph_to_gdfs(G.subgraph(route), nodes=False).explore(
-                    m=folium_map, color=route_color, style_kwds={"weight": 4}
-                )
-            else:  # if vehicle_type is DELIVERY_DRONES
-                folium.PolyLine((locations[start], locations[end]), color=route_color).add_to(
-                    folium_map
-                )
+                # follow the street network along the shortest path between stops
+                shortest_path = paths[start][1][end]
+                edges = ox.routing.route_to_gdf(G, shortest_path, weight="length")
+                lines.extend(geometry.coords for geometry in edges.geometry)
+            else:  # if vehicle_type is DELIVERY_DRONES, fly as the crow flies
+                lines.append([start_position[::-1], end_position[::-1]])
 
-    return folium_map, solution_cost_information
+        routes.append(
+            VehicleRoute(vehicle_id, route_color, icon_name, stops, _lines_to_geojson(lines))
+        )
+        solution_cost_information[vehicle_id] = cost_information
+
+    return routes, solution_cost_information

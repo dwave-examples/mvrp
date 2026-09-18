@@ -16,20 +16,19 @@ from __future__ import annotations
 
 from collections import defaultdict
 from operator import itemgetter
-from pathlib import Path
 from typing import NamedTuple, Union
 
 import dash
-import folium
-from dash import MATCH, callback_context, ctx
+from dash import MATCH, callback_context
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 
-from demo_interface import create_table
+from demo_interface import create_table, generate_locations_layer, generate_solution_layers
 from map import (
     generate_mapping_information,
-    plot_solution_routes_on_map,
-    show_locations_on_initial_map,
+    get_client_locations,
+    get_position,
+    get_solution_routes,
 )
 from src.demo_enums import SolverType, VehicleType
 from src.solver import RoutingProblemParameters, Solver
@@ -48,13 +47,15 @@ def toggle_left_column(collapse_trigger: int, to_collapse_class: str) -> tuple[s
     """Toggles a 'collapsed' class that hides and shows some aspect of the UI.
 
     Args:
-        collapse_trigger (int): The (total) number of times a collapse button has been clicked.
-        to_collapse_class (str): Current class name of the thing to collapse, 'collapsed' if not
+        collapse_trigger: The (total) number of times a collapse button has been clicked.
+        to_collapse_class: Current class name of the thing to collapse, 'collapsed' if not
             visible, empty string if visible.
 
     Returns:
-        str: The new class name of the thing to collapse.
-        str: The aria-expanded value.
+        A tuple containing:
+
+        - str: The new class name of the thing to collapse.
+        - str: The aria-expanded value.
     """
 
     classes = to_collapse_class.split(" ") if to_collapse_class else []
@@ -64,49 +65,35 @@ def toggle_left_column(collapse_trigger: int, to_collapse_class: str) -> tuple[s
     return to_collapse_class + " collapsed" if to_collapse_class else "collapsed", "false"
 
 
-def generate_initial_map(num_clients: int) -> folium.Map:
-    """Generates the initial map.
-
-    Args:
-        num_clients (int): Number of locations.
-
-    Returns:
-        folium.Map: Initial map shown on the map tab.
-    """
-    map_network, depot_id, client_subset, map_bounds = generate_mapping_information(num_clients)
-    initial_map = show_locations_on_initial_map(map_network, depot_id, client_subset, map_bounds)
-    return initial_map
-
-
 @dash.callback(
-    Output("solution-map", "srcDoc"),
-    inputs=[
-        Input("num-clients-select", "value"),
-        Input("run-button", "n_clicks"),
-    ],
+    Output("locations-layer", "children"),
+    Output("routes-layer", "children"),
+    Output("solution-map", "viewport"),
+    Input("num-clients-select", "value"),
 )
-def render_initial_map(num_clients: int, _) -> str:
-    """Generates and saves and HTML version of the initial map.
+def render_initial_map(num_clients: int) -> tuple[list, list, dict]:
+    """Draws the depot and client locations on the map.
 
-    Note that 'run-button' is required as an Input to reload the map each time
-    a run is started. This resets the solution map to the initial map but does
-    NOT regenerate the initial map unless 'num-clients-select' is changed.
+    Runs on page load and whenever the number of locations changes, which clears any
+    previous solution.
 
     Args:
         num_clients: Number of locations.
 
     Returns:
-        str: Initial map shown on the map tab as HTML.
+        A tuple containing:
+
+        - list: Depot and client location markers.
+        - list: Solution route lines (always empty, clearing any previous solution).
+        - dict: Map viewport fitted to the bounds of the street network.
     """
-    map_path = Path("src/maps/initial_map.html")
-    map_path.parent.mkdir(parents=True, exist_ok=True)
+    map_network, depot_id, client_subset, map_bounds = generate_mapping_information(num_clients)
+    locations = generate_locations_layer(
+        get_position(map_network, depot_id),
+        get_client_locations(map_network, depot_id, client_subset),
+    )
 
-    # only regenerate map if num_clients is changed (i.e., if run buttons is NOT clicked)
-    if ctx.triggered_id != "run-button" or not map_path.exists():
-        initial_map = generate_initial_map(num_clients)
-        initial_map.save(map_path)
-
-    return open(map_path, "r").read()
+    return locations, [], {"bounds": map_bounds, "transition": "fitBounds"}
 
 
 @dash.callback(
@@ -130,7 +117,10 @@ def update_tables(run_in_progress, stored_results, reset_results, solver_type) -
         solver_type: The sampler type used in the latest run (``"quantum"`` or ``"classical"``)
 
     Returns:
-        tuple: A tuple containing the two results tables.
+        A tuple containing:
+
+        - list: Solution cost table children.
+        - list: Classical solution cost table children.
     """
     empty_or_no_update = [] if reset_results else dash.no_update
 
@@ -160,8 +150,10 @@ def calculate_cost_comparison(
         reset_results: Whether or not to reset wall clock times.
 
     Returns:
-        cost_comparison: Updated dictionary with solver keys and run cost values.
-        performance_improvement_quantum: String stating the quantum hybrid performance improvement.
+        A tuple containing:
+
+        - dict: Updated dictionary with solver keys and run cost values.
+        - str: String stating the quantum hybrid performance improvement.
     """
 
     # Dict keys must be strings because Dash stores data as JSON
@@ -199,8 +191,10 @@ def get_updated_wall_clock_times(
         reset_results: Whether or not to reset wall clock times.
 
     Returns:
-        wall_clock_time_kmeans: Updated kmeans wall clock time.
-        wall_clock_time_quantum: Updated quantum wall clock time.
+        A tuple containing:
+
+        - str: Updated kmeans wall clock time.
+        - str: Updated hybrid solver wall clock time.
     """
     wall_clock_time_kmeans = ""
     wall_clock_time_quantum = ""
@@ -218,7 +212,8 @@ def get_updated_wall_clock_times(
 class RunOptimizationReturn(NamedTuple):
     """Return type for the ``run_optimization`` callback function."""
 
-    solution_map: str
+    locations_layer: list
+    routes_layer: list
     cost_table: tuple
     hybrid_table_label: str
     solver_type: str
@@ -236,7 +231,8 @@ class RunOptimizationReturn(NamedTuple):
 
 @dash.callback(
     # update map and results
-    Output("solution-map", "srcDoc", allow_duplicate=True),
+    Output("locations-layer", "children", allow_duplicate=True),
+    Output("routes-layer", "children", allow_duplicate=True),
     Output("stored-results", "data"),
     Output("hybrid-table-label", "children"),
     # store the solver used, whether or not to reset results tabs and the
@@ -316,27 +312,26 @@ def run_optimization(
         A NamedTuple (RunOptimizationReturn) containing all outputs to be used when updating the
         HTML template (in ``demo_interface.py``). These are:
 
-            solution-map: Updates the 'srcDoc' entry for the 'solution-map' Iframe in the map tab.
-                This is the map (initial and solution map).
-            stored-results: Stores the Solution cost table in the results tab.
-            hybrid-table-label: Label for the hybrid results table (either Stride or DQM).
-            sampler-type: The sampler used (``"quantum"`` or ``"classical"``).
-            reset-results: Whether or not to reset the results tables before applying the new one.
-            parameter-hash: Hash string to detect changed parameters.
-            performance-improvement-quantum: Updates quantum performance improvement message.
-            cost-comparison: Keeps track of the difference between classical and hybrid run costs.
-            problem-size: Updates the problem-size entry in the problem details table.
-            search-space: Updates the search-space entry in the problem details table.
-            wall-clock-time-classical: Updates the wall clock time in the Classical table header.
-            wall-clock-time-quantum: Updates the wall clock time in the Hybrid Quantum table header.
-            num-locations: Updates the number of locations in the problem details table.
-            vehicles-deployed: Updates the vehicles-deployed entry in the problem details table.
+        - locations_layer: Depot and stop markers on the map, colored by vehicle.
+        - routes_layer: Solution route lines on the map, one per vehicle.
+        - cost_table: Stores the Solution cost table in the results tab.
+        - hybrid_table_label: Label for the hybrid results table (either Stride or DQM).
+        - solver_type: The sampler used (``"quantum"`` or ``"classical"``).
+        - reset_results: Whether or not to reset the results tables before applying the new one.
+        - parameter_hash: Hash string to detect changed parameters.
+        - performance_improvement_quantum: Updates quantum performance improvement message.
+        - cost_comparison: Keeps track of the difference between classical and hybrid run costs.
+        - problem_size: Updates the problem-size entry in the problem details table.
+        - search_space: Updates the search-space entry in the problem details table.
+        - wall_clock_time_classical: Updates the wall clock time in the Classical table header.
+        - wall_clock_time_quantum: Updates the wall clock time in the Hybrid Quantum table header.
+        - num_locations: Updates the number of locations in the problem details table.
+        - vehicles_deployed: Updates the vehicles-deployed entry in the problem details table.
     """
     vehicle_type = VehicleType(int(vehicle_type))
     solver_type = SolverType(int(solver_type))
 
-    map_network, depot_id, client_subset, map_bounds = generate_mapping_information(num_clients)
-    initial_map = show_locations_on_initial_map(map_network, depot_id, client_subset, map_bounds)
+    map_network, depot_id, client_subset, _ = generate_mapping_information(num_clients)
 
     routing_problem_parameters = RoutingProblemParameters(
         map_network=map_network,
@@ -353,10 +348,9 @@ def run_optimization(
     # run problem and generate solution (stored in Solver)
     wall_clock_time = routing_problem_solver.generate()
 
-    solution_map, solution_cost = plot_solution_routes_on_map(
-        initial_map,
-        routing_problem_parameters,
-        routing_problem_solver,
+    routes, solution_cost = get_solution_routes(routing_problem_parameters, routing_problem_solver)
+    locations_layer, routes_layer = generate_solution_layers(
+        get_position(map_network, depot_id), routes
     )
 
     problem_size = num_vehicles * num_clients
@@ -369,7 +363,6 @@ def run_optimization(
             total_cost[key] += value
 
     cost_table = create_table(solution_cost, list(total_cost.values()))
-    solution_map.save("src/maps/solution_map.html")
 
     parameter_hash = _get_parameter_hash(**callback_context.states)
     reset_results = parameter_hash != previous_parameter_hash
@@ -385,7 +378,8 @@ def run_optimization(
     hybrid_table_label = dash.no_update if solver_type is SolverType.KMEANS else solver_type.label
 
     return RunOptimizationReturn(
-        solution_map=open("src/maps/solution_map.html", "r").read(),
+        locations_layer=locations_layer,
+        routes_layer=routes_layer,
         cost_table=cost_table,
         hybrid_table_label=hybrid_table_label,
         solver_type="classical" if solver_type is SolverType.KMEANS else "quantum",

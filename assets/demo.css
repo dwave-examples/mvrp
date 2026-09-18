@@ -108,16 +108,43 @@ h5.no-results {
     box-shadow: none;
 }
 
+.map-region,
 #solution-map {
-    border: none;
     width: 100%;
+    height: 100%;
+}
 
-    /* -7px to fix map generator creating a gap at the bottom of the screen */
-    height: calc(100% - 7px);
+/* Ground color shown while map tiles load */
+#solution-map {
+    background: #e6e8eb;
 }
 
 #solution-map:focus-visible {
-    box-shadow: 0 0 0 2px var(--teal);
+    box-shadow: inset 0 0 0 2px var(--teal);
+}
+
+/* Desaturate and lighten the tile basemap (tiles only) so markers and routes stand out */
+#solution-map .leaflet-tile-pane {
+    filter: grayscale(0.8) brightness(1.06) contrast(0.9);
+}
+
+#solution-map .leaflet-tooltip {
+    font-size: 1rem;
+}
+
+#solution-map .leaflet-control-attribution {
+    background: white;
+}
+
+#solution-map .leaflet-control-attribution a {
+    text-decoration: underline;
+    color: var(--blue-dark);
+}
+
+#solution-map .leaflet-control-scale-line {
+    color: var(--grey-medium);
+    text-shadow: none;
+    background: white;
 }
 
 .map-wrapper[style="visibility: visible;"] {
@@ -132,8 +159,4 @@ h5.no-results {
 
 #solver-time-limit {
     margin-bottom: 1.25rem;
-}
-
-#solution-map .leaflet-control-attribution {
-    text-decoration: underline;
 }

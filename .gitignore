@@ -5,6 +5,3 @@ cache
 build
 dist
 *.egg-info
-initial_map.html
-solution_map.html
-*.DS_Store
