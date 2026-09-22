@@ -170,14 +170,14 @@ class CKMeans:
         if not isinstance(X, np.ndarray):
             X = np.asarray(X)
 
-        best_score = 0
+        best_score = float("inf")
         start = time.time()
 
         while time.time() - start < time_limit:
             assignments = self.predict_once(X, demand, capacities)
             score = self._get_score(X, assignments)
 
-            if score > best_score:
+            if score < best_score:
                 best_score = score
                 best_assignments = assignments
 
