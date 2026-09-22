@@ -263,8 +263,6 @@ class RunOptimizationReturn(NamedTuple):
         State("num-vehicles-select", "value"),
         State("solver-time-limit", "value"),
         State("num-clients-select", "value"),
-        # input and output result table (to update it dynamically)
-        State("solution-cost-table", "children"),
         State("parameter-hash", "data"),
         State("cost-comparison", "data"),
     ],
@@ -290,7 +288,6 @@ def run_optimization(
     num_vehicles: int,
     time_limit: float,
     num_clients: int,
-    cost_table: list,
     previous_parameter_hash: str,
     cost_comparison: dict,
 ) -> RunOptimizationReturn:
@@ -311,7 +308,6 @@ def run_optimization(
         num_vehicles: The number of vehicles.
         time_limit: The solver time limit.
         num_clients: The number of locations.
-        cost_table: The html 'Solution cost' table. Used to update it dynamically.
         previous_parameter_hash: Previous hash string to detect changed parameters
         cost_comparison: Dictionary with solver keys and run cost values.
 

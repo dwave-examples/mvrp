@@ -248,35 +248,31 @@ def get_solution_routes(routing_parameters, routing_solver) -> tuple[list[Vehicl
         - dict: Solution cost information keyed by vehicle ID.
     """
     G = routing_parameters.map_network
-    solution = routing_solver.solution
+    visiting_orders = routing_solver.visiting_order
     cost = routing_solver.cost_between_nodes
     paths = routing_solver.paths_and_lengths
 
     # expand the palette if there are more vehicles than colors
-    palette = PALETTE * (len(solution) // len(PALETTE) + 1)
+    palette = PALETTE * (len(visiting_orders) // len(PALETTE) + 1)
 
     routes = []
     solution_cost_information = {}
-    for index, route_network in solution.items():
+    for index, visiting_order in visiting_orders.items():
         vehicle_id = index + 1
         icon_name, route_color = palette.pop()
 
-        cost_information = {"optimized_cost": 0, "serviced": len(route_network.nodes) - 1}
-        for i in range(len(RESOURCES)):
-            cost_information[f"resource_{i}"] = 0
-
         stops = []
-        route_order = _clients_in_visiting_order(
-            routing_solver.visiting_order[index], routing_parameters.depot_id
-        )
+        route_order = _clients_in_visiting_order(visiting_order, routing_parameters.depot_id)
         for stop_number, node in enumerate(route_order, start=1):
-            location = get_location(G, node)
-            stops.append(Stop(location, stop_number))
-            for i, demand in enumerate(location.demand):
-                cost_information[f"resource_{i}"] += demand
+            stops.append(Stop(get_location(G, node), stop_number))
 
+        cost_information = {"optimized_cost": 0, "serviced": len(stops)}
+        for i in range(len(RESOURCES)):
+            cost_information[f"resource_{i}"] = sum(stop.location.demand[i] for stop in stops)
+
+        # Walk the tour leg by leg.
         lines = []
-        for start, end in route_network.edges:
+        for start, end in zip(visiting_order[:-1], visiting_order[1:]):
             start_position, end_position = get_position(G, start), get_position(G, end)
             cost_information["optimized_cost"] += cost(start_position, end_position, start, end)
 
