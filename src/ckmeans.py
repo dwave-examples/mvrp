@@ -180,7 +180,7 @@ class CKMeans:
             assignments = self.predict_once(X, demand, capacities)
             score = self._get_score(X, assignments)
 
-            if score < best_score:
+            if score < best_score:  # lower score is better
                 best_score = score
                 best_assignments = assignments
 
