@@ -50,6 +50,10 @@ MARKER_TOOLTIP_ANCHOR = [0, -36]
 # OpenStreetMap standard tiles from the volunteer-run OSM tile servers, which require
 # attribution and are subject to https://operations.osmfoundation.org/policies/tiles/
 OSM_TILE_URL = "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+# Keep the map near the demo area: zooming out to a continent or the whole world loads many
+# tiles that add nothing to the demo. Zoom 10 spans roughly a metropolitan area.
+TILE_MIN_ZOOM = 10
+TILE_MAX_ZOOM = 19
 MAP_ATTRIBUTION = (
     '<a href="https://leafletjs.com" title="A JavaScript library for interactive maps">Leaflet</a>'
     ' | &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -282,6 +286,15 @@ def _demand_lines(location: Location) -> list[str]:
     return [f"{resource}: {demand}" for resource, demand in zip(RESOURCES, location.demand)]
 
 
+def generate_depot_marker(depot_position: tuple[float, float]) -> dl.Marker:
+    """Generate the depot marker.
+
+    Args:
+        depot_position: ``(latitude, longitude)`` of the depot.
+    """
+    return generate_marker(depot_position, DEPOT_ICON, [DEPOT_LABEL], DEPOT_LABEL)
+
+
 def generate_locations_layer(
     depot_position: tuple[float, float], locations: list[Location]
 ) -> list[dl.Marker]:
@@ -294,7 +307,7 @@ def generate_locations_layer(
     Returns:
         Markers for the ``locations-layer`` layer group.
     """
-    markers = [generate_marker(depot_position, DEPOT_ICON, [DEPOT_LABEL], DEPOT_LABEL)]
+    markers = [generate_depot_marker(depot_position)]
     icon_url = f"{LOCATION_ICON_DIR}/{INITIAL_LOCATION_ICON}.png"
     markers.extend(
         generate_marker(location.position, icon_url, _demand_lines(location), LOCATIONS_LABEL)
@@ -318,7 +331,7 @@ def generate_solution_layers(
         - list[dl.Marker]: Depot and stop markers, colored by vehicle, for ``locations-layer``.
         - list[dl.GeoJSON]: One route line per vehicle for ``routes-layer``.
     """
-    markers = [generate_marker(depot_position, DEPOT_ICON, [DEPOT_LABEL], DEPOT_LABEL)]
+    markers = [generate_depot_marker(depot_position)]
     route_lines = []
 
     for route in routes:
@@ -358,7 +371,7 @@ def generate_map() -> html.Div:
             keyboard=True,
             attributionControl=False,  # replaced by the control below, which credits the data
             children=[
-                dl.TileLayer(url=OSM_TILE_URL, maxZoom=19),
+                dl.TileLayer(url=OSM_TILE_URL, minZoom=TILE_MIN_ZOOM, maxZoom=TILE_MAX_ZOOM),
                 dl.LayerGroup(id="routes-layer"),
                 dl.LayerGroup(id="locations-layer"),
                 dl.FullScreenControl(),

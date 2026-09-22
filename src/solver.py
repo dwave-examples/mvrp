@@ -56,7 +56,6 @@ class Solver:
 
     def __init__(self, parameters: RoutingProblemParameters) -> None:
         self._parameters = parameters
-        self._solution = None
         self._visiting_order = None
 
         if self.vehicle_type is VehicleType.TRUCKS:
@@ -75,11 +74,6 @@ class Solver:
     def paths_and_lengths(self) -> dict:
         """All paths between locations/nodes and distances/weights between them."""
         return self._paths_and_lengths
-
-    @property
-    def solution(self) -> dict[Hashable, nx.DiGraph]:
-        """Solution for the problem."""
-        return self._solution
 
     @property
     def visiting_order(self) -> dict[Hashable, list[int]]:
@@ -150,7 +144,6 @@ class Solver:
             cvrp.solve_tsp_heuristic()
 
         wall_clock_time = time.perf_counter() - start_time
-        self._solution = cvrp.solution
         self._visiting_order = cvrp.paths
 
         return wall_clock_time
