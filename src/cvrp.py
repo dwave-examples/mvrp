@@ -63,7 +63,11 @@ class CapacitatedVehicleRoutingProblem:
 
     @property
     def paths(self) -> dict[int, list[int]]:
-        """Solution paths for each of the vehicles."""
+        """Ordered location IDs visited by each vehicle, starting and ending at the depot.
+
+        A heuristic tour may pass through a location more than once, in which case it appears
+        more than once in the path.
+        """
         return self._paths
 
     @property
@@ -260,12 +264,14 @@ class CapacitatedVehicleRoutingProblem:
             greedy_tsp = nx.approximation.traveling_salesman.greedy_tsp
             path = nx.approximation.traveling_salesman_problem(G, cycle=False, method=greedy_tsp)
 
-            path += [path[0]]
-            cluster += [cluster[0]]
-            edges = [(cluster[n], cluster[path[i + 1]]) for i, n in enumerate(path[:-1])]
+            # The heuristic returns the tour starting from an arbitrary location; rotate it to
+            # start at the depot (index 0), close the loop and convert indices to location IDs.
+            depot_position = path.index(idx[cluster[0]])
+            path = path[depot_position:] + path[:depot_position]
+            route = [cluster[i] for i in path] + [cluster[0]]
 
-            self._paths[vehicle_id] = dict(enumerate(path))
-            self._solution[vehicle_id] = nx.DiGraph(edges)
+            self._paths[vehicle_id] = route
+            self._solution[vehicle_id] = nx.DiGraph(zip(route[:-1], route[1:]))
 
     def _clustering_feasible(self) -> bool:
         """Whether clustering is feasible based on total capacity >= demand."""
