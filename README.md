@@ -61,8 +61,8 @@ In this demo a single central depot location is determined by choosing an
 address (can be set in [demo_configs.py](demo_configs.py)), after which a number
 of locations are placed randomly within a specified radius of the depot. The
 vehicles can either be trucks, following the road network, or drones, traversing
-the map as the crow flies. The problem can then be solved using either a
-classical or a quantum hybrid solver for a chosen number of vehicles and
+the map as the crow flies. The problem can then be solved using either the Stride&trade; hybrid
+solver or a classical solver for a chosen number of vehicles and
 locations.
 
 ## License

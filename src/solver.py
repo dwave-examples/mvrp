@@ -135,12 +135,8 @@ class Solver:
         if self.solver_type is SolverType.STRIDE:
             cvrp.solve_hybrid_stride(time_limit=self.time_limit)
         else:
-            # DQM and K-Means require a two-step solution: clustering + tsp
-            if self.solver_type is SolverType.DQM:
-                cvrp.cluster_dqm(capacity_penalty_strength=1.0, time_limit=self.time_limit)
-            else:
-                cvrp.cluster_kmeans(time_limit=self.time_limit)
-
+            # K-Means requires a two-step solution: clustering + tsp
+            cvrp.cluster_kmeans(time_limit=self.time_limit)
             cvrp.solve_tsp_heuristic()
 
         wall_clock_time = time.perf_counter() - start_time

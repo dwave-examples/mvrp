@@ -145,25 +145,25 @@ def calculate_cost_comparison(
     solver_type: Union[SolverType, int],
     reset_results: bool,
 ) -> tuple[dict, str]:
-    """Calculates cost improvement between DQM and KMEANS.
+    """Calculates cost improvement between STRIDE and KMEANS.
 
     Args:
         cost_comparison: Dictionary with solver keys and run cost values.
         final_cost: The total distance cost of the most recent run.
-        solver_type: The sampler that was run. Either Quantum Hybrid (DQM)
-            (``0`` or ``SolverType.DQM``), Quantum Hybrid (Stride) (``1`` or ``SolverType.STRIDE``), or
-            Classical (K-Means) (``2`` or ``SolverType.KMEANS``).
+        solver_type: The sampler that was run. Either Stride Hybrid Solver
+            (``0`` or ``SolverType.STRIDE``) or Classical (K-Means)
+            (``1`` or ``SolverType.KMEANS``).
         reset_results: Whether or not to reset wall clock times.
 
     Returns:
         A tuple containing:
 
         - dict: Updated dictionary with solver keys and run cost values.
-        - str: String stating the quantum hybrid performance improvement.
+        - str: String stating the Stride hybrid solver performance improvement.
     """
 
     # Dict keys must be strings because Dash stores data as JSON
-    key = str(solver_type.value if solver_type is SolverType.KMEANS else SolverType.DQM.value)
+    key = str(solver_type.value)
     cost_comparison_ratio = 1
 
     if reset_results:
@@ -171,7 +171,7 @@ def calculate_cost_comparison(
     else:
         cost_comparison[key] = final_cost
         if len(cost_comparison) == 2:
-            cost_quantum = cost_comparison[str(SolverType.DQM.value)]
+            cost_quantum = cost_comparison[str(SolverType.STRIDE.value)]
             cost_kmeans = cost_comparison[str(SolverType.KMEANS.value)]
             if cost_kmeans:
                 cost_comparison_ratio = cost_quantum / cost_kmeans
@@ -180,7 +180,7 @@ def calculate_cost_comparison(
     if cost_comparison_ratio < 1:
         performance_improvement_quantum = f"The total distance \
             travelled is {1 - cost_comparison_ratio:.2%} \
-            less using the quantum hybrid solution."
+            less using the Stride hybrid solver."
     return cost_comparison, performance_improvement_quantum
 
 
@@ -191,9 +191,9 @@ def get_updated_wall_clock_times(
 
     Args:
         wall_clock_time: Total run time.
-        solver_type: The sampler that was run. Either Either Quantum Hybrid (DQM)
-            (``0`` or ``SolverType.DQM``), Quantum Hybrid (Stride) (``1`` or ``SolverType.STRIDE``), or
-            Classical (K-Means) (``2`` or ``SolverType.KMEANS``).
+        solver_type: The sampler that was run. Either Stride Hybrid Solver
+            (``0`` or ``SolverType.STRIDE``) or Classical (K-Means)
+            (``1`` or ``SolverType.KMEANS``).
         reset_results: Whether or not to reset wall clock times.
 
     Returns:
@@ -302,9 +302,8 @@ def run_optimization(
         run_click: The (total) number of times the run button has been clicked.
         vehicle_type: Either Trucks (``0`` or ``VehicleType.TRUCKS``) or
             Delivery Drones (``1`` or ``VehicleType.DELIVERY_DRONES``).
-        solver_type: Either Quantum Hybrid (DQM) (``0`` or ``SolverType.DQM``),
-            Quantum Hybrid (Stride) (``1`` or ``SolverType.STRIDE``), or Classical (K-Means)
-            (``2`` or ``SolverType.KMEANS``).
+        solver_type: Either Stride Hybrid Solver (``0`` or ``SolverType.STRIDE``) or
+            Classical (K-Means) (``1`` or ``SolverType.KMEANS``).
         num_vehicles: The number of vehicles.
         time_limit: The solver time limit.
         num_clients: The number of locations.
@@ -318,7 +317,7 @@ def run_optimization(
         - locations_layer: Depot and stop markers on the map, colored by vehicle.
         - routes_layer: Solution route lines on the map, one per vehicle.
         - cost_table: Stores the Solution cost table in the results tab.
-        - hybrid_table_label: Label for the hybrid results table (either Stride or DQM).
+        - hybrid_table_label: Label for the hybrid results table.
         - solver_type: The sampler used (``"quantum"`` or ``"classical"``).
         - reset_results: Whether or not to reset the results tables before applying the new one.
         - parameter_hash: Hash string to detect changed parameters.
