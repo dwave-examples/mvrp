@@ -50,6 +50,12 @@ MARKER_TOOLTIP_ANCHOR = [0, -36]
 # OpenStreetMap standard tiles from the volunteer-run OSM tile servers, which require
 # attribution and are subject to https://operations.osmfoundation.org/policies/tiles/
 OSM_TILE_URL = "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+# The OSM servers refuse tile requests from Chrome and Firefox that carry no Referer header,
+# serving a "403 Access blocked" tile instead. Hosting proxies (e.g. GitHub Codespaces port
+# forwarding) can impose a restrictive Referrer-Policy on the page; setting the policy on each
+# tile image overrides that and sends the page origin, which is what OSM asks for. See
+# https://wiki.openstreetmap.org/wiki/Referer
+TILE_REFERRER_POLICY = "strict-origin-when-cross-origin"
 # Keep the map near the demo area: zooming out to a continent or the whole world loads many
 # tiles that add nothing to the demo. Zoom 10 spans roughly a metropolitan area.
 TILE_MIN_ZOOM = 10
@@ -371,7 +377,12 @@ def generate_map() -> html.Div:
             keyboard=True,
             attributionControl=False,  # replaced by the control below, which credits the data
             children=[
-                dl.TileLayer(url=OSM_TILE_URL, minZoom=TILE_MIN_ZOOM, maxZoom=TILE_MAX_ZOOM),
+                dl.TileLayer(
+                    url=OSM_TILE_URL,
+                    minZoom=TILE_MIN_ZOOM,
+                    maxZoom=TILE_MAX_ZOOM,
+                    referrerPolicy=TILE_REFERRER_POLICY,
+                ),
                 dl.LayerGroup(id="routes-layer"),
                 dl.LayerGroup(id="locations-layer"),
                 dl.FullScreenControl(),
