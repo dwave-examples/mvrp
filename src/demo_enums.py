@@ -17,14 +17,12 @@ from enum import Enum
 
 class SolverType(Enum):
     STRIDE = 0
-    DQM = 1
-    KMEANS = 2
+    KMEANS = 1
 
     @property
     def label(self):
         return {
-            SolverType.STRIDE: "Quantum Hybrid (Stride)",
-            SolverType.DQM: "Quantum Hybrid (DQM)",
+            SolverType.STRIDE: "Stride\u2122 Hybrid Solver",
             SolverType.KMEANS: "Classical (K-Means)",
         }[self]
 

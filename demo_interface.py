@@ -30,7 +30,6 @@ from demo_configs import (
     NUM_VEHICLES,
     RESOURCES,
     SHOW_COST_COMPARISON,
-    SHOW_DQM,
     SOLVER_TIME,
     THUMBNAIL,
     UNITS_IMPERIAL,
@@ -129,10 +128,9 @@ def generate_settings_form() -> html.Div:
         for vehicle_type in VehicleType
     ]
 
-    solver_options = []
-    for solver_type in SolverType:
-        if solver_type is not SolverType.DQM or SHOW_DQM:
-            solver_options.append({"label": solver_type.label, "value": f"{solver_type.value}"})
+    solver_options = [
+        {"label": solver_type.label, "value": f"{solver_type.value}"} for solver_type in SolverType
+    ]
 
     return html.Div(
         className="settings",
@@ -448,7 +446,7 @@ def problem_details(index: int) -> html.Div:
                                         [
                                             html.Td(LOCATIONS_LABEL),
                                             html.Td(id="num-locations"),
-                                            html.Td("Quantum Hybrid"),
+                                            html.Td("Stride Solver"),
                                             html.Td(id="wall-clock-time-quantum"),
                                         ]
                                     ),
@@ -636,7 +634,7 @@ def create_interface():
                                                                                 ],
                                                                             ),
                                                                             html.Div(
-                                                                                title="Quantum Hybrid",
+                                                                                title="Stride Solver",
                                                                                 id="solution-cost-table",
                                                                                 children=[],  # add children dynamically using 'create_table' below
                                                                             ),

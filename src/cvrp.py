@@ -14,18 +14,15 @@
 
 from __future__ import annotations
 
-import warnings
-from collections import defaultdict
 from itertools import combinations
 from typing import Hashable, Optional
 
 import networkx as nx
 import numpy as np
-from dimod import DiscreteQuadraticModel
 from dimod.variables import Variables
 from dwave.optimization import Model
 from dwave.optimization.generators import capacitated_vehicle_routing
-from dwave.system import LeapHybridDQMSampler, LeapHybridNLSampler
+from dwave.system import LeapHybridNLSampler
 
 from demo_configs import DEPOT_LABEL
 from src.ckmeans import CKMeans
@@ -167,57 +164,6 @@ class CapacitatedVehicleRoutingProblem:
 
         self.parse_solution_stride()
 
-    def cluster_dqm(
-        self, capacity_penalty_strength: float, time_limit: Optional[float] = None, **kwargs
-    ) -> None:
-        """Cluster the client locations using the DQM.
-
-        Other keyword args are passed on to the LeapHybridDQMSampler.
-
-        Args:
-            capacity_penalty_strength (float): Dictates the penalty for violating vehicle capacity.
-            time_limit: Time limit for the DQM sampler.
-        """
-        if not self._clustering_feasible():
-            raise ValueError("Clustering not feasible due to demand being higher than capacity.")
-
-        sampler = LeapHybridDQMSampler()
-
-        # get and set the DQM model
-        self._get_clustering_dqm(capacity_penalty_strength=capacity_penalty_strength)
-
-        if sampler.min_time_limit(self._optimization["dqm"]) > time_limit:
-            warnings.warn("Defaulting to minimum time limit for Leap Hybrid DQM Sampler.")
-
-            # setting time_limit to None uses the minimum time limit
-            time_limit = None
-
-        res = sampler.sample_dqm(
-            self._optimization["dqm"], time_limit=time_limit, label="Example - MVRP", **kwargs
-        )
-        res.resolve()
-
-        sample = res.first.sample
-        assignments = defaultdict(list)
-        for v in self._clients:
-            assignments[v].append(self._vehicles[int(sample[v])])
-
-        capacity_violation = {}
-        for k in self._vehicles:
-            capacity_violation[k] = -self._vehicle_capacity[k]
-
-        for v in self._clients:
-            k = int(sample[v])
-            capacity_violation[self._vehicles[k]] += self._demand[v]
-
-        self._optimization["assignments"] = assignments
-        self._optimization["capacity_violation"] = assignments
-
-    def _get_clustering_dqm(self, capacity_penalty_strength) -> None:
-        """Get and set DQM and offset."""
-        self._optimization["dqm"], offset = self.construct_clustering_dqm(capacity_penalty_strength)
-        self._optimization["dqm_offset"] = offset
-
     def cluster_kmeans(self, time_limit=None) -> None:
         """Cluster the client locations using the K-Means classical method.
 
@@ -289,52 +235,6 @@ class CapacitatedVehicleRoutingProblem:
 
         """
         return self._optimization.get("assignments", {})
-
-    def construct_clustering_dqm(
-        self, capacity_penalty_strength
-    ) -> tuple[DiscreteQuadraticModel, float]:
-        """Construct the DQM used for clustering.
-
-        Args:
-            capacity_penalty_strength (float): Dictates the penalty for violating vehicle capacity.
-
-        Returns:
-            DiscreteQuadraticModel, float: The DQM and offset.
-        """
-        dqm = DiscreteQuadraticModel()
-        num_vehicles = len(self._vehicle_capacity)
-        for v in self.demand:
-            dqm.add_variable(num_vehicles, v)
-
-        max_capacity = max(self._vehicle_capacity.values())
-        precision = 1 + int(np.ceil(np.log2(max_capacity)))
-
-        slacks = {
-            (k, i): "s_capacity_{}_{}".format(k, i)
-            for k in self._vehicle_capacity
-            for i in range(precision)
-        }
-
-        for s in slacks.values():
-            dqm.add_variable(2, s)
-
-        for u, v in combinations(self.demand, r=2):
-            for idk, k in enumerate(self._vehicle_capacity):
-                dqm.set_quadratic_case(u, idk, v, idk, self.costs[u, v] + self.costs[v, u])
-
-        capacity_penalty = {k: capacity_penalty_strength for k in self._vehicle_capacity}
-
-        offset = 0
-        for idk, k in enumerate(self._vehicle_capacity):
-            slack_terms = [(slacks[k, i], 1, 2**i) for i in range(precision)]
-            dqm.add_linear_equality_constraint(
-                [(v, idk, self.demand[v]) for v in self.demand] + slack_terms,
-                constant=-self._vehicle_capacity[k],
-                lagrange_multiplier=capacity_penalty[k],
-            )
-
-            offset += capacity_penalty[k] * self._vehicle_capacity[k] ** 2
-        return dqm, offset
 
     def generate_nl_model(self) -> Model:
         """Follows the Stride solver formulation of the CVRP.

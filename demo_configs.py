@@ -14,7 +14,7 @@
 
 """This file stores input parameters for the app."""
 
-# Shows/hides Quantum Hybrid vs Classical cost comparison in the
+# Shows/hides Stride solver vs Classical cost comparison in the
 # results tab when both are run with the same settings.
 SHOW_COST_COMPARISON = False
 
@@ -37,8 +37,6 @@ that each location receives its required resources and no vehicle exceeds its ca
 DEPOT_LABEL = "Depot"  # Either "Depot" or specific start location
 LOCATIONS_LABEL = "Locations"  # Either "Locations" or business specific location type
 RESOURCES = ["Water Pallets", "Food Boxes", "Clothing Boxes"]  # Supports any number of resources
-
-SHOW_DQM = False  # Show/hide DQM drop down option
 
 #######################################
 # Sliders, buttons and option entries #
